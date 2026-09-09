@@ -21,7 +21,7 @@ export interface RecordRefInput {
 
 export interface LinkActor { id: string; role?: string | null }
 
-async function assertCanView(actor: LinkActor, module: string, recordType: string): Promise<void> {
+export async function assertCanViewRecordType(actor: LinkActor, module: string, recordType: string): Promise<void> {
   const perm = recordViewPermission(module, recordType);
   if (!perm || !(await userCan(actor, perm))) {
     throw Object.assign(new Error('You do not have permission to view this record.'), { status: 403 });
@@ -40,10 +40,10 @@ export interface LinkRecordsInput {
 
 export async function linkRecords(actor: LinkActor, input: LinkRecordsInput) {
   // Only link records you can see — both sides.
-  await assertCanView(actor, input.source.module, input.source.recordType);
-  await assertCanView(actor, input.target.module, input.target.recordType);
+  await assertCanViewRecordType(actor, input.source.module, input.source.recordType);
+  await assertCanViewRecordType(actor, input.target.module, input.target.recordType);
 
-  const { data, error } = await sb.from('record_links').upsert({
+  const result = await sb.from('record_links').upsert({
     source_module:      input.source.module,
     source_record_type: input.source.recordType,
     source_record_id:   input.source.recordId,
@@ -66,12 +66,12 @@ export async function linkRecords(actor: LinkActor, input: LinkRecordsInput) {
     onConflict: 'source_module,source_record_type,source_record_id,target_module,target_record_type,target_record_id,relationship_type',
   }).select('*').single();
 
-  if (error) throw Object.assign(new Error(error.message), { status: 500 });
-  return data;
+  if (result.error) throw Object.assign(new Error(result.error.message), { status: 500 });
+  return result.data as Record<string, unknown>;
 }
 
 export async function listRecordLinks(actor: LinkActor, args: { module: string; recordType: string; recordId: string }) {
-  await assertCanView(actor, args.module, args.recordType);
+  await assertCanViewRecordType(actor, args.module, args.recordType);
 
   // Two equality queries (record as source OR as target) — avoids interpolating
   // values into a PostgREST .or() filter string.
@@ -84,7 +84,9 @@ export async function listRecordLinks(actor: LinkActor, args: { module: string; 
 
   const seen = new Set<string>();
   const out: Record<string, unknown>[] = [];
-  for (const row of [...(srcRes.data ?? []), ...(tgtRes.data ?? [])] as Array<{ id: string }>) {
+  const sourceRows = srcRes.data as { id: string }[];
+  const targetRows = tgtRes.data as { id: string }[];
+  for (const row of [...sourceRows, ...targetRows]) {
     if (!seen.has(row.id)) { seen.add(row.id); out.push(row); }
   }
   out.sort((a, b) => new Date((b as { created_at: string }).created_at).getTime() - new Date((a as { created_at: string }).created_at).getTime());
@@ -96,7 +98,7 @@ export async function deleteRecordLink(actor: LinkActor, args: { id: string }) {
     .select('source_module, source_record_type').eq('id', args.id)
     .maybeSingle<{ source_module: string; source_record_type: string }>();
   if (!link) throw Object.assign(new Error('Link not found.'), { status: 404 });
-  await assertCanView(actor, link.source_module, link.source_record_type);
+  await assertCanViewRecordType(actor, link.source_module, link.source_record_type);
 
   const { error } = await sb.from('record_links').delete().eq('id', args.id);
   if (error) throw Object.assign(new Error(error.message), { status: 500 });

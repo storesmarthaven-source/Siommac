@@ -1891,6 +1891,25 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'high',
   },
 
+  // ── Meetings ────────────────────────────────────────────────────────────────
+  'meetings.view': { module: 'Meetings', group: 'Access', label: 'View Meetings', description: 'View meetings the user organises, attends, or may manage within team scope.', risk: 'low' },
+  'meetings.create': { module: 'Meetings', group: 'Lifecycle', label: 'Create Meetings', description: 'Schedule a meeting with Calendar invitations and a linked Messages discussion.', risk: 'medium' },
+  'meetings.manage_own': { module: 'Meetings', group: 'Lifecycle', label: 'Manage Own Meetings', description: 'Edit, reschedule, cancel, and archive meetings organised by the user.', risk: 'medium' },
+  'meetings.manage_team': { module: 'Meetings', group: 'Lifecycle', label: 'Manage Team Meetings', description: 'Manage meetings within the user’s authorised department scope.', risk: 'high' },
+  'meetings.participants.manage': { module: 'Meetings', group: 'Participants', label: 'Manage Participants', description: 'Invite and remove meeting participants while keeping Calendar and Messages aligned.', risk: 'medium' },
+  'meetings.recording.manage': { module: 'Meetings', group: 'Recording', label: 'Manage Recordings', description: 'Start, upload, replace, and remove governed meeting recordings.', risk: 'high' },
+  'meetings.recording.view': { module: 'Meetings', group: 'Recording', label: 'View Recordings', description: 'Play recordings for meetings within the user’s authorised scope.', risk: 'medium' },
+  'meetings.transcript.view': { module: 'Meetings', group: 'Transcript', label: 'View Transcripts', description: 'Read authorised meeting transcripts.', risk: 'medium' },
+  'meetings.transcript.export': { module: 'Meetings', group: 'Transcript', label: 'Export Transcripts', description: 'Export an authorised meeting transcript as a governed artifact.', risk: 'high' },
+  'meetings.summary.generate': { module: 'Meetings', group: 'Outcomes', label: 'Generate Summaries', description: 'Generate a traceable meeting-summary proposal from authorised evidence.', risk: 'medium' },
+  'meetings.summary.review': { module: 'Meetings', group: 'Outcomes', label: 'Review Summaries', description: 'Review or reject generated meeting summaries.', risk: 'high' },
+  'meetings.summary.publish': { module: 'Meetings', group: 'Outcomes', label: 'Publish Summaries', description: 'Publish a reviewed meeting summary to its authorised audience.', risk: 'high' },
+  'meetings.actions.publish': { module: 'Meetings', group: 'Outcomes', label: 'Publish Meeting Actions', description: 'Accept proposed actions and promote them to Calendar, Workflow, or a module handoff.', risk: 'high' },
+  'meetings.comments.post': { module: 'Meetings', group: 'Collaboration', label: 'Post Meeting Comments', description: 'Post to a meeting’s linked Messages conversation.', risk: 'medium' },
+  'meetings.metrics.view': { module: 'Meetings', group: 'Insights', label: 'View Meeting Metrics', description: 'View evidence-based attendance, duration, and action completion metrics.', risk: 'low' },
+  'meetings.retention.manage': { module: 'Meetings', group: 'Compliance', label: 'Manage Retention', description: 'Manage recording and transcript retention, legal hold, and purge policy.', risk: 'high' },
+  'meetings.compliance_read': { module: 'Meetings', group: 'Compliance', label: 'Compliance Read', description: 'Receive time-limited, audited access to restricted meeting evidence.', risk: 'critical', requiresSuperAdmin: true },
+
   // ── Calendar & Tasks (platform) ──────────────────────────────────────────────
   'calendar.view': {
     module: 'Calendar', group: 'Calendar & Tasks',

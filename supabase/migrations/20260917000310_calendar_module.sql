@@ -36,6 +36,8 @@ create table if not exists public.calendar_entries (
   type                  text not null check (type in ('task', 'activity')),
   title                 text not null,
   notes                 text,
+  color_key             text check (color_key in ('blue', 'indigo', 'purple', 'rose', 'coral', 'amber', 'lime', 'mint', 'teal', 'slate')),
+  location_label        text check (location_label is null or char_length(btrim(location_label)) between 1 and 240),
 
   -- All-day items use the date columns; timed items use the timestamptz columns.
   all_day               boolean not null default true,

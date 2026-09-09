@@ -1,4 +1,5 @@
 import type {
+  CalendarEntryKind,
   CalendarItemDTO,
   CalendarTaskPriority,
   CalendarTaskStatus,
@@ -6,11 +7,13 @@ import type {
 } from '@api/calendar';
 import { isOverdue, itemDateKey, parseLocalDate } from '@lib/calendar/date';
 
-export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda';
-export type CalendarScope = 'all' | 'shared' | 'public' | 'archived';
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'agenda' | 'tasks';
+export type CalendarScope = 'all' | 'mine' | 'shared' | 'public' | 'archived';
+export type CalendarQuickType = 'all' | CalendarEntryKind;
+export type CalendarCategory = string;
 
 export interface CalendarFilters {
-  type: 'all' | CalendarItemDTO['type'];
+  type: CalendarQuickType;
   source: string;
   status: 'all' | CalendarTaskStatus;
   priority: 'all' | CalendarTaskPriority;
@@ -28,12 +31,28 @@ export const EMPTY_FILTERS: CalendarFilters = {
 };
 
 export function calendarSource(item: CalendarItemDTO): string {
-  if (item.origin === 'calendar') return 'calendar';
+  if (item.origin === 'calendar') return item.sourceModule ?? 'calendar';
   return item.sourceModule ?? 'module';
 }
 
+export function calendarCategory(item: CalendarItemDTO): CalendarCategory {
+  return item.categoryKey ?? 'general';
+}
+
+/** Normalize legacy/projected records at the presentation boundary. Native
+ * Calendar rows always provide `kind`; projected module deadlines still use
+ * the historical `type: deadline` contract and take precedence over a stale
+ * fallback kind supplied by an older adapter. */
+export function calendarItemKind(item: CalendarItemDTO): CalendarEntryKind {
+  if (item.type === 'deadline') return 'deadline';
+  return item.kind;
+}
+
 export function sourceLabel(item: CalendarItemDTO): string {
-  if (item.origin === 'calendar') return item.type === 'task' ? 'Task' : 'Activity';
+  if (item.origin === 'calendar') {
+    const kind = calendarItemKind(item);
+    return `${kind.slice(0, 1).toUpperCase()}${kind.slice(1)}`;
+  }
   if (item.sourceLabel) return item.sourceLabel;
   const source = calendarSource(item);
   return source.split(/[-_]/g).map(part => `${part.slice(0, 1).toUpperCase()}${part.slice(1)}`).join(' ');
@@ -68,6 +87,7 @@ export function filterCalendarItems(
   return items.filter(item => {
     const archived = item.status === 'done' || item.status === 'cancelled';
     if (options.scope === 'all' && archived) return false;
+    if (options.scope === 'mine' && item.ownerUserId !== options.userId && item.assigneeUserId !== options.userId) return false;
     if (options.scope === 'archived' && !archived) return false;
     if (options.scope === 'shared' && item.origin === 'calendar' && item.visibility !== 'team' && item.visibility !== 'org') return false;
     if (options.scope === 'public' && item.origin === 'calendar' && item.visibility !== 'org') return false;
@@ -81,7 +101,9 @@ export function filterCalendarItems(
     }
 
     const f = options.filters;
-    if (f.type !== 'all' && item.type !== f.type) return false;
+    if (f.type === 'deadline') {
+      if (calendarItemKind(item) !== 'deadline' && !item.deadlineAt) return false;
+    } else if (f.type !== 'all' && calendarItemKind(item) !== f.type) return false;
     if (f.source !== 'all' && calendarSource(item) !== f.source) return false;
     if (f.status !== 'all' && item.status !== f.status) return false;
     if (f.priority !== 'all' && item.priority !== f.priority) return false;
@@ -118,6 +140,20 @@ export function upcomingActionItems(items: CalendarItemDTO[], todayKey: string, 
     })
     .sort((a, b) => itemSortValue(a).localeCompare(itemSortValue(b)))
     .slice(0, limit);
+}
+
+/** Items surfaced in the compact action preview. Ordinary calendar events are
+ * deliberately excluded: they remain selectable on the grid, but do not take
+ * over the user's attention rail unless they require a response or link to an
+ * operational action. */
+export function calendarItemHasAction(item: CalendarItemDTO, userId: string | null): boolean {
+  if (item.status === 'done' || item.status === 'cancelled') return false;
+  if (item.completable || item.assignable) return true;
+  if (item.drillThrough && Boolean(item.sourceRoute)) return true;
+  if (item.type === 'task') return !item.assigneeUserId || item.assigneeUserId === userId;
+  return item.type === 'activity'
+    && item.attendeeCount > 0
+    && item.ownerUserId !== userId;
 }
 
 export function activeFilterCount(filters: CalendarFilters): number {

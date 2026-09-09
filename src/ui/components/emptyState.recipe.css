@@ -53,6 +53,18 @@
   .ui-empty-file-visual.tone-success { --ui-empty-file-bg: color-mix(in srgb,var(--ui-color-success) 12%,var(--ui-color-surface-default)); --ui-empty-file-fg: var(--ui-color-success); }
   .ui-empty-file-visual.tone-warning { --ui-empty-file-bg: color-mix(in srgb,var(--ui-color-warning) 13%,var(--ui-color-surface-default)); --ui-empty-file-fg: var(--ui-color-warning); }
   .ui-empty-file-visual.tone-danger { --ui-empty-file-bg: color-mix(in srgb,var(--ui-color-danger) 11%,var(--ui-color-surface-default)); --ui-empty-file-fg: var(--ui-color-danger); }
+  .ui-empty-icon-cluster { --ui-empty-cluster-accent: var(--siomac-navy,#1f2d51); display: flex; width: 176px; min-height: 78px; align-items: center; justify-content: center; }
+  .ui-empty-icon-cluster > span { position: relative; display: grid; width: 42px; height: 42px; flex: 0 0 42px; place-items: center; margin-left: -9px; border: 2px solid var(--ui-color-surface-default,#fff); border-radius: 50%; background: var(--ui-color-surface-subtle,#f4f6fa); color: var(--ui-color-text-secondary,#64708a); opacity: .48; }
+  .ui-empty-icon-cluster > span:first-child { margin-left: 0; opacity: .25; }
+  .ui-empty-icon-cluster > span:last-child { opacity: .25; }
+  .ui-empty-icon-cluster > span.is-accent { z-index: 3; width: 50px; height: 50px; flex-basis: 50px; border-color: var(--ui-color-surface-default,#fff); color: #fff; background: var(--ui-empty-cluster-accent); box-shadow: 0 3px 8px color-mix(in srgb,var(--ui-empty-cluster-accent) 10%,transparent); opacity: 1; }
+  .ui-empty-icon-cluster > span svg { width: 18px; height: 18px; }
+  .ui-empty-icon-cluster > span.is-accent svg { width: 22px; height: 22px; }
+  .ui-empty-icon-cluster.is-compact { width: 146px; min-height: 62px; transform: scale(.86); transform-origin: center; }
+  .ui-empty-icon-cluster.tone-blue { --ui-empty-cluster-accent: #2f75b5; }
+  .ui-empty-icon-cluster.tone-green { --ui-empty-cluster-accent: #2f7d61; }
+  .ui-empty-icon-cluster.tone-amber { --ui-empty-cluster-accent: #b7791f; }
+  .ui-empty-icon-cluster.tone-purple { --ui-empty-cluster-accent: #7254a3; }
   .ui-empty .ui-illustration { --ui-illustration-size: 210px; margin-block: -20px -14px; }
 
   .ui-rdrawer .ui-empty {

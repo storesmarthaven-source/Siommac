@@ -79,4 +79,29 @@ describe('Popover', () => {
     offsetWidth.mockRestore();
     trigger.remove();
   });
+
+  it('clamps a portalled surface to an application boundary', () => {
+    const trigger = anchor();
+    const boundary = document.createElement('section');
+    document.body.append(boundary);
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue({
+      x: 760, y: 300, top: 300, bottom: 320, left: 760, right: 780,
+      width: 20, height: 20, toJSON: () => ({}),
+    });
+    vi.spyOn(boundary, 'getBoundingClientRect').mockReturnValue({
+      x: 300, y: 100, top: 100, bottom: 700, left: 300, right: 800,
+      width: 500, height: 600, toJSON: () => ({}),
+    });
+    const offsetWidth = vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockReturnValue(352);
+
+    render(<Popover open anchor={trigger} boundary={boundary} onClose={vi.fn()} label="Bounded details">Body</Popover>);
+
+    const surface = screen.getByRole('dialog', { name: 'Bounded details' });
+    expect(Number.parseFloat(surface.style.left)).toBeLessThanOrEqual(440);
+    expect(surface.style.maxWidth).toBe('484px');
+
+    offsetWidth.mockRestore();
+    boundary.remove();
+    trigger.remove();
+  });
 });

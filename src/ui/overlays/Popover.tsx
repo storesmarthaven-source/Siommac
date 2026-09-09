@@ -14,6 +14,7 @@ import './overlays.recipe.css';
 export interface PopoverProps {
   open: boolean;
   anchor: HTMLElement | null;
+  boundary?: HTMLElement | null;
   onClose: () => void;
   /** Required because the surface uses role="dialog". */
   label: string;
@@ -35,7 +36,7 @@ const FOCUSABLE = [
 ].join(',');
 
 export function Popover({
-  open, anchor, onClose, label, children, id, class: extra,
+  open, anchor, boundary = null, onClose, label, children, id, class: extra,
   matchAnchorWidth = false, align = 'start', offset = 8, maxHeight = 360,
   placement = 'auto', initialFocus = false,
 }: PopoverProps): VNode | null {
@@ -58,6 +59,7 @@ export function Popover({
     <AnchoredPopup
       open={open}
       anchor={anchor}
+      boundary={boundary}
       onDismiss={onClose}
       matchAnchorWidth={matchAnchorWidth}
       align={align}

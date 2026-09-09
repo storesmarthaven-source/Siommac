@@ -8,9 +8,18 @@ function item(id: string, title: string, startsOn = '2026-07-08'): CalendarItemD
   return {
     id,
     type: 'task',
+    kind: 'task',
+    categoryId: 'category-general',
+    categoryKey: 'general',
+    categoryName: 'General',
+    categoryIcon: 'CalendarDays',
+    availability: null,
     origin: 'calendar',
     title,
     notes: 'Supporting detail',
+    colorKey: null,
+    customColor: null,
+    locationLabel: null,
     allDay: true,
     startsOn,
     endsOn: null,
@@ -84,6 +93,13 @@ describe('MonthView', () => {
     fireEvent.click(event);
     expect(open).toHaveBeenCalledWith(first);
   });
+
+  it('shows a multi-day item only once on its start day', () => {
+    const multiDay = { ...item('multi', 'Two-day shutdown', '2026-07-08'), endsOn: '2026-07-09' };
+    render(<MonthView month={new Date(2026, 6, 1)} items={[multiDay]} selectedKey="2026-07-08" loading={false} onSelectDay={vi.fn()} onOpenItem={vi.fn()} />);
+
+    expect(screen.getAllByRole('button', { name: /Two-day shutdown/ })).toHaveLength(1);
+  });
 });
 
 describe('AgendaView', () => {
@@ -93,6 +109,8 @@ describe('AgendaView', () => {
     const first = item('first', 'First task', '2026-07-08');
     render(<AgendaView items={[later, first]} loading={false} onOpenItem={open} />);
 
+    expect(screen.getByLabelText('Calendar schedule')).toBeTruthy();
+    expect(screen.getByText('Schedule')).toBeTruthy();
     const rows = screen.getAllByRole('button');
     expect(rows.map(row => row.textContent).join('|')).toMatch(/First task.*Later task/);
     fireEvent.click(screen.getByRole('button', { name: /First task/ }));

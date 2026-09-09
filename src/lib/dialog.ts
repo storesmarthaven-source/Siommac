@@ -15,7 +15,7 @@
  *
  * Imperative + framework-free, so it works from components, hooks, stores, and plain modules.
  */
-import { cpop } from './popup';
+import { cpop, type CpopOptions } from './popup';
 
 export type DialogIcon = 'success' | 'error' | 'warning' | 'info' | 'question';
 
@@ -28,6 +28,10 @@ export interface ConfirmOptions {
   /** Red confirm button + warning icon (deletes etc.). */
   danger?: boolean;
   icon?: DialogIcon;
+  /** Optional governed content for confirmations that need a small choice set. */
+  renderContent?: CpopOptions['renderContent'];
+  /** UI-kit surface modifier, not an application-owned replacement modal. */
+  panelClass?: string;
 }
 
 export interface PromptOptions {
@@ -59,6 +63,8 @@ export const dialog = {
       showCancelButton: true,
       confirmButtonText: o.confirmText ?? (o.danger ? 'Delete' : 'Confirm'),
       cancelButtonText: o.cancelText ?? 'Cancel',
+      renderContent: o.renderContent,
+      panelClass: o.panelClass,
     });
     return r.isConfirmed;
   },

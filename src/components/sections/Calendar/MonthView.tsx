@@ -2,36 +2,40 @@ import { type VNode } from 'preact';
 import type { CalendarItemDTO } from '@api/calendar';
 import { isToday, itemDateKey, monthGrid, timeLabel, toLocalDateKey } from '@lib/calendar/date';
 import { sourceLabel, sourceTone } from './calendarViewModel';
+import { calendarCustomColorVariables } from './calendarColor';
+import { CalendarTitleIcon } from './CalendarTitleIconPicker';
 
 const MAX_ITEMS = 3;
 
-function EventCard({ item, full, onOpen }: { item: CalendarItemDTO; full: boolean; onOpen: (item: CalendarItemDTO) => void }): VNode {
+function EventCard({ item, full, entering, onOpen, onEntryAnimationEnd }: { item: CalendarItemDTO; full: boolean; entering: boolean; onOpen: (item: CalendarItemDTO) => void; onEntryAnimationEnd?: (id: string) => void }): VNode {
   return (
-    <button type="button" class={`cal-event ${sourceTone(item)}${full ? ' is-full' : ''}${item.status === 'done' ? ' is-done' : ''}`}
-      title={item.title} onClick={event => { event.stopPropagation(); onOpen(item); }}>
-      <span class="cal-event-title">{item.title}{item.recurrenceRule ? <i class="fas fa-rotate" aria-label="Recurring" /> : null}</span>
+    <button type="button" class={`cal-event ${sourceTone(item)}${item.customColor ? ' has-custom-color' : ''}${full ? ' is-full' : ''}${item.status === 'done' ? ' is-done' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
+      style={calendarCustomColorVariables(item.customColor) || undefined}
+      onAnimationEnd={entering ? () => onEntryAnimationEnd?.(item.id) : undefined}
+      onClick={event => { event.stopPropagation(); onOpen(item); }}>
+      <span class="cal-event-title"><CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={12} /><span>{item.title}</span>{item.recurrenceRule ? <i class="fas fa-rotate" aria-label="Recurring" /> : null}</span>
       <small>{item.allDay ? sourceLabel(item) : `${item.startsAt ? timeLabel(item.startsAt) : 'Time pending'} · ${sourceLabel(item)}`}</small>
       {full && item.notes ? <span class="cal-event-notes">{item.notes}</span> : null}
     </button>
   );
 }
-export function MonthView({ month, items, selectedKey, loading, onSelectDay, onOpenItem }: {
+export function MonthView({ month, items, selectedKey, loading, enteringItemId = null, onSelectDay, onOpenItem, onEntryAnimationEnd }: {
   month: Date;
   items: CalendarItemDTO[];
   selectedKey: string;
   loading: boolean;
+  enteringItemId?: string | null;
   onSelectDay: (key: string) => void;
   onOpenItem: (item: CalendarItemDTO) => void;
+  onEntryAnimationEnd?: (id: string) => void;
 }): VNode {
   const days = monthGrid(month);
   const monthIndex = month.getMonth();
   const byDay = new Map<string, CalendarItemDTO[]>();
-  for (const item of items) {
-    const key = itemDateKey(item);
-    if (!key) continue;
-    const existing = byDay.get(key);
-    if (existing) existing.push(item);
-    else byDay.set(key, [item]);
+  for (const day of days) {
+    const key = toLocalDateKey(day);
+    const dayItems = items.filter(item => itemDateKey(item) === key);
+    if (dayItems.length) byDay.set(key, dayItems);
   }
 
   return (
@@ -50,7 +54,7 @@ export function MonthView({ month, items, selectedKey, loading, onSelectDay, onO
               onClick={() => onSelectDay(key)}
               onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelectDay(key); } }}>
               <span class="cal-day-number">{day.getDate()}</span>
-              {loading ? <div class="cal-skeleton cal-skeleton-event" /> : shown.map(item => <EventCard key={item.id} item={item} full={dayItems.length === 1} onOpen={onOpenItem} />)}
+              {loading ? <div class="cal-skeleton cal-skeleton-event" /> : shown.map(item => <EventCard key={item.id} item={item} full={dayItems.length === 1} entering={item.id === enteringItemId || item.id.startsWith(`${enteringItemId}::`)} onOpen={onOpenItem} onEntryAnimationEnd={onEntryAnimationEnd} />)}
               {extra > 0 ? <button type="button" class="cal-more" onClick={event => { event.stopPropagation(); onSelectDay(key); }}>+{extra} more</button> : null}
             </div>
           );

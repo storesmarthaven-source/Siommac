@@ -6,4 +6,164 @@
     --ui-drawer-width-lg: 640px;
     --ui-drawer-width-xl: 800px;
   }
+
+  .ui-drawer-title-block {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .ui-drawer-title-block > div {
+    min-width: 0;
+  }
+
+  .ui-drawer-head-icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    place-items: center;
+    border-radius: 12px;
+  }
+
+  .ui-drawer-head-icon > svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* The canonical Drawer must own its positioning and closed state. It cannot
+     depend on a domain page (historically HSE.css) happening to be loaded. */
+  .hse-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: block;
+    visibility: hidden;
+    background: rgba(27, 45, 84, .38);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease, visibility 0s linear 180ms;
+  }
+
+  .hse-drawer-backdrop.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  .hse-drawer {
+    position: fixed;
+    z-index: 51;
+    top: 0;
+    right: 0;
+    display: grid;
+    width: min(520px, 100vw);
+    height: 100dvh;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: -14px 0 32px rgba(15, 31, 61, .12);
+    visibility: hidden;
+    transform: translateX(100%);
+    pointer-events: none;
+    transition: transform 220ms ease, visibility 0s linear 220ms;
+  }
+
+  .hse-drawer[data-side="left"] {
+    right: auto;
+    left: 0;
+    transform: translateX(-100%);
+  }
+
+  .hse-drawer.show {
+    visibility: visible;
+    transform: translateX(0);
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  /* A drawer may be mounted for the first time in its open state. Give that
+     first rendered frame the same off-canvas position as every later open so
+     domain screens do not need to reproduce the UI kit's motion contract. */
+  @starting-style {
+    .hse-drawer.show {
+      visibility: hidden;
+      transform: translateX(100%);
+    }
+
+    .hse-drawer[data-side="left"].show {
+      transform: translateX(-100%);
+    }
+
+    .hse-drawer-backdrop.show {
+      opacity: 0;
+    }
+  }
+
+  .hse-drawer[data-contained="true"] {
+    position: absolute;
+    z-index: 36;
+    height: 100%;
+    box-shadow: none;
+  }
+
+  .ui-drawer-contained-backdrop {
+    position: absolute;
+    z-index: 35;
+    inset: 0;
+    visibility: hidden;
+    background: rgba(23, 42, 79, .04);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease, visibility 0s linear 220ms;
+  }
+
+  .ui-drawer-contained-backdrop.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+    transition-delay: 0s;
+  }
+
+  @starting-style {
+    .ui-drawer-contained-backdrop.show { opacity: 0; }
+  }
+
+  .hse-drawer-head,
+  .hse-drawer-foot {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px;
+    border-bottom: 1px solid #dfe4ec;
+    background: #f8fafe;
+  }
+
+  .hse-drawer-head h3,
+  .hse-drawer-head p {
+    margin: 0;
+  }
+
+  .hse-drawer-body {
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+  }
+
+  .hse-drawer-foot {
+    align-items: center;
+    border-top: 1px solid #dfe4ec;
+    border-bottom: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hse-drawer,
+    .hse-drawer-backdrop,
+    .ui-drawer-contained-backdrop {
+      transition-duration: 0s;
+    }
+  }
 }

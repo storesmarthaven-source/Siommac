@@ -48,6 +48,8 @@ let _textareaEl: HTMLTextAreaElement;
 let _activeInput: HTMLInputElement | HTMLTextAreaElement | null = null;
 
 let _activeResolve: ((v: CpopResult) => void) | null = null;
+let _activeContentCleanup: (() => void) | null = null;
+let _activeDidClose: (() => void) | null = null;
 let _activeTimer:   ReturnType<typeof setTimeout>    | null = null;
 let _escHandler:    ((e: KeyboardEvent) => void)     | null = null;
 let _closeTimer:    ReturnType<typeof setTimeout>    | null = null;
@@ -83,6 +85,10 @@ export interface CpopOptions {
   panelClass?:        string;
   position?:          string;
   didOpen?:           () => void;
+  /** Mount framework content into the governed popup content region. */
+  renderContent?:     (container: HTMLElement) => undefined | (() => void);
+  /** Called after the popup exit transition and custom content cleanup. */
+  didClose?:          () => void;
   /** Prompt input — renders a field; the value is returned in CpopResult.inputValue. */
   input?:             'text' | 'password' | 'email' | 'number' | 'textarea';
   inputValue?:        string;
@@ -143,8 +149,8 @@ function _ensureDOM(): void {
 function _installMdCapture(): void {
   if (_mdCapture) return;
   _mdCapture = (e: MouseEvent) => {
-    if (_modal?.contains(e.target as Node)) return;
-    const bsModal = (e.target as Element)?.closest?.('.modal.show');
+    if (_modal.contains(e.target as Node)) return;
+    const bsModal = e.target instanceof Element ? e.target.closest('.modal.show') : null;
     if (bsModal) e.stopImmediatePropagation();
   };
   document.addEventListener('mousedown', _mdCapture, true);
@@ -195,6 +201,10 @@ function _close(confirmed: boolean): void {
     _closeTimer = null;
     _modal.classList.add('cpop-hidden');
     _modal.classList.remove('cpop-closing');
+    _activeContentCleanup?.();
+    _activeContentCleanup = null;
+    _activeDidClose?.();
+    _activeDidClose = null;
     if (r) r({ isConfirmed: confirmed, isDismissed: !confirmed, isDenied: false, value: confirmed, inputValue: iv });
   }, 180);
 }
@@ -241,6 +251,12 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
   _ensureDOM();
   if (opts.toast) return _showToast(opts);
 
+  // A replacement popup owns a fresh content lifecycle. This prevents a
+  // framework subtree from surviving after another alert reuses the singleton.
+  _activeContentCleanup?.();
+  _activeContentCleanup = null;
+  _activeDidClose = opts.didClose ?? null;
+
   // Cancel any in-progress close animation / auto-timer from a previous popup
   if (_closeTimer)  { clearTimeout(_closeTimer);  _closeTimer  = null; }
   if (_activeTimer) { clearTimeout(_activeTimer); _activeTimer = null; }
@@ -275,8 +291,12 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
   // Content
   _titleEl.textContent = opts.title ?? '';
   _titleEl.style.display = opts.title ? '' : 'none';
-  if (opts.html) _textEl.innerHTML = opts.html;
-  else           _textEl.textContent = opts.text ?? '';
+  if (opts.renderContent) {
+    _textEl.replaceChildren();
+    const cleanup = opts.renderContent(_textEl);
+    _activeContentCleanup = typeof cleanup === 'function' ? cleanup : null;
+  } else if (opts.html) _textEl.innerHTML = opts.html;
+  else                  _textEl.textContent = opts.text ?? '';
 
   // Prompt input
   _activeInput = null;
@@ -332,7 +352,8 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
   };
   document.addEventListener('keydown', _escHandler);
 
-  if (_activeInput) setTimeout(() => { try { _activeInput?.focus(); _activeInput?.select?.(); } catch (_) { /* empty */ } }, 60);
+  const activeInput = _activeInput;
+  if (activeInput) setTimeout(() => { try { activeInput.focus(); activeInput.select(); } catch (_) { /* empty */ } }, 60);
   if (typeof opts.didOpen === 'function') {
     setTimeout(() => { try { opts.didOpen!(); } catch (_) { /* empty */ } }, 50);
   }

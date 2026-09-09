@@ -62,8 +62,10 @@ export function useOverlayA11y<T extends HTMLElement = HTMLElement>(active: bool
 
     // Move focus into the panel (first focusable, else the panel itself).
     const first = focusables()[0];
-    if (first) first.focus();
-    else if (node) { node.tabIndex = -1; node.focus(); }
+    // A contained drawer often opens over a scrollable planning surface. Moving
+    // focus must not scroll that surface and make the underlying page jump.
+    if (first) first.focus({ preventScroll: true });
+    else if (node) { node.tabIndex = -1; node.focus({ preventScroll: true }); }
 
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') { e.stopPropagation(); onCloseRef.current(); return; }
@@ -83,7 +85,7 @@ export function useOverlayA11y<T extends HTMLElement = HTMLElement>(active: bool
       // is still in the document. On a route change the opener is gone, and
       // calling focus() on a detached node silently moves focus to <body>,
       // which drops the user at the top of the new page.
-      if (opener && document.contains(opener) && typeof opener.focus === 'function') opener.focus();
+      if (opener && document.contains(opener) && typeof opener.focus === 'function') opener.focus({ preventScroll: true });
     };
   }, [active]);
 

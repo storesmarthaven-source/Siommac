@@ -591,11 +591,29 @@ export const PERMISSION_KEYS = [
   'calendar.task.assign',             // assign a task to a permitted team member
   'calendar.activity.manage_own',     // create / update own activities (meetings, site visits…)
 
+  // ── Meetings (platform execution record) ──────────────────────────────────
+  'meetings.view', 'meetings.create', 'meetings.manage_own', 'meetings.manage_team',
+  'meetings.participants.manage',
+  'meetings.recording.manage', 'meetings.recording.view',
+  'meetings.transcript.view', 'meetings.transcript.export',
+  'meetings.summary.generate', 'meetings.summary.review', 'meetings.summary.publish',
+  'meetings.actions.publish', 'meetings.comments.post', 'meetings.metrics.view',
+  'meetings.retention.manage', 'meetings.compliance_read',
+
   // ── Weather (platform) ───────────────────────────────────────────────────────
   'platform.weather.view',            // read the server-proxied weather snapshot (widget)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
+
+const MEETING_STAFF_PERMISSIONS: readonly PermissionKey[] = [
+  'meetings.view', 'meetings.create', 'meetings.manage_own', 'meetings.participants.manage',
+  'meetings.recording.manage', 'meetings.recording.view', 'meetings.transcript.view',
+  'meetings.summary.generate', 'meetings.summary.review', 'meetings.summary.publish',
+  'meetings.actions.publish', 'meetings.comments.post', 'meetings.metrics.view',
+];
+const MEETING_MANAGER_PERMISSIONS: readonly PermissionKey[] = ['meetings.manage_team', 'meetings.transcript.export'];
+const MEETING_ADMIN_PERMISSIONS: readonly PermissionKey[] = ['meetings.retention.manage'];
 
 // ── Critical-grant keys (require dual superadmin approval) ──────────────────
 // MIRROR of netlify/functions/lib/permissions.ts — kept in sync by
@@ -603,6 +621,7 @@ export type PermissionKey = typeof PERMISSION_KEYS[number];
 export const CRITICAL_GRANT_KEYS = new Set<string>([
   'communications.compliance_read',
   'communications.compliance_export',
+  'meetings.compliance_read',
   'auth.security.manage_policy',
   'auth.passkeys.admin_revoke',
   'auth.trusted_devices.admin_revoke',
@@ -631,6 +650,7 @@ export const CRITICAL_GRANT_KEYS = new Set<string>([
 export const COMPLIANCE_GATED_KEYS = new Set<string>([
   'communications.compliance_read',
   'communications.compliance_export',
+  'meetings.compliance_read',
 ]);
 
 // ── Role defaults ─────────────────────────────────────────────────────────────
@@ -669,6 +689,7 @@ const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
   'finance.bank_accounts.view',
   'finance.bank_accounts.manage',
   'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
+  ...MEETING_STAFF_PERMISSIONS,
   'platform.weather.view',
 ]);
 
@@ -706,6 +727,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
   hr_manager: new Set<PermissionKey>([
     'calendar.manage', 'calendar.task.assign',
+    ...MEETING_MANAGER_PERMISSIONS,
     ...EMPLOYEE_BASELINE,
     'tickets.create_internal',      // HR service-queue handler
     // HR Onboarding — oversight tier. Mirrors the cumulative onboarding grant migrations
@@ -799,6 +821,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
   finance_manager: new Set<PermissionKey>([
     'calendar.manage', 'calendar.task.assign',
+    ...MEETING_MANAGER_PERMISSIONS,
     ...EMPLOYEE_BASELINE,
     'tickets.create_internal',      // Finance/Payroll service-queue handler
     'finance.statutory.view',
@@ -953,6 +976,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.create_self', 'tickets.create_team',
     'finance.payroll.view_own',   // self-service: view/print own payslips (self-scoped server-side)
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_MANAGER_PERMISSIONS,
     'platform.weather.view',
     // Workflow — run approvals + manage instances (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
@@ -1020,6 +1044,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     'tickets.view_all', 'tickets.reply_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_MANAGER_PERMISSIONS, ...MEETING_ADMIN_PERMISSIONS,
     'platform.weather.view',
     // Workflow — full except superadmin-only admin_override (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
@@ -1458,6 +1483,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
     // Calendar & Tasks (platform) — superadmin: all
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS, ...MEETING_MANAGER_PERMISSIONS, ...MEETING_ADMIN_PERMISSIONS,
     'platform.weather.view',
   ]),
 };

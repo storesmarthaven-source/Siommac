@@ -18,7 +18,7 @@ export const calendarModule: ModuleDefinition = {
     id:   's-calendar',
     label: 'Calendar & Tasks',
     icon: 'fa-calendar-days',
-    sub:  'Deadlines, tasks and activities across every module — one calendar',
+    sub:  'Events, meetings, tasks and deadlines across every module',
   }],
   roles: ['superadmin', 'admin', 'manager', 'employee'],
   mount: {

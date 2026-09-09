@@ -27,4 +27,26 @@ describe('Drawer', () => {
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(onClose).toHaveBeenCalledOnce();
   });
+
+  it('renders inside a feature surface and dismisses from its contained backdrop', () => {
+    const onClose = vi.fn();
+    const { container } = render(<Drawer open contained title="Edit event" onClose={onClose}>Body</Drawer>);
+    const drawer = screen.getByRole('dialog', { name: 'Edit event' });
+    expect(container.contains(drawer)).toBe(true);
+    expect(drawer.getAttribute('data-contained')).toBe('true');
+    expect(drawer.getAttribute('aria-modal')).toBe('false');
+    expect(document.querySelector('.hse-drawer-backdrop')).toBeNull();
+    const backdrop = container.querySelector('.ui-drawer-contained-backdrop')!;
+    expect(backdrop.classList.contains('show')).toBe(true);
+    fireEvent.click(backdrop);
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it('keeps the contained drawer mounted in its closing state for CSS exit motion', () => {
+    const { rerender } = render(<Drawer open contained title="Edit event" onClose={vi.fn()}>Body</Drawer>);
+    rerender(<Drawer open={false} contained title="Edit event" onClose={vi.fn()}>Body</Drawer>);
+
+    expect(document.querySelector('.ui-drawer.hse-drawer')?.classList.contains('show')).toBe(false);
+    expect(document.querySelector('.ui-drawer-contained-backdrop')?.classList.contains('show')).toBe(false);
+  });
 });

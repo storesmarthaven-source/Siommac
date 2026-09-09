@@ -15,11 +15,13 @@ import {
   ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY,
   NAVIGATION_PREFERENCE_KEY,
   TOAST_PREFERENCE_KEY,
+  CALENDAR_NAVIGATOR_PREFERENCE_KEY,
   type EmployeeRegisterColumnKey,
   type EmployeeRegisterView,
   type OnboardingWorkQueueView,
   type NavigationPreference,
   type ToastPreference,
+  type CalendarNavigatorPreference,
 } from '../../types/uiPreferences';
 
 /** Every key the endpoint accepts, and the value type stored under it. */
@@ -29,6 +31,7 @@ export interface UiPreferenceValues {
   [EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY]: EmployeeRegisterColumnKey[];
   [EMPLOYEE_REGISTER_VIEWS_PREFERENCE_KEY]: EmployeeRegisterView[];
   [ONBOARDING_WORK_QUEUE_VIEWS_PREFERENCE_KEY]: OnboardingWorkQueueView[];
+  [CALENDAR_NAVIGATOR_PREFERENCE_KEY]: CalendarNavigatorPreference;
 }
 
 export type UiPreferenceKey = keyof UiPreferenceValues;

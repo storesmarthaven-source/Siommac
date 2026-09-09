@@ -50,6 +50,8 @@ import authStepUpRouter     from './routes/authStepUp';
 import adminSecurityRouter, { policyReadRouter } from './routes/adminSecurity';
 import permissionApprovalsRouter from './routes/permissionApprovals';
 import calendarRouter             from './routes/calendar';
+import calendarConnectionsRouter  from './routes/calendarConnections';
+import meetingsRouter             from './routes/meetings';
 import weatherRouter              from './routes/weather';
 import hrRouter                   from './routes/hr';
 import hrEmployeeImportRouter     from './routes/hrEmployeeImport';
@@ -163,7 +165,7 @@ app.use('*', async (c, next) => {
 //   { action: "routeName", args: { ... }, token: "..." }
 app.use('*', async (c, next) => {
   let body: Record<string, unknown> = {};
-  let text = '';
+  let text: string;
   try {
     text = await c.req.text();
     if (text) body = JSON.parse(text) as Record<string, unknown>;
@@ -257,6 +259,8 @@ app.route('/api',            uiPrefsRouter);
 app.route('/api',            widgetPackagesRouter);
 app.route('/api',            workflowsRouter);
 app.route('/api',            calendarRouter);
+app.route('/api',            calendarConnectionsRouter);
+app.route('/api',            meetingsRouter);
 app.route('/api',            weatherRouter);
 app.route('/api',            communicationsRouter);
 app.route('/api',            communicationsComplianceRouter);

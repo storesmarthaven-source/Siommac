@@ -9,6 +9,16 @@ import './emptyState.recipe.css';
 
 export type EmptyTone = 'blue' | 'amber' | 'green' | 'purple' | 'gray';
 export type EmptyStateSize = 'compact' | 'default';
+export type EmptyStateClusterTone = 'navy' | 'blue' | 'green' | 'amber' | 'purple';
+
+export interface EmptyStateIconClusterProps {
+  /** Three to five related icons. The component remains usable with any count. */
+  icons: readonly ComponentChildren[];
+  /** Zero-based icon to emphasize; defaults to the visual centre. */
+  accentIndex?: number;
+  tone?: EmptyStateClusterTone;
+  compact?: boolean;
+}
 
 export interface EmptyStateProps {
   /** Font Awesome class, e.g. 'fa-folder-open', or a canonical icon node. */
@@ -48,6 +58,21 @@ export function EmptyState({
         {note && <p class="ui-empty-note">{note}</p>}
         {actions && <div class="ui-empty-actions">{actions}</div>}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Reusable layered-icon visual for compact dialogs, search results and larger
+ * section empty states. Content stays with EmptyState; this component owns only
+ * the adaptable visual composition.
+ */
+export function EmptyStateIconCluster({
+  icons, accentIndex = Math.floor(icons.length / 2), tone = 'navy', compact = false,
+}: EmptyStateIconClusterProps): VNode {
+  return (
+    <div class={`ui-empty-icon-cluster tone-${tone}${compact ? ' is-compact' : ''}`} aria-hidden="true">
+      {icons.map((icon, index) => <span class={index === accentIndex ? 'is-accent' : ''} key={index}>{icon}</span>)}
     </div>
   );
 }

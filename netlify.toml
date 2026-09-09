@@ -34,6 +34,12 @@
   to = "/index.html"
   status = 200
 
+# OAuth providers return to this SPA route after calendar authorisation.
+[[redirects]]
+  from = "/calendar/oauth/callback"
+  to = "/index.html"
+  status = 200
+
 # ── Security headers — applied to every response ─────────────────────────────
 [[headers]]
   for = "/*"

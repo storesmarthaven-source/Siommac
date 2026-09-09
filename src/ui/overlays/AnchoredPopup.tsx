@@ -28,12 +28,14 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { createPortal } from 'preact/compat';
 import { usePortalRoot } from './portalRoot';
-import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'preact/hooks';
 
 export interface AnchoredPopupProps {
   open: boolean;
   /** The element the surface is positioned against. */
   anchor: HTMLElement | null;
+  /** Optional collision boundary. Defaults to the browser viewport. */
+  boundary?: HTMLElement | null;
   onDismiss: () => void;
   /** Match the anchor's width (dropdowns) or size to content (menus). */
   matchAnchorWidth?: boolean;
@@ -67,16 +69,25 @@ interface Position {
   left: number;
   width: number | undefined;
   maxHeight: number;
+  maxWidth: number;
   placement: 'bottom' | 'top' | 'left' | 'right';
 }
 
 export function AnchoredPopup({
-  open, anchor, onDismiss,
+  open, anchor, boundary = null, onDismiss,
   matchAnchorWidth = true, align = 'start', placement = 'auto', offset = 4, maxHeight = 280,
   class: extra, id, role, onKeyDown, onSurfaceMount, children, ...aria
 }: AnchoredPopupProps): VNode | null {
+  const popupId = `ui-popup-${useId()}`;
   const surfaceRef = useRef<HTMLDivElement | null>(null);
   const [pos, setPos] = useState<Position | null>(null);
+  const parentPopup = anchor?.closest<HTMLElement>('.ui-popup') ?? null;
+  const popupAncestors = [
+    parentPopup?.dataset.uiPopupId,
+    ...(parentPopup?.dataset.uiPopupAncestors?.split(' ').filter(Boolean) ?? []),
+  ].filter((value): value is string => Boolean(value));
+  const overlayOrigin = anchor?.closest<HTMLElement>('.hdr-modal-overlay')?.id
+    ?? parentPopup?.dataset.uiOverlayOrigin;
 
   // useLayoutEffect: measure and place before paint, or the surface is visible
   // for one frame at the wrong coordinates.
@@ -87,11 +98,24 @@ export function AnchoredPopup({
       const el = anchor;
       if (!el) return;
       const r = el.getBoundingClientRect();
+      const boundaryRect = boundary?.getBoundingClientRect();
+      const bounds = {
+        top: Math.max(0, boundaryRect?.top ?? 0),
+        right: Math.min(window.innerWidth, boundaryRect?.right ?? window.innerWidth),
+        bottom: Math.min(window.innerHeight, boundaryRect?.bottom ?? window.innerHeight),
+        left: Math.max(0, boundaryRect?.left ?? 0),
+      };
+      const inset = 8;
+      const minLeft = bounds.left + inset;
+      const maxRight = bounds.right - inset;
+      const minTop = bounds.top + inset;
+      const maxBottom = bounds.bottom - inset;
+      const boundaryMaxWidth = Math.max(1, maxRight - minLeft);
       const surfaceWidth = matchAnchorWidth ? r.width : surfaceRef.current?.offsetWidth ?? r.width;
 
       if (placement === 'left' || placement === 'right') {
-        const spaceRight = window.innerWidth - r.right - offset - 8;
-        const spaceLeft = r.left - offset - 8;
+        const spaceRight = maxRight - r.right - offset;
+        const spaceLeft = r.left - offset - minLeft;
         const resolvedSide = placement === 'right' && spaceRight < surfaceWidth && spaceLeft > spaceRight
           ? 'left'
           : placement === 'left' && spaceLeft < surfaceWidth && spaceRight > spaceLeft
@@ -99,17 +123,18 @@ export function AnchoredPopup({
             : placement;
         const left = resolvedSide === 'right' ? r.right + offset : r.left - surfaceWidth - offset;
         setPos({
-          top: Math.max(8, Math.min(r.top, window.innerHeight - Math.min(maxHeight, window.innerHeight - 16) - 8)),
+          top: Math.max(minTop, Math.min(r.top, maxBottom - Math.min(maxHeight, maxBottom - minTop))),
           bottom: undefined,
-          left: Math.max(8, Math.min(left, window.innerWidth - surfaceWidth - 8)),
+          left: Math.max(minLeft, Math.min(left, maxRight - Math.min(surfaceWidth, boundaryMaxWidth))),
           width: matchAnchorWidth ? r.width : undefined,
-          maxHeight: Math.min(maxHeight, window.innerHeight - 16),
+          maxHeight: Math.min(maxHeight, maxBottom - minTop),
+          maxWidth: boundaryMaxWidth,
           placement: resolvedSide,
         });
         return;
       }
-      const spaceBelow = window.innerHeight - r.bottom - offset - 8;
-      const spaceAbove = r.top - offset - 8;
+      const spaceBelow = maxBottom - r.bottom - offset;
+      const spaceAbove = r.top - offset - minTop;
 
       // Flip up only when below genuinely cannot hold a usable list AND above is
       // roomier — flipping for a few pixels makes the surface jump around as the
@@ -127,7 +152,7 @@ export function AnchoredPopup({
         : align === 'center'
           ? r.left + (r.width - resolvedSurfaceWidth) / 2
           : r.right - resolvedSurfaceWidth;
-      const left = Math.max(8, Math.min(alignedLeft, window.innerWidth - resolvedSurfaceWidth - 8));
+      const left = Math.max(minLeft, Math.min(alignedLeft, maxRight - Math.min(resolvedSurfaceWidth, boundaryMaxWidth)));
 
       setPos({
         // A top-placed surface uses `bottom`, not an estimated `top`. Its
@@ -139,6 +164,7 @@ export function AnchoredPopup({
         left,
         width,
         maxHeight: height,
+        maxWidth: boundaryMaxWidth,
         placement: flip ? 'top' : 'bottom',
       });
     }
@@ -160,7 +186,7 @@ export function AnchoredPopup({
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', place);
     };
-  }, [open, anchor, matchAnchorWidth, align, placement, offset, maxHeight, onDismiss]);
+  }, [open, anchor, boundary, matchAnchorWidth, align, placement, offset, maxHeight, onDismiss]);
 
   // Content-sized surfaces cannot be horizontally centred/clamped or reliably
   // collision-tested until their real dimensions exist. Correct the provisional
@@ -170,15 +196,29 @@ export function AnchoredPopup({
   useLayoutEffect(() => {
     if (!open || !anchor || !pos || !surfaceRef.current) return;
     const r = anchor.getBoundingClientRect();
+    const boundaryRect = boundary?.getBoundingClientRect();
+    const bounds = {
+      top: Math.max(0, boundaryRect?.top ?? 0) + 8,
+      right: Math.min(window.innerWidth, boundaryRect?.right ?? window.innerWidth) - 8,
+      bottom: Math.min(window.innerHeight, boundaryRect?.bottom ?? window.innerHeight) - 8,
+      left: Math.max(0, boundaryRect?.left ?? 0) + 8,
+    };
     const surface = surfaceRef.current;
     if (pos.placement === 'left' || pos.placement === 'right') {
       const surfaceWidth = surface.offsetWidth;
       const surfaceHeight = Math.min(surface.offsetHeight, pos.maxHeight);
-      const left = pos.placement === 'right' ? r.right + offset : r.left - surfaceWidth - offset;
-      const top = Math.max(8, Math.min(r.top, window.innerHeight - surfaceHeight - 8));
-      const clampedLeft = Math.max(8, Math.min(left, window.innerWidth - surfaceWidth - 8));
-      if (Math.abs(clampedLeft - pos.left) > 0.5 || Math.abs(top - (pos.top ?? 0)) > 0.5) {
-        setPos(current => current ? { ...current, left: clampedLeft, top, bottom: undefined } : current);
+      const spaceRight = bounds.right - r.right - offset;
+      const spaceLeft = r.left - offset - bounds.left;
+      const resolvedSide = placement === 'right' && spaceRight < surfaceWidth && spaceLeft > spaceRight
+        ? 'left'
+        : placement === 'left' && spaceLeft < surfaceWidth && spaceRight > spaceLeft
+          ? 'right'
+          : placement === 'left' ? 'left' : 'right';
+      const left = resolvedSide === 'right' ? r.right + offset : r.left - surfaceWidth - offset;
+      const top = Math.max(bounds.top, Math.min(r.top, bounds.bottom - surfaceHeight));
+      const clampedLeft = Math.max(bounds.left, Math.min(left, bounds.right - Math.min(surfaceWidth, pos.maxWidth)));
+      if (resolvedSide !== pos.placement || Math.abs(clampedLeft - pos.left) > 0.5 || Math.abs(top - (pos.top ?? 0)) > 0.5) {
+        setPos(current => current ? { ...current, left: clampedLeft, top, bottom: undefined, placement: resolvedSide } : current);
       }
       return;
     }
@@ -190,11 +230,11 @@ export function AnchoredPopup({
         : align === 'end'
           ? r.right - surfaceWidth
           : r.left;
-      left = Math.max(8, Math.min(raw, window.innerWidth - surfaceWidth - 8));
+      left = Math.max(bounds.left, Math.min(raw, bounds.right - Math.min(surfaceWidth, pos.maxWidth)));
     }
 
-    const spaceBelow = window.innerHeight - r.bottom - offset - 8;
-    const spaceAbove = r.top - offset - 8;
+    const spaceBelow = bounds.bottom - r.bottom - offset;
+    const spaceAbove = r.top - offset - bounds.top;
     const shouldFlipForMeasuredContent = placement === 'auto'
       && pos.placement === 'bottom'
       && surface.scrollHeight > pos.maxHeight + 1
@@ -212,7 +252,7 @@ export function AnchoredPopup({
         } : {}),
       } : current);
     }
-  }, [open, anchor, matchAnchorWidth, align, placement, offset, maxHeight, pos]);
+  }, [open, anchor, boundary, matchAnchorWidth, align, placement, offset, maxHeight, pos]);
 
   useEffect(() => {
     if (!open) return;
@@ -222,6 +262,15 @@ export function AnchoredPopup({
       // dismiss for clicks genuinely outside both.
       if (surfaceRef.current?.contains(t)) return;
       if (anchor?.contains(t)) return;
+      // A modal alert opened by a control inside this surface temporarily owns
+      // interaction. Keep the underlying menu mounted so its state and focus
+      // context are intact when the alert resolves.
+      if (t instanceof Element && t.closest('.cpop')) return;
+      const clickedPopup = e.composedPath().find(node => node instanceof HTMLElement && node.matches('.ui-popup'));
+      if (clickedPopup instanceof HTMLElement) {
+        const ancestors = clickedPopup.dataset.uiPopupAncestors?.split(' ').filter(Boolean) ?? [];
+        if (ancestors.includes(popupId)) return;
+      }
       onDismiss();
     }
     document.addEventListener('pointerdown', onPointerDown, true);
@@ -241,6 +290,9 @@ export function AnchoredPopup({
         onSurfaceMount?.(node);
       }}
       id={id}
+      data-ui-popup-id={popupId}
+      data-ui-popup-ancestors={popupAncestors.length > 0 ? popupAncestors.join(' ') : undefined}
+      data-ui-overlay-origin={overlayOrigin}
       role={role}
       class={`ui-popup${extra ? ` ${extra}` : ''}`}
       data-placement={pos.placement}
@@ -251,6 +303,7 @@ export function AnchoredPopup({
         left: `${pos.left}px`,
         width: pos.width != null ? `${pos.width}px` : undefined,
         maxHeight: `${pos.maxHeight}px`,
+        maxWidth: `${pos.maxWidth}px`,
       }}
       onKeyDown={onKeyDown}
       {...aria}

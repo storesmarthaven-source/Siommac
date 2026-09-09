@@ -200,6 +200,10 @@ export default function SharedSections() {
         <div id="preact-calendar-root" />
       </AppSection>
 
+      <AppSection id="s-meetings">
+        <div id="preact-meetings-root" />
+      </AppSection>
+
       {/* Access Control — superadmin only (RBAC console, moved out of Settings) */}
       <AppSection id="s-access-control">
         <div id="preact-access-control-root" />

@@ -16,12 +16,24 @@ import type {
   CalendarTaskStatus, RecurrenceScope, CalendarAttendeeDTO,
   CalendarRemindersResponse, SetCalendarRemindersRequest,
   CalendarAttendeeResponseRequest,
+  CalendarDayContextRequest, CalendarDayContextResponse,
+  CalendarCollectionsResponse,
+  CalendarCategoriesResponse,
+  CreateCalendarCollectionRequest, UpdateCalendarCollectionRequest, ArchiveCalendarCollectionRequest,
+  CalendarConnectionsResponse, CalendarProvider, CompleteCalendarOAuthRequest,
+  ConnectCalendarCredentialsRequest, ToggleExternalCalendarRequest,
 } from '../../types/calendar';
 
 export type {
   CalendarItemDTO, CalendarItemType, CalendarItemOrigin, CalendarTaskStatus,
   CalendarTaskPriority, CalendarVisibility, RecurrenceScope,
-  CalendarAttendeeDTO, CalendarAttendeeResponse,
+  CalendarAttendeeDTO, CalendarAttendeeResponse, CalendarColorKey, UpdateEntryRequest,
+  CalendarEntryKind, CalendarAvailability, CalendarCategoryDTO, CalendarCategoriesResponse, CalendarTitleIconType,
+  CalendarHolidayMarkerDTO, CalendarDayContextRequest,
+  CalendarCollectionDTO, CreateCalendarCollectionRequest, UpdateCalendarCollectionRequest,
+  CalendarConnectionDTO, CalendarConnectionsResponse, CalendarProvider,
+  CalendarProviderAvailabilityDTO, ExternalCalendarDTO,
+  CompleteCalendarOAuthRequest, ConnectCalendarCredentialsRequest, ToggleExternalCalendarRequest,
 } from '../../types/calendar';
 
 // ── query keys ──────────────────────────────────────────────────────────────
@@ -31,7 +43,43 @@ export const calendarKeys = {
   list: (req: CalendarListRequest) => [...calendarKeys.all, 'list', req] as const,
   item: (id: string) => [...calendarKeys.all, 'item', id] as const,
   reminders: (id: string) => [...calendarKeys.all, 'reminders', id] as const,
+  dayContext: (req: CalendarDayContextRequest) => [...calendarKeys.all, 'day-context', req] as const,
+  departments: () => [...calendarKeys.all, 'departments'] as const,
+  collections: () => [...calendarKeys.all, 'collections'] as const,
+  connections: () => [...calendarKeys.all, 'connections'] as const,
+  categories: () => [...calendarKeys.all, 'categories'] as const,
 };
+
+export interface CalendarDepartmentOption { id: string; name: string }
+
+export function useCalendarCategories(enabled = true) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: calendarKeys.categories(),
+    enabled: enabled && isAuthenticated,
+    staleTime: 5 * 60_000,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<CalendarCategoriesResponse>('calendar/categories/list', {}, { signal });
+      if (!res.success) throw new Error(res.message ?? 'Failed to load calendar categories');
+      return res.categories;
+    },
+  });
+}
+
+/** Lightweight authenticated department catalogue for calendar audience controls. */
+export function useCalendarDepartments(enabled = true) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: calendarKeys.departments(),
+    enabled: enabled && isAuthenticated,
+    staleTime: 60_000,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data?: CalendarDepartmentOption[]; message?: string }>('listDepartments', {}, { signal });
+      if (!res.success) throw new Error(res.message ?? 'Failed to load departments');
+      return (res.data ?? []).map(({ id, name }) => ({ id, name }));
+    },
+  });
+}
 
 // ── list ────────────────────────────────────────────────────────────────────
 
@@ -45,6 +93,50 @@ export function useCalendarList(req: CalendarListRequest, enabled = true) {
       const res = await apiPost<CalendarListResponse>('calendar/list', req as unknown as Record<string, unknown>, { signal });
       if (!res.success) throw new Error(res.message ?? 'Failed to load calendar');
       return res.items;
+    },
+  });
+}
+
+export function useCalendarCollections(enabled = true) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: calendarKeys.collections(),
+    enabled: enabled && isAuthenticated,
+    staleTime: 30_000,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<CalendarCollectionsResponse>('calendar/calendars/list', {}, { signal });
+      if (!res.success) throw new Error(res.message ?? 'Failed to load calendars');
+      return res.calendars;
+    },
+  });
+}
+
+export function useCalendarConnections(enabled = true) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: calendarKeys.connections(),
+    enabled: enabled && isAuthenticated,
+    staleTime: 30_000,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<CalendarConnectionsResponse>('calendar/connections/list', {}, { signal });
+      if (!res.success) throw new Error(res.message ?? 'Failed to load connected calendars');
+      return res;
+    },
+  });
+}
+
+/** Published public-holiday metadata for day headers. This deliberately stays
+ * outside the item list so a holiday cannot consume an event lane. */
+export function useCalendarDayContext(req: CalendarDayContextRequest | null) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: req ? calendarKeys.dayContext(req) : [...calendarKeys.all, 'day-context', 'none'],
+    enabled: isAuthenticated && req !== null,
+    staleTime: 60 * 60_000,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<CalendarDayContextResponse>('calendar/day-context', req as unknown as Record<string, unknown>, { signal });
+      if (!res.success) throw new Error(res.message ?? 'Failed to load calendar day context');
+      return res.holidays;
     },
   });
 }
@@ -107,15 +199,112 @@ export function useCreateActivity() {
   });
 }
 
-export function useUpdateEntry() {
+export function useCreateCalendarCollection() {
   const invalidate = useInvalidateCalendar();
   return useMutation({
-    mutationFn: (req: UpdateEntryRequest) => apiPost<{ success: boolean; message?: string }>('calendar/update', req as unknown as Record<string, unknown>),
+    mutationFn: (req: CreateCalendarCollectionRequest) => apiPost<{ success: boolean; id?: string; message?: string }>('calendar/calendars/create', req as unknown as Record<string, unknown>),
     onSuccess: (res) => {
-      if (!res.success) { toast.error(res.message ?? 'Failed to update.'); return; }
-      toast.success('Saved.'); void invalidate();
+      if (!res.success) { toast.error(res.message ?? 'Failed to create calendar.'); return; }
+      toast.success('Calendar created.'); void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useUpdateCalendarCollection() {
+  const invalidate = useInvalidateCalendar();
+  return useMutation({
+    mutationFn: (req: UpdateCalendarCollectionRequest) => apiPost<{ success: boolean; id?: string; message?: string }>('calendar/calendars/update', req as unknown as Record<string, unknown>),
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to update calendar.'); return; }
+      toast.success('Calendar updated.'); void invalidate();
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useArchiveCalendarCollection() {
+  const invalidate = useInvalidateCalendar();
+  return useMutation({
+    mutationFn: (req: ArchiveCalendarCollectionRequest) => apiPost<{ success: boolean; id?: string; message?: string }>('calendar/calendars/archive', req as unknown as Record<string, unknown>),
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to archive calendar.'); return; }
+      toast.success('Calendar archived.'); void invalidate();
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+function useCalendarConnectionMutation<TRequest extends Record<string, unknown>, TResponse extends { success: boolean; message?: string }>(
+  endpoint: string,
+  successMessage: string,
+) {
+  const invalidate = useInvalidateCalendar();
+  return useMutation({
+    mutationFn: (req: TRequest) => apiPost<TResponse>(endpoint, req),
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'The calendar connection could not be updated.'); return; }
+      toast.success(successMessage);
+      void invalidate();
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useStartCalendarOAuth() {
+  return useMutation({
+    mutationFn: (provider: Extract<CalendarProvider, 'google' | 'microsoft'>) =>
+      apiPost<{ success: boolean; authorizationUrl?: string; message?: string }>('calendar/connections/oauth/start', { provider }),
+  });
+}
+
+export function useCompleteCalendarOAuth() {
+  return useCalendarConnectionMutation<CompleteCalendarOAuthRequest & Record<string, unknown>, { success: boolean; message?: string; syncWarning?: string }>(
+    'calendar/connections/oauth/complete',
+    'Calendar account connected.',
+  );
+}
+
+export function useConnectCalendarCredentials() {
+  return useCalendarConnectionMutation<ConnectCalendarCredentialsRequest & { idempotencyKey: string } & Record<string, unknown>, { success: boolean; message?: string; syncWarning?: string }>(
+    'calendar/connections/credentials/connect',
+    'Calendar account connected.',
+  );
+}
+
+export function useToggleExternalCalendar() {
+  return useCalendarConnectionMutation<ToggleExternalCalendarRequest & Record<string, unknown>, { success: boolean; message?: string; syncWarning?: string }>(
+    'calendar/connections/calendar/toggle',
+    'Calendar visibility updated.',
+  );
+}
+
+export function useSyncCalendarConnection() {
+  return useCalendarConnectionMutation<{ connectionId: string }, { success: boolean; message?: string }>(
+    'calendar/connections/sync',
+    'Calendar sync complete.',
+  );
+}
+
+export function useDisconnectCalendarConnection() {
+  return useCalendarConnectionMutation<{ connectionId: string; idempotencyKey: string }, { success: boolean; message?: string }>(
+    'calendar/connections/disconnect',
+    'Calendar account disconnected.',
+  );
+}
+
+export function useUpdateEntry(options: { announceSuccess?: boolean } = {}) {
+  const invalidate = useInvalidateCalendar();
+  return useMutation({
+    mutationFn: async (req: UpdateEntryRequest) => {
+      const response = await apiPost<{ success: boolean; message?: string }>('calendar/update', req as unknown as Record<string, unknown>);
+      if (!response.success) throw new Error(response.message ?? 'Failed to update.');
+      return response;
+    },
+    onSuccess: () => {
+      if (options.announceSuccess !== false) toast.success('Saved.');
+      void invalidate();
+    },
   });
 }
 

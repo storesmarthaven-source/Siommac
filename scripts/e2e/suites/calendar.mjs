@@ -2,7 +2,7 @@
  * scripts/e2e/suites/calendar.mjs
  *
  * Live E2E for the platform Calendar & Tasks module (routes/calendar.ts). Hits the
- * real routes over HTTP and asserts the §2 side-effects (app_events + activity_logs)
+ * real routes over HTTP and asserts the §2 side-effects (app_events + audit logs)
  * via the service-role client.
  *
  * Covers, per the Testing Standard:
@@ -19,28 +19,47 @@
  *     audit rows, the view override, and synthetic actors are removed.
  */
 
+import crypto from 'node:crypto';
+
 export const title = 'Calendar';
 
 const DAY = 86_400_000;
 const dayKey = (offset) => new Date(Date.now() + offset * DAY).toISOString().slice(0, 10);
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api: request, test, expect, ok, fails, mint, sb, TAG } = h;
 
   // Actors: two real employees (creator + "other user") and a manager (has assign/manage).
   const { actors: [emp1, emp2], createdIds: idsEmp } = await h.acquireActors('employee', 2, {}, {}, { forceSynthetic: true });
   const { actors: [mgr],        createdIds: idsMgr } = await h.acquireActors('manager', 1, {}, {}, { forceSynthetic: true });
   const createdActorIds = [...idsEmp, ...idsMgr];
   const T = { emp1: mint(emp1), emp2: mint(emp2), mgr: mint(mgr) };
+  const { data: defaultCalendars, error: defaultCalendarError } = await sb.from('calendar_collections')
+    .select('id,owner_user_id,is_default').in('owner_user_id', [emp1.id, emp2.id, mgr.id]).eq('status', 'active');
+  expect(!defaultCalendarError, `default calendars loaded: ${defaultCalendarError?.message}`);
+  const defaultCalendarByOwner = new Map((defaultCalendars ?? []).filter(calendar => calendar.is_default).map(calendar => [calendar.owner_user_id, calendar.id]));
+  expect(defaultCalendarByOwner.size === 3, 'every synthetic actor received one default calendar');
+  const calendarByToken = new Map([[T.emp1, defaultCalendarByOwner.get(emp1.id)], [T.emp2, defaultCalendarByOwner.get(emp2.id)], [T.mgr, defaultCalendarByOwner.get(mgr.id)]]);
+  const api = (route, token, args = {}) => request(route, token, (route === 'calendar/task/create' || route === 'calendar/activity/create') && token
+    ? { calendarId: calendarByToken.get(token), ...args }
+    : args);
 
   const runStart = new Date().toISOString();
   const entryIds = [];               // every calendar_entries id this run created
   const onboardingCaseIds = [];      // adapter fixtures cascade their onboarding tasks
   const overrides = [];              // { userId, permission } overrides to remove
   const preferenceStates = [];       // preferences changed by this run, restored at cleanup
+  const holidayCalendarIds = [];     // published day-context fixtures, purged through the guarded RPC
+  const externalConnectionIds = [];  // external-connection fixtures and their cascaded provider calendars
   let departmentId = null;
 
   h.onCleanup(async () => {
+    if (holidayCalendarIds.length) {
+      await sb.rpc('work_calendar_purge_tx', { p_work_calendar_ids: null, p_holiday_calendar_ids: holidayCalendarIds });
+      await h.mustDelete('app_events', q => q.eq('source_module', 'hr_work_calendar').eq('actor_user_id', mgr.id).gte('created_at', runStart));
+      await h.mustDelete('hr_audit_log', q => q.eq('submodule_key', 'hr.work_calendar').eq('actor_id', mgr.id).gte('created_at', runStart));
+      await h.mustDelete('work_calendar_command_receipts', q => q.eq('actor_id', mgr.id).gte('created_at', runStart));
+    }
     if (entryIds.length) {
       await h.mustDelete('notifications', q => q.eq('module', 'calendar').in('source_id', entryIds).gte('created_at', runStart));
       await h.mustDelete('audit_logs', q => q.in('record_id', entryIds).gte('created_at', runStart));
@@ -55,6 +74,23 @@ export default async function run(h) {
     }
     for (const o of overrides)
       await h.mustDelete('user_permissions', q => q.eq('user_id', o.userId).eq('permission', o.permission));
+    await h.mustDelete('ui_user_preferences', q => q.in('user_id', [emp1.id, emp2.id]).eq('preference_key', 'calendar.navigator'));
+    if (externalConnectionIds.length) {
+      const { data: externalRows } = await sb.from('calendar_external_calendars').select('id,calendar_collection_id').in('connection_id', externalConnectionIds);
+      const externalIds = (externalRows ?? []).map(row => row.id);
+      const importedCollectionIds = (externalRows ?? []).map(row => row.calendar_collection_id).filter(Boolean);
+      await h.mustDelete('app_events', q => q.eq('source_module', 'calendar').in('source_entity_id', [...externalConnectionIds, ...externalIds]));
+      await h.mustDelete('audit_logs', q => q.in('record_id', [...externalConnectionIds, ...externalIds]));
+      await h.mustDelete('calendar_connections', q => q.in('id', externalConnectionIds));
+      if (importedCollectionIds.length) await h.mustDelete('calendar_collections', q => q.in('id', importedCollectionIds));
+    }
+    const { data: ownedCalendars } = await sb.from('calendar_collections').select('id').in('owner_user_id', createdActorIds);
+    const ownedCalendarIds = (ownedCalendars ?? []).map(calendar => calendar.id);
+    if (ownedCalendarIds.length) {
+      await h.mustDelete('app_events', q => q.eq('source_module', 'calendar').eq('source_entity_type', 'calendar_collection').in('source_entity_id', ownedCalendarIds));
+      await h.mustDelete('audit_logs', q => q.eq('table_name', 'calendar_collection').in('record_id', ownedCalendarIds));
+      await h.mustDelete('calendar_collections', q => q.in('id', ownedCalendarIds));
+    }
     if (createdActorIds.length) await h.mustDelete('app_users', q => q.in('id', createdActorIds));
   });
 
@@ -81,6 +117,271 @@ export default async function run(h) {
     });
     return { status: response.status, body: await response.json() };
   };
+  const platformAuditExists = async (entityId, action) => {
+    const { data } = await sb.from('audit_logs').select('id')
+      .eq('table_name', 'calendar_collection').eq('record_id', entityId).eq('action', action).gte('created_at', runStart).limit(1);
+    return (data ?? []).length > 0;
+  };
+
+  h.section('Calendar › Cross-device navigator');
+
+  await test('calendar navigator settings persist through the typed preference API', async () => {
+    const value = {
+      view: 'agenda', scope: 'mine', zoom: 1.15, showAllDay: false,
+      showWeather: true, showHolidays: true, weatherLocation: 'san-fernando',
+      titleIconType: 'lucide',
+      hiddenSources: ['payroll'], hiddenCategories: ['compliance'], hiddenCalendarIds: [defaultCalendarByOwner.get(emp2.id)], expandedSections: ['navigator'],
+    };
+    const save = await api('ui-preferences/save', T.emp1, { key: 'calendar.navigator', value });
+    ok(save);
+    expect(save.body.data.preference.version === 8, 'calendar navigator version returned');
+    const get = await api('ui-preferences/get', T.emp1, { key: 'calendar.navigator' });
+    ok(get);
+    const stored = get.body.data.preference.value;
+    expect(
+      stored.view === value.view
+      && stored.scope === value.scope
+      && stored.zoom === value.zoom
+      && stored.showAllDay === value.showAllDay
+      && stored.showWeather === value.showWeather
+      && stored.showHolidays === value.showHolidays
+      && stored.weatherLocation === value.weatherLocation
+      && stored.titleIconType === value.titleIconType
+      && JSON.stringify(stored.hiddenSources) === JSON.stringify(value.hiddenSources)
+      && JSON.stringify(stored.hiddenCategories) === JSON.stringify(value.hiddenCategories)
+      && JSON.stringify(stored.hiddenCalendarIds) === JSON.stringify(value.hiddenCalendarIds)
+      && JSON.stringify(stored.expandedSections) === JSON.stringify(value.expandedSections),
+      'navigator preference round-trips exactly',
+    );
+    const { data: row, error } = await sb.from('ui_user_preferences').select('user_id,preference_key,preference_value').eq('user_id', emp1.id).eq('preference_key', 'calendar.navigator').maybeSingle();
+    expect(!error && row?.preference_value?.scope === 'mine', 'navigator preference persisted for the caller');
+    const other = await api('ui-preferences/get', T.emp2, { key: 'calendar.navigator' });
+    ok(other);
+    expect(other.body.data.preference === null, 'another user cannot read the caller preference');
+  });
+
+  await test('calendar navigator preference rejects malformed state', async () => {
+    const response = await api('ui-preferences/save', T.emp1, { key: 'calendar.navigator', value: { view: 'week' } });
+    fails(response);
+    expect(response.status === 400, `malformed navigator expected 400, got ${response.status}`);
+  });
+
+  await test('day context requires calendar authentication', async () => {
+    fails(await api('calendar/day-context', null, { from: dayKey(0), to: dayKey(7), jurisdiction: 'TT' }));
+  });
+
+  await test('day context returns a published TT holiday as header metadata, not an event', async () => {
+    const holidayDate = dayKey(3);
+    const requestKey = () => `${TAG}-${crypto.randomUUID()}`;
+    const create = await sb.rpc('holiday_set_command_tx', {
+      p_actor_id: mgr.id,
+      p_command: 'create_version',
+      p_request_key: requestKey(),
+      p_payload: {
+        reason: 'calendar day-context e2e',
+        calendar: { name: `Calendar context ${TAG}`, jurisdiction: 'TT' },
+        effectiveFrom: dayKey(-2),
+        effectiveTo: dayKey(10),
+        timezone: 'America/Port_of_Spain',
+      },
+    });
+    expect(!create.error, `holiday set create: ${create.error?.message}`);
+    const calendarId = create.data.calendar.id;
+    const versionId = create.data.version.id;
+    holidayCalendarIds.push(calendarId);
+    const add = await sb.rpc('holiday_set_command_tx', {
+      p_actor_id: mgr.id,
+      p_command: 'add_holiday',
+      p_request_key: requestKey(),
+      p_payload: {
+        reason: 'calendar day-context e2e', versionId,
+        expectedLockVersion: create.data.version.lock_version,
+        holiday: {
+          holidayDate, dayFraction: 1, nameStatutory: `${TAG} Public Holiday`, nameCommon: `${TAG} Holiday`, holidayType: 'statutory',
+          sourceReference: 'E2E verified fixture', sourcePublishedDate: dayKey(-5), provenanceNote: 'Calendar day-context contract fixture',
+        },
+      },
+    });
+    expect(!add.error, `holiday add: ${add.error?.message}`);
+    const publish = await sb.rpc('holiday_set_command_tx', {
+      p_actor_id: mgr.id,
+      p_command: 'publish_version',
+      p_request_key: requestKey(),
+      p_payload: {
+        reason: 'calendar day-context e2e', versionId,
+        expectedVersionLockVersion: add.data.version.lock_version,
+        expectedCalendarLockVersion: create.data.calendar.lock_version,
+      },
+    });
+    expect(!publish.error, `holiday publish: ${publish.error?.message}`);
+
+    const response = await api('calendar/day-context', T.emp1, { from: dayKey(0), to: dayKey(7), jurisdiction: 'TT' });
+    ok(response);
+    const marker = response.body.holidays.find(item => item.name === `${TAG} Holiday`);
+    expect(marker?.date === holidayDate, 'published holiday is returned on its effective date');
+    for (const field of ['id', 'date', 'name', 'statutoryName', 'holidayType', 'dayFraction', 'calendarName', 'sourceReference'])
+      expect(field in marker, `CalendarHolidayMarkerDTO.${field} present`);
+    const items = await listItems(T.emp1, dayKey(0), dayKey(7));
+    expect(!items.some(item => item.title === `${TAG} Holiday`), 'holiday metadata is not duplicated into the calendar item list');
+  });
+
+  h.section('Calendar › My Calendars');
+
+  let generalCategoryId = null;
+  await test('calendar categories require authentication and return persisted preset taxonomy', async () => {
+    fails(await api('calendar/categories/list', null, {}));
+    const response = await api('calendar/categories/list', T.emp1, {});
+    ok(response);
+    expect(response.body.categories.length >= 10, 'the system category catalogue is available');
+    const general = response.body.categories.find(category => category.key === 'general');
+    expect(!!general, 'the general fallback category exists');
+    generalCategoryId = general?.id ?? null;
+    for (const field of ['id', 'key', 'name', 'iconName', 'scope', 'sortOrder', 'active', 'canManage'])
+      expect(field in general, `CalendarCategoryDTO.${field} present`);
+  });
+
+  await test('calendar collections require authentication and return the durable container contract', async () => {
+    fails(await api('calendar/calendars/list', null, {}));
+    const response = await api('calendar/calendars/list', T.emp1, {});
+    ok(response);
+    const own = response.body.calendars.find(calendar => calendar.id === defaultCalendarByOwner.get(emp1.id));
+    expect(!!own, 'default calendar is visible to its owner');
+    for (const field of ['id', 'name', 'description', 'ownerUserId', 'ownerName', 'visibility', 'departmentId', 'departmentName', 'colorKey', 'customColor', 'isDefault', 'status', 'canEdit', 'canArchive', 'provider', 'readOnly'])
+      expect(field in own, `CalendarCollectionDTO.${field} present`);
+    expect(own.isDefault === true && own.canEdit === true, 'default ownership capabilities are server-computed');
+  });
+
+  let managedCollectionId = null;
+  await test('create calendar is idempotent and atomically records event + platform audit', async () => {
+    const idempotencyKey = crypto.randomUUID();
+    const payload = {
+      idempotencyKey,
+      name: `${TAG} Operations Plan`,
+      description: 'E2E collection workflow',
+      visibility: 'personal',
+      colorKey: 'mint',
+      customColor: null,
+      makeDefault: false,
+    };
+    const first = await api('calendar/calendars/create', T.emp1, payload);
+    ok(first);
+    managedCollectionId = first.body.id;
+    const replay = await api('calendar/calendars/create', T.emp1, payload);
+    ok(replay);
+    expect(replay.body.id === managedCollectionId, 'same request returns the original collection');
+    const { data: events } = await sb.from('app_events').select('id').eq('event_type', 'calendar.collection.created').eq('source_entity_id', managedCollectionId);
+    expect((events ?? []).length === 1, 'idempotent create emitted exactly one app_event');
+    expect(await platformAuditExists(managedCollectionId, 'calendar.collection.created'), 'create wrote the platform audit row');
+  });
+
+  await test('calendar owner can rename, recolor and make default; another employee cannot', async () => {
+    const denied = await api('calendar/calendars/update', T.emp2, {
+      id: managedCollectionId, idempotencyKey: crypto.randomUUID(), name: `${TAG} Intrusion`, description: null,
+      visibility: 'personal', colorKey: 'coral', customColor: null, makeDefault: false,
+    });
+    fails(denied);
+    expect(denied.status === 403, `non-owner update expected 403, got ${denied.status}`);
+    const updated = await api('calendar/calendars/update', T.emp1, {
+      id: managedCollectionId, idempotencyKey: crypto.randomUUID(), name: `${TAG} Field Programme`, description: 'Renamed by E2E',
+      visibility: 'personal', colorKey: 'amber', customColor: null, makeDefault: true,
+    });
+    ok(updated);
+    const { data: row } = await sb.from('calendar_collections').select('name,color_key,is_default').eq('id', managedCollectionId).maybeSingle();
+    expect(row?.name === `${TAG} Field Programme` && row.color_key === 'amber' && row.is_default === true, 'collection settings persisted');
+    expect(await appEventExists(managedCollectionId, 'calendar.collection.updated'), 'update emitted app_event');
+    expect(await platformAuditExists(managedCollectionId, 'calendar.collection.updated'), 'update wrote platform audit');
+  });
+
+  await test('archiving preserves at least one active calendar and promotes a replacement default', async () => {
+    const archived = await api('calendar/calendars/archive', T.emp1, { id: managedCollectionId, idempotencyKey: crypto.randomUUID() });
+    ok(archived);
+    const { data: archivedRow } = await sb.from('calendar_collections').select('status,is_default').eq('id', managedCollectionId).maybeSingle();
+    const { data: replacement } = await sb.from('calendar_collections').select('id').eq('owner_user_id', emp1.id).eq('status', 'active').eq('is_default', true).maybeSingle();
+    expect(archivedRow?.status === 'archived' && archivedRow.is_default === false, 'calendar archived without deletion');
+    expect(!!replacement, 'a remaining active calendar became default');
+    expect(await appEventExists(managedCollectionId, 'calendar.collection.archived'), 'archive emitted app_event');
+    expect(await platformAuditExists(managedCollectionId, 'calendar.collection.archived'), 'archive wrote platform audit');
+  });
+
+  await test('the last active calendar cannot be archived', async () => {
+    const onlyActiveId = defaultCalendarByOwner.get(emp1.id);
+    const response = await api('calendar/calendars/archive', T.emp1, { id: onlyActiveId, idempotencyKey: crypto.randomUUID() });
+    fails(response);
+    expect(response.status === 409, `last-calendar archive expected 409, got ${response.status}`);
+    const { data: remaining } = await sb.from('calendar_collections').select('status,is_default').eq('id', onlyActiveId).maybeSingle();
+    expect(remaining?.status === 'active' && remaining.is_default === true, 'last calendar remains active and default');
+  });
+
+  h.section('Calendar › Connected calendars');
+
+  let externalConnectionId = null;
+  let externalCalendarId = null;
+  let importedCollectionId = null;
+  await test('connected calendar list is authenticated and never exposes credentials', async () => {
+    fails(await api('calendar/connections/list', null, {}));
+    const response = await api('calendar/connections/list', T.emp1, {});
+    ok(response);
+    expect(response.body.providers.length === 4, 'all four supported providers are described');
+    expect(response.body.providers.every(provider => ['oauth', 'credentials'].includes(provider.connectionMethod)), 'provider connection methods returned');
+    expect(!JSON.stringify(response.body).includes('credentials_encrypted'), 'encrypted credentials are not exposed');
+  });
+
+  await test('provider activation is idempotent and writes one event + audit', async () => {
+    const idempotencyKey = `${TAG}-external-connect-${crypto.randomUUID()}`;
+    const args = {
+      p_actor_id: emp1.id,
+      p_provider: 'google',
+      p_provider_account_id: `${TAG}-provider-account`,
+      p_account_email: `${TAG}@example.com`,
+      p_display_name: `${TAG} Google account`,
+      p_credentials_encrypted: 'v1:e2e:opaque:fixture',
+      p_granted_scopes: ['calendar.readonly'],
+      p_provider_metadata: { fixture: true },
+      p_calendars: [{ id: `${TAG}-primary`, name: 'Personal', description: 'E2E provider calendar', color: '#4285f4', timeZone: 'America/Port_of_Spain', accessRole: 'owner', isPrimary: true, etag: 'e2e' }],
+      p_idempotency_key: idempotencyKey,
+    };
+    const first = await sb.rpc('calendar_connection_activate_tx', args);
+    expect(!first.error && !!first.data?.connectionId, `external activation: ${first.error?.message ?? ''}`);
+    externalConnectionId = first.data.connectionId;
+    externalConnectionIds.push(externalConnectionId);
+    const replay = await sb.rpc('calendar_connection_activate_tx', args);
+    expect(!replay.error && replay.data?.connectionId === externalConnectionId && replay.data?.idempotentReplay === true, 'activation retry returns the same connection without replaying side effects');
+    const { data: events } = await sb.from('app_events').select('id').eq('event_type', 'calendar.connection.activated').eq('source_entity_id', externalConnectionId);
+    const { data: audits } = await sb.from('audit_logs').select('id').eq('action', 'calendar.connection.activated').eq('record_id', externalConnectionId);
+    expect((events ?? []).length === 1 && (audits ?? []).length === 1, 'activation wrote exactly one event and one audit row');
+    const { data: remote } = await sb.from('calendar_external_calendars').select('id').eq('connection_id', externalConnectionId).eq('is_primary', true).maybeSingle();
+    externalCalendarId = remote?.id ?? null;
+    expect(!!externalCalendarId, 'provider calendar discovery persisted');
+  });
+
+  await test('enabling an imported calendar creates a read-only My Calendars entry', async () => {
+    const toggle = await api('calendar/connections/calendar/toggle', T.emp1, { externalCalendarId, enabled: true, colorKey: 'blue', idempotencyKey: crypto.randomUUID() });
+    ok(toggle);
+    expect(typeof toggle.body.syncWarning === 'string', 'provider sync failure is explicit while the validated calendar remains enabled');
+    importedCollectionId = toggle.body.collectionId;
+    const listed = await api('calendar/calendars/list', T.emp1, {});
+    ok(listed);
+    const imported = listed.body.calendars.find(calendar => calendar.id === importedCollectionId);
+    expect(imported?.name === 'Personal' && imported.provider === 'google' && imported.readOnly === true, 'provider calendar appears in My Calendars with provider identity');
+    expect(imported.canEdit === false && imported.canArchive === false, 'imported collection capabilities are read-only');
+    const rejected = await api('calendar/activity/create', T.emp1, { calendarId: importedCollectionId, title: `${TAG} forbidden write`, startsOn: dayKey(1) });
+    fails(rejected);
+    expect(rejected.status === 403, `writing to an imported calendar expected 403, got ${rejected.status}`);
+  });
+
+  await test('disable and disconnect archive the imported calendar and clear credentials', async () => {
+    const disabled = await api('calendar/connections/calendar/toggle', T.emp1, { externalCalendarId, enabled: false, idempotencyKey: crypto.randomUUID() });
+    ok(disabled);
+    const disconnected = await api('calendar/connections/disconnect', T.emp1, { connectionId: externalConnectionId, idempotencyKey: crypto.randomUUID() });
+    ok(disconnected);
+    const { data: connection } = await sb.from('calendar_connections').select('status,credentials_encrypted').eq('id', externalConnectionId).maybeSingle();
+    const { data: collection } = await sb.from('calendar_collections').select('status').eq('id', importedCollectionId).maybeSingle();
+    expect(connection?.status === 'disconnected' && connection.credentials_encrypted === null, 'disconnect clears credentials and retires the account');
+    expect(collection?.status === 'archived', 'imported My Calendars entry is archived');
+    const { data: events } = await sb.from('app_events').select('id').eq('event_type', 'calendar.connection.disconnected').eq('source_entity_id', externalConnectionId);
+    const { data: audits } = await sb.from('audit_logs').select('id').eq('action', 'calendar.connection.disconnected').eq('record_id', externalConnectionId);
+    expect((events ?? []).length === 1 && (audits ?? []).length === 1, 'disconnect wrote its event and audit row');
+  });
 
   // ── Tasks: create · list contract · update · status lifecycle · cancel ──────
   h.section('Calendar › Tasks');
@@ -88,12 +389,17 @@ export default async function run(h) {
   let taskId = null;
   await test('task/create → row written + app_event + audit', async () => {
     const r = await api('calendar/task/create', T.emp1, {
-      title: `${TAG} Forecast`, notes: 'Q2', allDay: true, startsOn: dayKey(2), priority: 'high',
+      kind: 'task', categoryId: generalCategoryId, title: `${TAG} Forecast`, titleIconType: 'emoji', titleIconValue: '📊', notes: 'Q2', allDay: true, startsOn: dayKey(2), deadlineAt: new Date(`${dayKey(2)}T17:00:00`).toISOString(), priority: 'high', colorKey: 'purple', reminderOffsets: [15],
     });
     ok(r); taskId = r.body.id; expect(!!taskId, 'id returned'); entryIds.push(taskId);
-    const { data: row } = await sb.from('calendar_entries').select('type, status, priority, owner_user_id').eq('id', taskId).maybeSingle();
-    expect(row && row.type === 'task' && row.status === 'not_started' && row.priority === 'high', 'task row: not_started/high');
+    const { data: row } = await sb.from('calendar_entries').select('type,entry_kind,category_id,status,priority,color_key,title_icon_type,title_icon_value,deadline_at,owner_user_id,calendar_collection_id').eq('id', taskId).maybeSingle();
+    expect(row && row.type === 'task' && row.entry_kind === 'task' && row.category_id === generalCategoryId && row.status === 'not_started' && row.priority === 'high' && row.color_key === 'purple', 'task row: persisted kind/category/not_started/high/purple');
+    expect(row.title_icon_type === 'emoji' && row.title_icon_value === '📊', 'task title icon persisted as one paired value');
+    expect(row.deadline_at?.startsWith(`${dayKey(2)}T`), 'task deadline metadata persisted without changing its schedule kind');
     expect(row.owner_user_id === emp1.id, 'owner = creator');
+    expect(row.calendar_collection_id === defaultCalendarByOwner.get(emp1.id), 'task stored in the selected calendar');
+    const { data: createdReminders } = await sb.from('calendar_reminders').select('offset_minutes').eq('calendar_entry_id', taskId);
+    expect(createdReminders?.length === 1 && createdReminders[0]?.offset_minutes === 15, 'create transaction staged its reminder');
     expect(await appEventExists(taskId, 'calendar.task.created'), 'app_event calendar.task.created');
     expect(await auditExists(taskId, 'calendar_task_create'), 'audit calendar_task_create');
   });
@@ -102,20 +408,52 @@ export default async function run(h) {
     const items = await listItems(T.emp1, dayKey(-1), dayKey(10));
     const it = items.find(i => i.id === taskId);
     expect(!!it, 'created task appears in the window');
-    for (const f of ['id', 'type', 'origin', 'title', 'status', 'priority', 'ownerUserId', 'allDay', 'departmentId', 'departmentName', 'sourceDepartment', 'sourceDepartmentLabel', 'editable', 'completable', 'assignable', 'cancelable', 'drillThrough'])
+    for (const f of ['id', 'type', 'kind', 'categoryId', 'categoryKey', 'categoryName', 'categoryIcon', 'availability', 'origin', 'title', 'titleIconType', 'titleIconValue', 'status', 'priority', 'colorKey', 'customColor', 'locationLabel', 'deadlineAt', 'calendarId', 'calendarName', 'ownerUserId', 'allDay', 'departmentId', 'departmentName', 'sourceDepartment', 'sourceDepartmentLabel', 'editable', 'completable', 'assignable', 'cancelable', 'drillThrough'])
       expect(f in it, `CalendarItemDTO.${f} present`);
     expect(it.type === 'task' && it.origin === 'calendar', 'native task');
+    expect(it.kind === 'task' && it.categoryKey === 'general', 'persisted entry kind and category are projected');
     expect(it.sourceDepartment === 'calendar' && it.sourceDepartmentLabel === 'Calendar', 'native task source department');
+    expect(it.calendarId === defaultCalendarByOwner.get(emp1.id) && it.calendarName === 'My Calendar', 'native task exposes its calendar container');
     expect(it.editable === true && it.completable === true && it.cancelable === true, 'owner can edit/complete/cancel');
     expect(it.assignable === false, 'employee (no assign perm) cannot assign');
   });
 
-  await test('update changes title + priority', async () => {
-    const r = await api('calendar/update', T.emp1, { id: taskId, patch: { title: `${TAG} Forecast v2`, priority: 'medium' } });
+  await test('update changes title, title icon, priority, custom colour, and deadline metadata', async () => {
+    const r = await api('calendar/update', T.emp1, { id: taskId, patch: { title: `${TAG} Forecast v2`, titleIconType: 'lucide', titleIconValue: 'ListChecks', priority: 'medium', colorKey: null, customColor: '#2a8f64', deadlineAt: new Date(`${dayKey(3)}T16:30:00`).toISOString() } });
     ok(r);
     const g = await api('calendar/get', T.emp1, { id: taskId });
-    ok(g); expect(g.body.item.title === `${TAG} Forecast v2` && g.body.item.priority === 'medium', 'title + priority updated');
+    ok(g); expect(g.body.item.title === `${TAG} Forecast v2` && g.body.item.titleIconType === 'lucide' && g.body.item.titleIconValue === 'ListChecks' && g.body.item.priority === 'medium' && g.body.item.colorKey === null && g.body.item.customColor === '#2a8f64' && g.body.item.deadlineAt?.startsWith(`${dayKey(3)}T`), 'title + icon + priority + custom colour + deadline updated');
+    const { data: row } = await sb.from('calendar_entries').select('color_key,custom_color,title_icon_type,title_icon_value,deadline_at').eq('id', taskId).maybeSingle();
+    expect(row?.color_key === null && row?.custom_color === '#2a8f64', 'custom colour persisted without a competing preset');
+    expect(row?.title_icon_type === 'lucide' && row?.title_icon_value === 'ListChecks' && row?.deadline_at?.startsWith(`${dayKey(3)}T`), 'title icon and deadline persisted atomically');
     expect(await appEventExists(taskId, 'calendar.entry.updated'), 'update app_event');
+  });
+
+  await test('custom colour rejects malformed values at the API boundary', async () => {
+    const r = await api('calendar/task/create', T.emp1, {
+      title: `${TAG} Invalid colour`, allDay: true, startsOn: dayKey(3), customColor: 'red; background:url(x)',
+    });
+    fails(r);
+    expect(r.status === 400, `invalid custom colour expected 400, got ${r.status}`);
+  });
+
+  await test('deadline is metadata on an event or task, never a standalone entry kind', async () => {
+    const r = await api('calendar/task/create', T.emp1, {
+      kind: 'deadline', categoryId: generalCategoryId, title: `${TAG} Invalid standalone deadline`, allDay: true, startsOn: dayKey(5), visibility: 'personal',
+    });
+    fails(r);
+    expect(r.status === 400, `standalone deadline expected 400, got ${r.status}`);
+  });
+
+  await test('title icons reject unpaired or unrecognised values', async () => {
+    const missingValue = await api('calendar/task/create', T.emp1, {
+      title: `${TAG} Missing icon value`, titleIconType: 'emoji', allDay: true, startsOn: dayKey(5),
+    });
+    fails(missingValue); expect(missingValue.status === 400, 'unpaired title icon rejected');
+    const unknownLucide = await api('calendar/task/create', T.emp1, {
+      title: `${TAG} Unknown icon`, titleIconType: 'lucide', titleIconValue: 'NotARealCalendarIcon', allDay: true, startsOn: dayKey(5),
+    });
+    fails(unknownLucide); expect(unknownLucide.status === 400, 'unrecognised Lucide title icon rejected');
   });
 
   await test('task/status: not_started → in_progress → done (completed_at stamped)', async () => {
@@ -143,20 +481,53 @@ export default async function run(h) {
     const { data, error } = await sb.from('departments').select('id').order('name').limit(1).maybeSingle();
     expect(!error && !!data?.id, `department fixture: ${error?.message ?? ''}`);
     departmentId = data?.id ?? null;
+    if (departmentId) {
+      const { error: assignmentError } = await sb.from('app_users').update({ department_id: departmentId }).eq('id', emp2.id);
+      expect(!assignmentError, `department member fixture: ${assignmentError?.message ?? ''}`);
+    }
   });
 
   await test('activity/create with an attendee → row + attendee + app_event', async () => {
     const r = await api('calendar/activity/create', T.emp1, {
-      title: `${TAG} Team Meeting`, allDay: false,
+      kind: 'event', categoryId: generalCategoryId, title: `${TAG} Team Event`, allDay: false,
       startsAt: `${dayKey(1)}T10:00:00`, endsAt: `${dayKey(1)}T11:00:00`,
-      visibility: 'team', attendeeUserIds: [emp2.id],
+      visibility: 'personal', attendeeUserIds: [emp2.id], colorKey: 'mint', locationLabel: 'Operations Room 2', reminderOffsets: [30],
     });
     ok(r); activityId = r.body.id; entryIds.push(activityId);
-    const { data: row } = await sb.from('calendar_entries').select('type, status, priority, all_day').eq('id', activityId).maybeSingle();
-    expect(row && row.type === 'activity' && row.status === null && row.priority === null && row.all_day === false, 'activity: no status/priority, timed');
+    const { data: row } = await sb.from('calendar_entries').select('type,entry_kind,category_id,status,priority,color_key,location_label,all_day').eq('id', activityId).maybeSingle();
+    expect(row && row.type === 'activity' && row.entry_kind === 'event' && row.category_id === generalCategoryId && row.status === null && row.priority === null && row.color_key === 'mint' && row.location_label === 'Operations Room 2' && row.all_day === false, 'event: kind/category, no status/priority, timed, visual metadata persisted');
     const { data: att } = await sb.from('calendar_activity_attendees').select('user_id').eq('calendar_entry_id', activityId);
     expect((att ?? []).some(a => a.user_id === emp2.id), 'attendee row written');
     expect(await appEventExists(activityId, 'calendar.activity.created'), 'app_event calendar.activity.created');
+  });
+
+  await test('standalone reminder is an activity-family kind without a fabricated end time', async () => {
+    const r = await api('calendar/activity/create', T.emp1, {
+      kind: 'reminder', categoryId: generalCategoryId, title: `${TAG} Standalone reminder`, allDay: false,
+      startsAt: `${dayKey(3)}T15:00:00`, visibility: 'personal', availability: 'free', reminderOffsets: [0],
+    });
+    ok(r); entryIds.push(r.body.id);
+    const { data: row } = await sb.from('calendar_entries').select('type,entry_kind,availability,starts_at,ends_at').eq('id', r.body.id).maybeSingle();
+    expect(row?.type === 'activity' && row.entry_kind === 'reminder' && row.availability === 'free' && !!row.starts_at && row.ends_at === null, 'standalone reminder persists as a point-in-time item');
+    const { data: reminderRows } = await sb.from('calendar_reminders').select('offset_minutes').eq('calendar_entry_id', r.body.id);
+    expect(reminderRows?.length === 1 && reminderRows[0]?.offset_minutes === 0, 'standalone reminder delivery timing is created with the item');
+  });
+
+  await test('a multi-day activity is one record returned in every intersected calendar window', async () => {
+    const r = await api('calendar/activity/create', T.emp1, {
+      title: `${TAG} Multi-day mobilisation`, allDay: false,
+      startsAt: `${dayKey(6)}T22:00:00`, endsAt: `${dayKey(8)}T02:00:00`,
+      visibility: 'personal', colorKey: 'amber',
+    });
+    ok(r);
+    const multiDayId = r.body.id;
+    entryIds.push(multiDayId);
+    const middleDay = await listItems(T.emp1, dayKey(7), dayKey(7), { types: ['activity'] });
+    const projected = middleDay.filter(item => item.id === multiDayId);
+    expect(projected.length === 1, 'the intersecting day returns one projection of the same record');
+    expect(projected[0]?.startsAt?.startsWith(dayKey(6)) && projected[0]?.endsAt?.startsWith(dayKey(8)), 'the complete multi-day schedule is preserved');
+    expect(await appEventExists(multiDayId, 'calendar.activity.created'), 'multi-day create app_event');
+    expect(await auditExists(multiDayId, 'calendar_activity_create'), 'multi-day create audit');
   });
 
   await test('department-scoped activity persists department and returns hydrated department fields', async () => {
@@ -172,6 +543,10 @@ export default async function run(h) {
     const items = await listItems(T.mgr, dayKey(3), dayKey(5), { types: ['activity'] });
     const projected = items.find(i => i.id === departmentActivityId);
     expect(projected?.departmentId === departmentId && !!projected?.departmentName, 'department fields returned');
+    const memberItems = await listItems(T.emp2, dayKey(3), dayKey(5), { types: ['activity'] });
+    expect(memberItems.some(i => i.id === departmentActivityId), 'department member sees the scoped entry in list');
+    const memberGet = await api('calendar/get', T.emp2, { id: departmentActivityId });
+    ok(memberGet, 'department member can open the same entry returned by list');
   });
 
   await test('ACCESS: employee cannot create department-scoped calendar entries', async () => {
@@ -186,9 +561,25 @@ export default async function run(h) {
   await test('get returns attendee response contract to the invited user', async () => {
     const g = await api('calendar/get', T.emp2, { id: activityId });
     ok(g);
-    expect(g.body.item.type === 'activity' && g.body.item.attendeeCount === 1, 'attendeeCount = 1');
+    expect(g.body.item.type === 'activity' && g.body.item.attendeeCount === 1 && g.body.item.colorKey === 'mint' && g.body.item.locationLabel === 'Operations Room 2', 'attendeeCount and visual metadata contract');
     const attendee = (g.body.attendees ?? []).find(a => a.userId === emp2.id);
     expect(attendee && attendee.responseStatus === 'invited' && attendee.respondedAt === null, 'camelCase invitation contract');
+  });
+
+  await test('update replaces event invitees and records participant notifications', async () => {
+    ok(await api('calendar/update', T.emp1, { id: activityId, patch: { attendeeUserIds: [emp2.id, mgr.id] } }));
+    const { data: afterAdd } = await sb.from('calendar_activity_attendees').select('user_id').eq('calendar_entry_id', activityId);
+    expect((afterAdd ?? []).some(row => row.user_id === mgr.id), 'new invitee persisted');
+    const { data: addedNotification } = await sb.from('notifications').select('id')
+      .eq('user_id', mgr.id).eq('type', 'calendar.activity.participants_updated').eq('source_id', activityId).maybeSingle();
+    expect(!!addedNotification, 'new invitee received a participant update notification');
+
+    ok(await api('calendar/update', T.emp1, { id: activityId, patch: { attendeeUserIds: [emp2.id] } }));
+    const { data: afterRemove } = await sb.from('calendar_activity_attendees').select('user_id').eq('calendar_entry_id', activityId);
+    expect(!(afterRemove ?? []).some(row => row.user_id === mgr.id), 'removed invitee no longer has an attendee row');
+    expect((afterRemove ?? []).some(row => row.user_id === emp2.id), 'unchanged invitee and response record are preserved');
+    expect(await appEventExists(activityId, 'calendar.activity.participants_updated'), 'participant update app_event');
+    expect(await auditExists(activityId, 'calendar_update'), 'participant update audit');
   });
 
   await test('only an attendee can respond; acceptance is atomic and notifies the owner', async () => {
@@ -408,17 +799,23 @@ export default async function run(h) {
     fails(st); expect(st.status === 403, `manager status on personal expected 403, got ${st.status}`);
   });
 
-  await test('central policy: a TEAM entry is not readable by UUID for a non-participant', async () => {
-    const r = await api('calendar/task/create', T.emp1, { title: `${TAG} team item`, startsOn: dayKey(2), visibility: 'team' });
+  await test('central policy: TEAM visibility requires a real department and follows membership', async () => {
+    const missingDepartment = await api('calendar/task/create', T.emp1, { title: `${TAG} invalid team item`, startsOn: dayKey(2), visibility: 'team' });
+    fails(missingDepartment); expect(missingDepartment.status === 400, 'team visibility cannot exist without a department');
+    if (!departmentId) return;
+    const r = await api('calendar/task/create', T.mgr, { title: `${TAG} team item`, startsOn: dayKey(2), visibility: 'team', departmentId });
     ok(r); const teamId = r.body.id; entryIds.push(teamId);
-    // Non-participant plain employee: list excludes it AND get by UUID is refused.
-    const items = await listItems(T.emp2, dayKey(-1), dayKey(10));
-    expect(!items.some(i => i.id === teamId), 'emp2 must not see a team entry in list');
-    const g = await api('calendar/get', T.emp2, { id: teamId });
-    fails(g, 'team entry must not leak to a non-participant via get-by-UUID');
-    // The manager (calendar.manage) DOES see team scope.
-    const mgrGet = await api('calendar/get', T.mgr, { id: teamId });
-    ok(mgrGet, 'manager should read a team entry');
+    ok(await api('calendar/update', T.mgr, { id: teamId, patch: { visibility: 'personal' } }), 'owner can make the item personal');
+    const missingDepartmentUpdate = await api('calendar/update', T.mgr, { id: teamId, patch: { visibility: 'team' } });
+    fails(missingDepartmentUpdate); expect(missingDepartmentUpdate.status === 400, 'editing to team visibility also requires a department');
+    ok(await api('calendar/update', T.mgr, { id: teamId, patch: { visibility: 'team', departmentId } }), 'owner can restore valid department visibility');
+    const memberItems = await listItems(T.emp2, dayKey(-1), dayKey(10));
+    expect(memberItems.some(i => i.id === teamId), 'department member sees the team entry in list');
+    ok(await api('calendar/get', T.emp2, { id: teamId }), 'department member can open the team entry');
+    const outsiderItems = await listItems(T.emp1, dayKey(-1), dayKey(10));
+    expect(!outsiderItems.some(i => i.id === teamId), 'non-member does not see the team entry in list');
+    const outsiderGet = await api('calendar/get', T.emp1, { id: teamId });
+    fails(outsiderGet, 'team entry does not leak to a non-member by UUID');
   });
 
   await test('central policy: an invited ATTENDEE sees the activity in list + get', async () => {

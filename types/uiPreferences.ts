@@ -18,6 +18,8 @@
  * overwrite what the user actually stored.
  */
 
+import { CALENDAR_TITLE_ICON_TYPES, type CalendarTitleIconType } from './calendar';
+
 // ── Employee register: visible columns ──────────────────────────────────────
 
 export const EMPLOYEE_REGISTER_COLUMNS_PREFERENCE_KEY = 'hr.employee-register.columns';
@@ -407,6 +409,90 @@ export function sanitizeToastPreference(value: unknown): ToastPreference | null 
   };
 }
 
+// ── Calendar navigator ─────────────────────────────────────────────────────
+
+export const CALENDAR_NAVIGATOR_PREFERENCE_KEY = 'calendar.navigator';
+export const CALENDAR_NAVIGATOR_PREFERENCE_VERSION = 8;
+
+export const CALENDAR_NAVIGATOR_VIEWS = ['day', 'week', 'month', 'agenda', 'tasks'] as const;
+export const CALENDAR_NAVIGATOR_SCOPES = ['all', 'mine', 'shared', 'public', 'archived'] as const;
+export const CALENDAR_NAVIGATOR_SECTIONS = ['navigator'] as const;
+export const CALENDAR_WEATHER_LOCATIONS = ['port-of-spain', 'san-fernando', 'scarborough'] as const;
+
+export type CalendarNavigatorView = typeof CALENDAR_NAVIGATOR_VIEWS[number];
+export type CalendarNavigatorScope = typeof CALENDAR_NAVIGATOR_SCOPES[number];
+export type CalendarNavigatorCategory = string;
+export type CalendarNavigatorSection = typeof CALENDAR_NAVIGATOR_SECTIONS[number];
+export type CalendarWeatherLocation = typeof CALENDAR_WEATHER_LOCATIONS[number];
+
+export interface CalendarNavigatorPreference {
+  view: CalendarNavigatorView;
+  scope: CalendarNavigatorScope;
+  zoom: number;
+  showAllDay: boolean;
+  showWeather: boolean;
+  showHolidays: boolean;
+  weatherLocation: CalendarWeatherLocation;
+  titleIconType: CalendarTitleIconType;
+  hiddenSources: string[];
+  hiddenCategories: CalendarNavigatorCategory[];
+  hiddenCalendarIds: string[];
+  expandedSections: CalendarNavigatorSection[];
+}
+
+const CALENDAR_SOURCE_KEY = /^[a-zA-Z0-9][a-zA-Z0-9._-]*$/;
+
+function exactEnumArray<T extends string>(value: unknown, allowed: readonly T[], limit: number): T[] | null {
+  if (!Array.isArray(value) || value.length > limit) return null;
+  const accepted = new Set<string>(allowed);
+  if (value.some(item => typeof item !== 'string' || !accepted.has(item))) return null;
+  return [...new Set(value as T[])];
+}
+
+export function sanitizeCalendarNavigatorPreference(value: unknown): CalendarNavigatorPreference | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  const allowedKeys = new Set(['view', 'scope', 'zoom', 'showAllDay', 'showWeather', 'showHolidays', 'weatherLocation', 'titleIconType', 'hiddenSources', 'hiddenCategories', 'hiddenCalendarIds', 'expandedSections']);
+  if (Object.keys(raw).some(key => !allowedKeys.has(key))) return null;
+  if (!CALENDAR_NAVIGATOR_VIEWS.includes(raw.view as CalendarNavigatorView)) return null;
+  if (!CALENDAR_NAVIGATOR_SCOPES.includes(raw.scope as CalendarNavigatorScope)) return null;
+  if (typeof raw.zoom !== 'number' || !Number.isFinite(raw.zoom) || raw.zoom < .75 || raw.zoom > 1.4) return null;
+  if (typeof raw.showAllDay !== 'boolean') return null;
+  const showWeather = raw.showWeather ?? true;
+  const showHolidays = raw.showHolidays ?? false;
+  const weatherLocation = raw.weatherLocation ?? 'port-of-spain';
+  const titleIconType = raw.titleIconType ?? 'emoji';
+  if (typeof showWeather !== 'boolean' || typeof showHolidays !== 'boolean') return null;
+  if (!CALENDAR_WEATHER_LOCATIONS.includes(weatherLocation as CalendarWeatherLocation)) return null;
+  if (!CALENDAR_TITLE_ICON_TYPES.includes(titleIconType as CalendarTitleIconType)) return null;
+  if (!Array.isArray(raw.hiddenSources) || raw.hiddenSources.length > 80) return null;
+  if (raw.hiddenSources.some(source => typeof source !== 'string' || source.length > 96 || !CALENDAR_SOURCE_KEY.test(source))) return null;
+  const hiddenCalendarIds = raw.hiddenCalendarIds ?? [];
+  if (!Array.isArray(hiddenCalendarIds) || hiddenCalendarIds.length > 100) return null;
+  if (hiddenCalendarIds.some(id => typeof id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))) return null;
+
+  const hiddenCategories = raw.hiddenCategories;
+  const expandedSections = exactEnumArray(raw.expandedSections, CALENDAR_NAVIGATOR_SECTIONS, CALENDAR_NAVIGATOR_SECTIONS.length);
+  if (!Array.isArray(hiddenCategories) || hiddenCategories.length > 100) return null;
+  if (hiddenCategories.some(category => typeof category !== 'string' || category.length > 96 || !CALENDAR_SOURCE_KEY.test(category))) return null;
+  if (!expandedSections) return null;
+
+  return {
+    view: raw.view as CalendarNavigatorView,
+    scope: raw.scope as CalendarNavigatorScope,
+    zoom: raw.zoom,
+    showAllDay: raw.showAllDay,
+    showWeather,
+    showHolidays,
+    weatherLocation: weatherLocation as CalendarWeatherLocation,
+    titleIconType: titleIconType as CalendarTitleIconType,
+    hiddenSources: [...new Set(raw.hiddenSources as string[])],
+    hiddenCategories: [...new Set(hiddenCategories as string[])],
+    hiddenCalendarIds: [...new Set(hiddenCalendarIds as string[])],
+    expandedSections,
+  };
+}
+
 // ── The registry the endpoint validates against ─────────────────────────────
 
 /**
@@ -424,6 +510,11 @@ export interface UiPreferenceDefinition {
 }
 
 export const UI_PREFERENCES: readonly UiPreferenceDefinition[] = [
+  {
+    key: CALENDAR_NAVIGATOR_PREFERENCE_KEY,
+    version: CALENDAR_NAVIGATOR_PREFERENCE_VERSION,
+    sanitize: sanitizeCalendarNavigatorPreference,
+  },
   {
     key: TOAST_PREFERENCE_KEY,
     version: TOAST_PREFERENCE_VERSION,

@@ -84,6 +84,41 @@ export function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
+/** The local final day touched by an item. All-day end dates are inclusive. */
+export function itemEndDateKey(item: { allDay: boolean; startsOn: string | null; endsOn: string | null; startsAt: string | null; endsAt: string | null; occurrenceDate?: string | null }): DateKey | null {
+  if (item.occurrenceDate) return item.occurrenceDate;
+  if (item.allDay) return item.endsOn ?? item.startsOn;
+  if (item.endsAt) return toLocalDateKey(new Date(item.endsAt));
+  return item.startsAt ? toLocalDateKey(new Date(item.startsAt)) : null;
+}
+
+/** True when an item occupies any part of a local calendar day. */
+export function itemOccursOnDate(item: { allDay: boolean; startsOn: string | null; endsOn: string | null; startsAt: string | null; endsAt: string | null; occurrenceDate?: string | null }, key: DateKey): boolean {
+  if (item.occurrenceDate) return item.occurrenceDate === key;
+  if (item.allDay) {
+    if (!item.startsOn) return false;
+    return key >= item.startsOn && key <= (item.endsOn ?? item.startsOn);
+  }
+  if (!item.startsAt) return false;
+  const dayStart = parseLocalDate(key).getTime();
+  const dayEnd = addDays(parseLocalDate(key), 1).getTime();
+  const start = new Date(item.startsAt).getTime();
+  const end = item.endsAt ? new Date(item.endsAt).getTime() : start + 60_000;
+  return start < dayEnd && end > dayStart;
+}
+
+/** Local wall-clock date + time form values → an ISO timestamp for the API. */
+export function localTimestamp(date: DateKey, time: string): string {
+  return new Date(`${date}T${time}:00`).toISOString();
+}
+
+/** ISO timestamp → the local `HH:mm` value expected by a time input. */
+export function localTimeValue(iso: string | null, fallback = '09:00'): string {
+  if (!iso) return fallback;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? fallback : `${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+
 /** Duration in minutes between two ISO timestamps, or null. */
 export function durationMinutes(startIso: string | null, endIso: string | null): number | null {
   if (!startIso || !endIso) return null;
@@ -91,9 +126,13 @@ export function durationMinutes(startIso: string | null, endIso: string | null):
 }
 
 /** Is a dated item overdue? (task, past its day, not done/cancelled). Derived, never stored. */
-export function isOverdue(item: { type: string; status: string | null; allDay: boolean; startsOn: string | null; startsAt: string | null; occurrenceDate?: string | null }): boolean {
+export function isOverdue(item: { type: string; status: string | null; allDay: boolean; startsOn: string | null; startsAt: string | null; deadlineAt?: string | null; occurrenceDate?: string | null }): boolean {
   if (item.type !== 'task' && item.type !== 'deadline') return false;
   if (item.status === 'done' || item.status === 'cancelled') return false;
+  if (item.deadlineAt) {
+    const deadline = new Date(item.deadlineAt).getTime();
+    return !Number.isNaN(deadline) && deadline < Date.now();
+  }
   const key = itemDateKey(item);
   if (!key) return false;
   return parseLocalDate(key) < parseLocalDate(toLocalDateKey(new Date()));

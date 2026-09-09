@@ -230,6 +230,12 @@ export {
 export { NextActionButton, type NextActionButtonProps, type NextActionIconTreatment } from './patterns/NextActionButton';
 export { BackActionButton, BackActionArtwork, BackActionIcon, type BackActionButtonProps, type BackActionIconTreatment } from './patterns/BackActionButton';
 export { ThemeModeSwitch, type ThemeModeSwitchProps, type ThemeMode } from './patterns/ThemeModeSwitch';
+export {
+  FeatureLandingPage,
+  type FeatureLandingPageProps,
+  type FeatureLandingCard,
+  type FeatureLandingAction,
+} from './patterns/FeatureLandingPage';
 
 // ONE Wizard. Step validation, navigation gating, optional/skipped steps and the
 // Back/Continue/Submit footer are its behaviour. It owns NO overlay — a modal
@@ -265,6 +271,7 @@ export { Dialog, type DialogProps, type DialogSize, type DialogVariant, type Dia
 export { AnchoredPopup, type AnchoredPopupProps } from './overlays/AnchoredPopup';
 export { Popover, type PopoverProps } from './overlays/Popover';
 export { Tooltip, type TooltipProps } from './overlays/Tooltip';
+export { OverflowTooltipText, type OverflowTooltipTextProps } from './overlays/OverflowTooltipText';
 
 // ── Feedback (canonical, v2) ──
 export { Alert, type AlertProps, type AlertTone, type AlertPlacement } from './feedback/Alert';
@@ -298,7 +305,7 @@ export {
 } from './components/Skeleton';
 export { Spinner, type SpinnerProps } from './components/Spinner';
 export { ActivityDots, type ActivityDotsProps, type ActivityDotsSize } from './components/ActivityDots';
-export { EmptyState, type EmptyStateProps, type EmptyStateSize, type EmptyTone } from './components/EmptyState';
+export { EmptyState, EmptyStateIconCluster, type EmptyStateProps, type EmptyStateSize, type EmptyStateIconClusterProps, type EmptyStateClusterTone, type EmptyTone } from './components/EmptyState';
 
 // ── Widget library (v2: instance/zone board + preview-on-board) lives under '@ui/widgets' ──
 

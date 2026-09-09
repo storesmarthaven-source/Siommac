@@ -25,6 +25,7 @@ import { createPortal } from 'preact/compat';
 import { useId } from 'preact/hooks';
 import { useOverlayA11y } from '../lib/useOverlayA11y';
 import { usePortalRoot } from '../overlays/portalRoot';
+import { LucideIcon } from '../LucideIcon';
 import './Drawer.recipe.css';
 
 export type DrawerSide = 'left' | 'right';
@@ -49,6 +50,10 @@ export interface DrawerProps {
   noFooter?: boolean;
   /** Slot rendered beside the close button (e.g. a kebab <Menu>). */
   headActions?: ComponentChildren;
+  /** Optional leading icon for domain drawers that need a stronger contextual
+      header. The icon remains inside the canonical Drawer header and inherits
+      its accessible title relationship. */
+  headIcon?: ComponentChildren;
   /** Render the v36-faithful RICH shell (entity panel) instead of the standard
       `.hse-drawer`: a slide-in with a title bar, no backdrop, no footer — the
       body composes <EntityHead>/<PanelStats>/<PanelTabs>/<InfoCard> etc. */
@@ -65,10 +70,15 @@ export interface DrawerProps {
   size?: DrawerSize;
   /** Backdrop dismissal is on by default. */
   closeOnBackdrop?: boolean;
+  /** Keep the drawer inside its nearest positioned feature surface instead of
+      portaling it to the viewport. Intended for split workspace detail panels. */
+  contained?: boolean;
+  /** Accessible label for the header close control. */
+  closeLabel?: string;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- createPortal() returns VNode<any>
-export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass, adaptive, side = 'right', size, closeOnBackdrop = true }: DrawerProps): VNode<any> {
+export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, headIcon, rich, panelClass, adaptive, side = 'right', size, closeOnBackdrop = true, contained = false, closeLabel = 'Close' }: DrawerProps): VNode<any> {
   const themeScope = adaptive ? 'adaptive' : undefined;
   const subText = sub ?? subtitle;
   const panelRef = useOverlayA11y(open, onClose);
@@ -105,7 +115,7 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
             </div>
             <div class="ui-rdrawer-icons">
               {headActions}
-              <button class="ui-icon-action" onClick={onClose} aria-label="Close">×</button>
+              <button class="ui-icon-action" onClick={onClose} aria-label={closeLabel}>×</button>
             </div>
           </div>
           <div class="ui-rdrawer-scroll">{children}</div>
@@ -117,40 +127,58 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
   }
 
   const footContent = noFooter ? null : (foot ?? footer ?? <button class="hse-btn" onClick={onClose}>Close</button>);
+  const standardPanel = (
+    <aside
+      ref={panelRef}
+      class={`ui-drawer hse-drawer${panelClass ? ' ' + panelClass : ''}${open ? ' show' : ''}`}
+      role="dialog"
+      aria-modal={contained ? 'false' : 'true'}
+      aria-hidden={!open}
+      aria-labelledby={titleId}
+      data-side={side}
+      data-size={size}
+      data-contained={contained ? 'true' : undefined}
+      style={sideStyle}
+    >
+      <div class="hse-drawer-head">
+        <div class="ui-drawer-title-block">
+          {headIcon && <span class="ui-drawer-head-icon" aria-hidden="true">{headIcon}</span>}
+          <div><h3 id={titleId}>{title}</h3>{subText && <p>{subText}</p>}</div>
+        </div>
+        <div class="ui-drawer-head-actions">
+          {headActions}
+          <button class="hse-icon-btn" onClick={onClose} aria-label={closeLabel}><LucideIcon name="X" /></button>
+        </div>
+      </div>
+      <div class="hse-drawer-body">
+        {details && (
+          <div class="hse-drawer-grid">
+            {details.map(d => <div class="hse-drawer-card" key={d.label}><span>{d.label}</span><strong>{d.value}</strong></div>)}
+          </div>
+        )}
+        {children}
+      </div>
+      {footContent && <div class="hse-drawer-foot">{footContent}</div>}
+    </aside>
+  );
+  if (contained) return (
+    <>
+      <div
+        class={`ui-drawer-contained-backdrop${open ? ' show' : ''}`}
+        data-contained="true"
+        onClick={closeOnBackdrop ? onClose : undefined}
+        aria-hidden="true"
+      />
+      {standardPanel}
+    </>
+  );
   // Portal to <body> so the fixed-position panel is anchored to the viewport, not
   // to an ancestor that establishes a containing block for fixed descendants
   // (e.g. `.hse-dash { container-type: inline-size }`, or any `transform`).
   return createPortal(
     <>
       <div class={`hse-drawer-backdrop${open ? ' show' : ''}`} onClick={closeOnBackdrop ? onClose : undefined} aria-hidden="true" />
-      <aside
-        ref={panelRef}
-        class={`ui-drawer hse-drawer${panelClass ? ' ' + panelClass : ''}${open ? ' show' : ''}`}
-        role="dialog"
-        aria-modal="true"
-        aria-hidden={!open}
-        aria-labelledby={titleId}
-        data-side={side}
-        data-size={size}
-        style={sideStyle}
-      >
-        <div class="hse-drawer-head">
-          <div><h3 id={titleId}>{title}</h3>{subText && <p>{subText}</p>}</div>
-          <div class="ui-drawer-head-actions">
-            {headActions}
-            <button class="hse-icon-btn" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
-          </div>
-        </div>
-        <div class="hse-drawer-body">
-          {details && (
-            <div class="hse-drawer-grid">
-              {details.map(d => <div class="hse-drawer-card" key={d.label}><span>{d.label}</span><strong>{d.value}</strong></div>)}
-            </div>
-          )}
-          {children}
-        </div>
-        {footContent && <div class="hse-drawer-foot">{footContent}</div>}
-      </aside>
+      {standardPanel}
     </>,
     portalRoot,
   );

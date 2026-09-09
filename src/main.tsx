@@ -65,6 +65,7 @@ import '@sections/HR';                  // self-registers the HR module
 import '@sections/Finance';             // self-registers the Finance module
 import '@sections/MyPayslips';          // self-registers My Payslips (self-service, all staff)
 import '@sections/Calendar';            // self-registers the Calendar & Tasks module
+import '@sections/Meetings';            // self-registers the governed Meetings module
 import '@sections/Tickets';             // self-registers the canonical Ticket Center
 import '@sections/AccessControl';       // self-registers the Access Control module (RBAC console)
 import '@sections/UiKit';               // self-registers the UI Kit workbench (design system, superadmin)

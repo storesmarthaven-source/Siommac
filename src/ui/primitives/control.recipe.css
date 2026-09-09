@@ -192,6 +192,45 @@
     line-height: var(--ui-line-height-base);
   }
   .ui-ctrl-input::placeholder { color: var(--ui-control-placeholder); }
+  input.ui-ctrl-input[type='search'] {
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  input.ui-ctrl-input[type='search']::-webkit-search-decoration,
+  input.ui-ctrl-input[type='search']::-webkit-search-cancel-button {
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  /* Chromium/WebKit paint date and time text inside anonymous inner boxes.
+     Those boxes can retain the browser's square background even though the
+     canonical UI-kit shell is rounded. Keep the native picker affordance, but
+     make every inner part visually belong to the single outer control. */
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-fields-wrapper,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-text,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-day-field,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-month-field,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-year-field,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-hour-field,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-minute-field,
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-datetime-edit-ampm-field {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  input.ui-ctrl-input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week'])::-webkit-calendar-picker-indicator {
+    margin: 0;
+    padding: 2px;
+    border: 0;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    cursor: pointer;
+  }
   input.ui-ctrl-input[type='password'] { font-size: calc(var(--ui-control-font-size) * .82); letter-spacing: .08em; }
   textarea.ui-ctrl-input { resize: vertical; min-height: 60px; padding: 0; }
 

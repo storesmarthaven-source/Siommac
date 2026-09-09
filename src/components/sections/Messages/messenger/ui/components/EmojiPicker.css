@@ -1,0 +1,21 @@
+@layer sections {
+  .sm-emoji-picker { position: absolute; z-index: 20; left: 18px; bottom: calc(100% - 10px); width: min(344px, calc(100vw - 48px)); height: 356px; overflow: hidden; border: 1px solid #d7e1ec; border-radius: 12px; display: grid; grid-template-rows: 42px 44px 39px minmax(0, 1fr); color: #243956; background: rgba(255,255,255,.98); box-shadow: 0 14px 36px rgba(24,47,73,.16); }
+  .sm-emoji-picker__header { padding: 0 12px 0 15px; border-bottom: 1px solid #e5ebf2; display: flex; align-items: center; justify-content: space-between; }
+  .sm-emoji-picker__header strong { font-size: 13px; font-weight: 650; }
+  .sm-emoji-picker__header button { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; display: grid; place-items: center; color: #718198; background: transparent; cursor: pointer; }
+  .sm-emoji-picker__header button:hover { color: var(--siomac-navy); background: #f4f7fb; }
+  .sm-emoji-picker__header svg { width: 14px; height: 14px; }
+  .sm-emoji-picker__search { width: auto; margin: 7px 10px 5px; }
+  .sm-emoji-picker__categories { padding: 2px 8px 4px; border-bottom: 1px solid #e5ebf2; display: grid; grid-template-columns: repeat(9, 1fr); gap: 2px; }
+  .sm-emoji-picker__categories button { width: 32px; height: 30px; padding: 0; border: 0; border-radius: 6px; display: grid; place-items: center; background: transparent; cursor: pointer; font-size: 15px; filter: saturate(.65); }
+  .sm-emoji-picker__categories button:hover { background: #f4f7fb; filter: none; }
+  .sm-emoji-picker__categories button.is-active { background: #e9eef6; filter: none; }
+  .sm-emoji-picker__content { min-height: 0; padding: 9px 10px 12px; overflow-y: auto; scrollbar-gutter: stable; }
+  .sm-emoji-picker__content section + section { margin-top: 11px; }
+  .sm-emoji-picker__content h4 { margin: 0 0 6px 2px; color: #687b94; font-size: 9px; font-weight: 700; letter-spacing: .045em; text-transform: uppercase; }
+  .sm-emoji-picker__grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 2px; }
+  .sm-emoji-picker__grid button { width: 36px; height: 34px; padding: 0; border: 0; border-radius: 7px; display: grid; place-items: center; background: transparent; cursor: pointer; font-family: "Segoe UI Emoji", "Apple Color Emoji", sans-serif; font-size: 20px; line-height: 1; transition: background-color 120ms ease, transform 120ms ease; }
+  .sm-emoji-picker__grid button:hover { background: #f4f7fb; transform: scale(1.08); }
+  .sm-emoji-picker__grid button:active { transform: scale(.94); }
+  .sm-emoji-picker__empty { margin: 26px 0 0; color: #7b8ca1; text-align: center; font-size: 11px; }
+}

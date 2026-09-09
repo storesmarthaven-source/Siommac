@@ -511,11 +511,29 @@ export const PERMISSION_KEYS = [
   'calendar.task.assign',             // assign a task to a permitted team member
   'calendar.activity.manage_own',     // create / update own activities (meetings, site visits…)
 
+  // ── Meetings (platform execution record) ──────────────────────────────────
+  'meetings.view', 'meetings.create', 'meetings.manage_own', 'meetings.manage_team',
+  'meetings.participants.manage',
+  'meetings.recording.manage', 'meetings.recording.view',
+  'meetings.transcript.view', 'meetings.transcript.export',
+  'meetings.summary.generate', 'meetings.summary.review', 'meetings.summary.publish',
+  'meetings.actions.publish', 'meetings.comments.post', 'meetings.metrics.view',
+  'meetings.retention.manage', 'meetings.compliance_read',
+
   // ── Weather (platform) ───────────────────────────────────────────────────────
   'platform.weather.view',            // read the server-proxied weather snapshot (widget)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
+
+const MEETING_STAFF_PERMISSIONS: readonly PermissionKey[] = [
+  'meetings.view', 'meetings.create', 'meetings.manage_own', 'meetings.participants.manage',
+  'meetings.recording.manage', 'meetings.recording.view', 'meetings.transcript.view',
+  'meetings.summary.generate', 'meetings.summary.review', 'meetings.summary.publish',
+  'meetings.actions.publish', 'meetings.comments.post', 'meetings.metrics.view',
+];
+const MEETING_MANAGER_PERMISSIONS: readonly PermissionKey[] = ['meetings.manage_team', 'meetings.transcript.export'];
+const MEETING_ADMIN_PERMISSIONS: readonly PermissionKey[] = ['meetings.retention.manage'];
 
 // ── Critical-grant keys (require dual superadmin approval) ──────────────────
 /**
@@ -527,6 +545,7 @@ export type PermissionKey = typeof PERMISSION_KEYS[number];
 export const CRITICAL_GRANT_KEYS = new Set<string>([
   'communications.compliance_read',
   'communications.compliance_export',
+  'meetings.compliance_read',
   'auth.security.manage_policy',
   'auth.passkeys.admin_revoke',
   'auth.trusted_devices.admin_revoke',
@@ -559,6 +578,7 @@ export function isCriticalGrant(key: string): boolean {
 export const COMPLIANCE_GATED_KEYS = new Set<string>([
   'communications.compliance_read',
   'communications.compliance_export',
+  'meetings.compliance_read',
 ]);
 
 // ── Role defaults ─────────────────────────────────────────────────────────────
@@ -583,6 +603,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.onboarding.custom_actions.case_complete', 'hr.onboarding.custom_actions.case_cancel',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS,
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
     'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
@@ -627,6 +648,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.onboarding.reports.view', 'hr.onboarding.reports.export',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS, ...MEETING_MANAGER_PERMISSIONS,
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
     'hse.incidents.view', 'hse.capa.view', 'hse.risk.view', 'hse.ptw.view', 'hse.inspections.view',
@@ -668,6 +690,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS,
     // employee baseline (same keys as employee role)
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
@@ -744,6 +767,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.onboarding.self.view',
     'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS, ...MEETING_MANAGER_PERMISSIONS,
     // employee baseline (same keys as employee role)
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
@@ -884,6 +908,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.create_self',
     'employees.access.request',           // self-service: submit own account support request
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS,
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'hr.overtime.submit',
     'finance.payroll.view_own',
@@ -911,6 +936,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.create_self', 'tickets.create_team',
     'finance.payroll.view_own',   // self-service: view/print own payslips (self-scoped server-side)
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS, ...MEETING_MANAGER_PERMISSIONS,
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve',
     'payroll.view_own', 'employees.view', 'employees.view_detail',
@@ -965,6 +991,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     'tickets.view_all', 'tickets.reply_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
+    ...MEETING_STAFF_PERMISSIONS, ...MEETING_MANAGER_PERMISSIONS, ...MEETING_ADMIN_PERMISSIONS,
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve', 'leaves.delete',
     'payroll.view_own', 'payroll.view_all', 'payroll.run', 'payroll.approve', 'payroll.export',

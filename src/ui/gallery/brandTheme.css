@@ -123,8 +123,6 @@
     .ui-brand-role-board__grid { grid-template-columns: 1fr; }
     .ui-brand-role-card { border: 1px solid var(--ui-color-border-default); }
   }
-  }
-
   .ui-brand-error {
     display: flex;
     align-items: center;
