@@ -40,6 +40,23 @@ describe('TimeGridView', () => {
     expect(card.querySelectorAll('.cal-tg-week-card-icon')).toHaveLength(1);
   });
 
+  it('uses the same pixel-based hour origin for Week cards and grid lines', () => {
+    const sunday = new Date(2026, 8, 6, 12);
+    const base = calendarStagingItems(sunday).find(candidate => Boolean(candidate.startsAt))!;
+    const item = {
+      ...base,
+      startsAt: new Date(2026, 8, 6, 6, 0).toISOString(),
+      endsAt: new Date(2026, 8, 6, 7, 0).toISOString(),
+    };
+    const { container } = render(<TimeGridView mode="week" days={[sunday]} items={[item]} onOpenItem={vi.fn()} />);
+    const grid = container.querySelector<HTMLElement>('.cal-tg')!;
+    const card = container.querySelector<HTMLElement>('.cal-week-event')!;
+
+    expect(grid.style.getPropertyValue('--cal-week-hour')).toBe('104px');
+    expect(card.style.left).toBe('624px');
+    expect(card.style.width).toBe('calc(96px)');
+  });
+
   it('renders the reference-density workday and opens a staged event', () => {
     const monday = new Date(2026, 7, 31, 12);
     const tuesday = addDays(monday, 1);
@@ -535,8 +552,8 @@ describe('TimeGridView', () => {
     expect(segments[0]?.style.width).toContain('calc(');
     expect(segments[0]?.style.minWidth).toBe('76px');
     expect(overlappingCard?.style.width).toContain('calc(');
-    expect(segments[0]?.style.left).toContain('91.666');
-    expect(overlappingCard?.style.left).toContain('93.75');
+    expect(segments[0]?.style.left).toBe('2288px');
+    expect(overlappingCard?.style.left).toBe('2340px');
 
     expect(segments[0]?.style.top).toBe('10px');
     expect(overlappingCard?.style.top).toBe('34px');

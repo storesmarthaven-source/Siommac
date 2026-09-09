@@ -903,9 +903,11 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                       : [];
                     const hasTitleIcon = Boolean(item.titleIconType && item.titleIconValue);
                     const entering = item.id === enteringItemId || item.id.startsWith(`${enteringItemId}::`);
+                    const cardStartX = (startMinutes / 60) * weekHourWidth;
+                    const cardDurationWidth = (durationMinutes / 60) * weekHourWidth;
                     return <article key={item.id} class={`cal-tg-event cal-week-event tone-${itemTone(item)} size-${size}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasTitleIcon ? ' has-title-icon' : ''}${people.length ? ' has-participants' : ''}${spansMultipleDays ? ' is-multi-day' : ''}${lanes > 1 ? ' is-overlapping' : ''}${onMoveItem && item.editable ? ' is-movable' : ''}${cardMove?.item.id === item.id && !cardMove.dragged ? ' is-pressed' : ''}${cardMove?.dragged && cardMove.item.id === item.id ? ' is-being-moved' : ''}${cardResize?.item.id === item.id ? ' is-being-resized' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
                       data-card-size={size} data-calendar-lanes={lanes} data-calendar-stack-group={stackGroup} data-calendar-item-id={item.id}
-                      style={`left:${startMinutes / (HOURS * 60) * 100}%;top:${10 + lane * weekStackStep}px;width:calc(${durationMinutes / (HOURS * 60) * 100}% - ${overviewMode ? 3 : 8}px);min-width:${overviewMode ? 30 : 76}px;height:${weekCardHeight}px;z-index:${lane + 2};${calendarCustomColorVariables(item.customColor)}`}
+                      style={`left:${cardStartX}px;top:${10 + lane * weekStackStep}px;width:calc(${cardDurationWidth}px - ${overviewMode ? 3 : 8}px);min-width:${overviewMode ? 30 : 76}px;height:${weekCardHeight}px;z-index:${lane + 2};${calendarCustomColorVariables(item.customColor)}`}
                       onAnimationEnd={entering ? () => onEntryAnimationEnd?.(item.id) : undefined}
                       onPointerDown={event => beginCardMove(event, item, event.currentTarget)}
                       onContextMenu={event => {
