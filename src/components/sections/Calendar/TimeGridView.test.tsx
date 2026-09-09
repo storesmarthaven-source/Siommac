@@ -251,6 +251,35 @@ describe('TimeGridView', () => {
     expect(overview.style.getPropertyValue('--cal-week-width')).toBe('864px');
   });
 
+  it('pans the Week timeline from the time ruler without starting card creation', () => {
+    const monday = new Date(2026, 7, 31, 12);
+    const create = vi.fn();
+    const { container } = render(<TimeGridView mode="week" days={[monday]} items={[]} onCreateForDay={create} onOpenItem={vi.fn()} />);
+    const scroll = container.querySelector<HTMLElement>('.cal-week-scroll')!;
+    const ruler = container.querySelector<HTMLElement>('.cal-week-hours')!;
+    scroll.scrollLeft = 500;
+
+    fireEvent.pointerDown(ruler, { button: 0, pointerId: 15, clientX: 500, clientY: 20 });
+    expect(scroll.classList.contains('is-panning')).toBe(true);
+    fireEvent.pointerMove(scroll, { pointerId: 15, clientX: 440, clientY: 20 });
+    expect(scroll.scrollLeft).toBe(560);
+    fireEvent.pointerUp(scroll, { pointerId: 15, clientX: 440, clientY: 20 });
+
+    expect(scroll.classList.contains('is-panning')).toBe(false);
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('uses Shift plus wheel for horizontal Week navigation', () => {
+    const monday = new Date(2026, 7, 31, 12);
+    const { container } = render(<TimeGridView mode="week" days={[monday]} items={[]} onOpenItem={vi.fn()} />);
+    const scroll = container.querySelector<HTMLElement>('.cal-week-scroll')!;
+    scroll.scrollLeft = 300;
+
+    fireEvent.wheel(container.querySelector('.cal-week-timeline')!, { shiftKey: true, deltaY: 120 });
+
+    expect(scroll.scrollLeft).toBe(420);
+  });
+
   it('does not resize a Day-view card below the readable 45-minute minimum', () => {
     const monday = new Date(2026, 7, 31, 12);
     const base = calendarStagingItems(monday).find(candidate => candidate.title === 'North Field Mobilisation')!;
@@ -509,10 +538,12 @@ describe('TimeGridView', () => {
     expect(segments[0]?.style.left).toContain('91.666');
     expect(overlappingCard?.style.left).toContain('93.75');
 
+    expect(segments[0]?.style.top).toBe('10px');
+    expect(overlappingCard?.style.top).toBe('34px');
     fireEvent.pointerEnter(segments[0]!);
-    expect(segments[0]?.style.top).toBe('34px');
-    expect(overlappingCard?.style.top).toBe('10px');
-    expect(segments[0]?.classList.contains('is-stack-promoted')).toBe(true);
+    expect(segments[0]?.style.top).toBe('10px');
+    expect(overlappingCard?.style.top).toBe('34px');
+    expect(container.querySelector('.is-stack-promoted')).toBeNull();
   });
 
   it('places overlapping Day events in equal side-by-side lanes', () => {

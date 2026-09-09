@@ -63,7 +63,7 @@ const CALENDAR_WEATHER_LOCATION_META: Record<CalendarWeatherLocation, { label: s
 function initialCalendarZoom(): number {
   if (typeof window === 'undefined') return 1;
   const stored = Number(window.localStorage.getItem(CALENDAR_ZOOM_KEY));
-  return Number.isFinite(stored) && stored >= .75 && stored <= 1.4 ? stored : 1;
+  return Number.isFinite(stored) && stored >= .35 && stored <= 1.6 ? stored : 1;
 }
 
 function initialAllDayVisibility(): boolean {
