@@ -215,4 +215,17 @@ describe('calendar local-date grids', () => {
       '2026-07-26',
     ]);
   });
+
+  it('returns a Sunday-to-Saturday week when requested by Week view', () => {
+    const week = weekDays(new Date(2026, 6, 22), 'sunday');
+    expect(week.map(toLocalDateKey)).toEqual([
+      '2026-07-19',
+      '2026-07-20',
+      '2026-07-21',
+      '2026-07-22',
+      '2026-07-23',
+      '2026-07-24',
+      '2026-07-25',
+    ]);
+  });
 });

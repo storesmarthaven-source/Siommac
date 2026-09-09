@@ -219,7 +219,7 @@ function stagedItem(value: StagedItem, index: number): CalendarItemDTO {
     editable: true,
     completable: false,
     assignable: false,
-    cancelable: false,
+    cancelable: true,
     drillThrough: Boolean(item.sourceRoute),
   };
 }
@@ -328,7 +328,7 @@ export function applyCalendarStagingPatch(item: CalendarItemDTO, patch: UpdateEn
     assigneeUserId: patch.assigneeUserId !== undefined ? patch.assigneeUserId : item.assigneeUserId,
     departmentId: patch.departmentId !== undefined ? patch.departmentId : item.departmentId,
     locationLabel: patch.locationLabel !== undefined ? patch.locationLabel : item.locationLabel,
-    calendarId: patch.calendarId ?? item.calendarId,
+    calendarId: patch.calendarId !== undefined ? patch.calendarId : item.calendarId,
     colorKey,
     customColor,
   };

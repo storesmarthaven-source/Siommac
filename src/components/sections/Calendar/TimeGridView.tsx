@@ -22,13 +22,18 @@ const DAY_HOUR_H = 88;        // compact Day view while preserving precise minut
 // A day is a stable layout unit. Narrowing the viewport scrolls the timeline
 // horizontally instead of compressing rich cards below their content budget.
 const DAY_W = 220;
+const GRID_GUTTER_W = 78;
 const HOURS = 24;
 // These heights are content budgets, not decoration. They fit a complete line
-// box for every element each tier exposes so titles/descriptions are never
+// box for every element each tier exposes so titles and metadata are never
 // sliced midway through a line at the default or enlarged timeline zoom.
 const CARD_MIN_HEIGHT = { small: 96, medium: 144, large: 200 } as const;
 const CARD_MAX_WIDTH = { small: 300, medium: 380, large: 460 } as const;
 const DAY_CARD_MIN_HEIGHT = { small: 44, medium: 66, large: 80 } as const;
+// Preserve the time-grid coordinates while leaving a deliberate visual break
+// between sequential cards. Compact cards retain their readable 40px floor.
+const EVENT_VERTICAL_GUTTER_PX = 8;
+const EVENT_MIN_RENDER_HEIGHT_PX = 40;
 // Keep resized Day-view cards large enough for the compact card's title and
 // time rows. Three 15-minute grid increments map to that readable footprint.
 const MIN_RESIZE_DURATION_MINUTES = 45;
@@ -44,6 +49,10 @@ function releasePointerCaptureIfSupported(element: Element, pointerId: number): 
 }
 
 type CardSize = keyof typeof CARD_MIN_HEIGHT;
+
+function renderedEventHeight(layoutHeight: number): number {
+  return Math.max(EVENT_MIN_RENDER_HEIGHT_PX, layoutHeight - EVENT_VERTICAL_GUTTER_PX);
+}
 
 interface EventBlock { item: CalendarItemDTO; top: number; height: number; lane: number; lanes: number; size: CardSize; spansMultipleDays: boolean }
 type HolidayTheme = 'national' | 'emancipation' | 'divali' | 'eid' | 'christmas' | 'arrival' | 'labour' | 'faith' | 'new-year' | 'civic';
@@ -136,21 +145,6 @@ function shortDateLabel(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-function descriptionLimit(size: CardSize, title: string): number {
-  if (size === 'small') return 0;
-  // Longer titles reserve one content row so every fixed-size card remains
-  // readable without introducing a second, decorative card system.
-  return size === 'medium' ? (title.trim().length >= 28 ? 8 : 12) : 16;
-}
-
-function limitWords(value: string | null | undefined, limit: number): { text: string; truncated: boolean } {
-  const words = value?.trim().split(/\s+/).filter(Boolean) ?? [];
-  if (!words.length) return { text: '', truncated: false };
-  if (limit <= 0) return { text: '', truncated: true };
-  if (words.length <= limit) return { text: words.join(' '), truncated: false };
-  return { text: `${words.slice(0, limit).join(' ')}…`, truncated: true };
-}
-
 /** All expanded cards share one visual tier; only explicit minimising is smaller. */
 function itemCardSize(_item: CalendarItemDTO): CardSize {
   return 'medium';
@@ -185,10 +179,10 @@ function layoutDay(
       const height = fitToDuration && !spansMultipleDays && !isMinimized ? durationHeight : contentHeight;
       // Collision detection follows the rendered card, not only its semantic
       // duration. This keeps minimum-height cards from visually overlapping.
-      // The rendered block is inset 4px and shortened by 8px, so its real
-      // visual footprint ends at height - 4px. Using the raw minimum height
-      // here falsely split sequential cards into narrow overlap lanes.
-      const visualDuration = ((height - 4) / hourHeight) * 60;
+      // Collision detection uses the same rendered height as the card. Using
+      // the raw layout height here would falsely split sequential cards into
+      // narrow overlap lanes even though the visual gutter keeps them apart.
+      const visualDuration = (renderedEventHeight(height) / hourHeight) * 60;
       // A multi-day card's collision footprint follows its compact visual card,
       // not all remaining hours in the first day.
       const collisionDuration = Math.max(30, visualDuration);
@@ -337,7 +331,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
   const suppressItemClickRef = useRef<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const effectiveMode = mode ?? (days.length === 1 ? 'day' : 'week');
-  const isDayMode = mode === 'day';
+  const isDayMode = effectiveMode === 'day';
   const hourHeightBase = isDayMode ? DAY_HOUR_H : HOUR_H;
   const hourHeight = Math.round(hourHeightBase * zoom);
   const previousHourHeightRef = useRef(hourHeight);
@@ -435,6 +429,8 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
   const weatherByDate = useMemo(() => new Map(weatherDays.map(day => [day.date, day])), [weatherDays]);
 
   const cols = days.length;
+  const dayMinWidth = isDayMode ? DAY_W : 0;
+  const gridMinWidth = isDayMode ? GRID_GUTTER_W + (cols * DAY_W) : 0;
   const hasAllDay = showAllDay;
   const hours = Array.from({ length: HOURS }, (_, h) => h);
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -684,7 +680,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
   };
 
   return (
-    <div class={`cal-tg cal-tg--${effectiveMode}${loading ? ' is-loading' : ''}`} style={`--cal-tg-cols:${cols};--cal-tg-hour:${hourHeight}px;--cal-tg-half-hour:${hourHeight / 2}px;--cal-tg-h:${HOURS * hourHeight}px;--cal-tg-day-w:${DAY_W}px;--cal-tg-min-width:${78 + (cols * DAY_W)}px;--cal-tg-zoom:${zoom}`} onWheel={event => {
+    <div class={`cal-tg cal-tg--${effectiveMode}${loading ? ' is-loading' : ''}`} style={`--cal-tg-cols:${cols};--cal-tg-hour:${hourHeight}px;--cal-tg-half-hour:${hourHeight / 2}px;--cal-tg-h:${HOURS * hourHeight}px;--cal-tg-day-w:${dayMinWidth}px;--cal-tg-min-width:${gridMinWidth}px;--cal-tg-zoom:${zoom}`} onWheel={event => {
       if ((!event.ctrlKey && !event.metaKey) || !onZoomChange) return;
       event.preventDefault();
       const scroll = scrollRef.current;
@@ -698,7 +694,10 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     }} data-widget-content-root>
       <div class="cal-tg-scroll" ref={scrollRef}>
       <div class="cal-tg-head">
-        {!isDayMode ? <Button class="cal-tg-previous-period" variant="ghost" size="sm" iconOnly onClick={onPrevious} disabled={!onPrevious} aria-label="Previous calendar period" iconLeft={<LucideIcon name="ChevronLeft" size={15} />} /> : null}
+        {!isDayMode ? <div class="cal-tg-week-nav" role="group" aria-label="Week navigation">
+          <Button variant="ghost" size="sm" iconOnly onClick={onPrevious} disabled={!onPrevious} aria-label="Previous week" iconLeft={<LucideIcon name="ChevronLeft" size={15} />} />
+          <Button variant="ghost" size="sm" iconOnly onClick={onNext} disabled={!onNext} aria-label="Next week" iconLeft={<LucideIcon name="ChevronRight" size={15} />} />
+        </div> : null}
         {byDay.map(({ day, key }) => {
           const dayWeather = weatherByDate.get(key);
           const dayWeatherLabel = dayWeather ? titleCase(dayWeather.label) : '';
@@ -729,7 +728,6 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
             </span>
           </div>;
         })}
-        {!isDayMode ? <Button class="cal-tg-next-period" variant="ghost" size="sm" iconOnly onClick={onNext} disabled={!onNext} aria-label="Next calendar period" iconLeft={<LucideIcon name="ChevronRight" size={15} />} /> : null}
       </div>
 
       {hasAllDay ? <div class="cal-tg-allday">
@@ -745,8 +743,9 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                 ? attendeePeople?.[item.id]
                   ?? [...new Set([item.ownerName].filter((name): name is string => Boolean(name)))].map(name => ({ id: `${item.id}-${name}`, name }))
                 : [];
+              const hasTitleIcon = Boolean(item.titleIconType && item.titleIconValue);
               const entering = item.id === enteringItemId || item.id.startsWith(`${enteringItemId}::`);
-              return <article class={`cal-tg-allday-card tone-${itemTone(item)}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${people.length ? ' has-participants' : ''}${entering ? ' cal-entry-is-entering' : ''}`} key={item.id}
+              return <article class={`cal-tg-allday-card tone-${itemTone(item)}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasTitleIcon ? ' has-title-icon' : ''}${people.length ? ' has-participants' : ''}${entering ? ' cal-entry-is-entering' : ''}`} key={item.id}
                 style={calendarCustomColorVariables(item.customColor) || undefined}
                 onContextMenu={event => {
                   if (!hasItemActions(item)) return;
@@ -759,8 +758,9 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                   setContext(null);
                   onOpenItem(item, { x: event.clientX, y: event.clientY });
                 }}>
-                  <span class="cal-tg-allday-icon" aria-hidden="true"><LucideIcon name={meta.icon} size={13} /></span>
-                  <span class="cal-tg-allday-copy"><strong><CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={13} />{item.title}</strong><span class="cal-tg-allday-time">All Day</span></span>
+                  {isDayMode ? <span class="cal-tg-allday-icon" aria-hidden="true"><LucideIcon name={meta.icon} size={13} /></span> : null}
+                  <span class="cal-tg-allday-copy"><strong>{isDayMode ? <CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={13} /> : null}{item.title}</strong><span class="cal-tg-allday-time">All Day</span></span>
+                  {!isDayMode ? <span class="cal-tg-week-card-icon" aria-hidden="true">{hasTitleIcon ? <CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={12} /> : <LucideIcon name={meta.icon} size={12} />}</span> : null}
                 </button>
                 {people.length ? <footer><AvatarGroup people={people} max={4} size={22} totalCount={Math.max(item.attendeeCount, people.length)} label={`${item.title} people`} /></footer> : null}
               </article>;
@@ -824,19 +824,17 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                   ? 'is-micro size-small'
                   : extraSmall ? 'is-extra-small size-medium' : size === 'medium' ? 'is-compact size-medium' : 'is-roomy size-large';
                 const showTime = Boolean(item.startsAt);
-                const hasLongTitle = size === 'medium' && item.title.trim().length >= 28;
-                const description = limitWords(item.notes, isDayMode ? 0 : descriptionLimit(size, item.title));
                 const deadline = deadlineMeta(item);
-                const showDescription = Boolean(description.text);
+                const hasTitleIcon = Boolean(item.titleIconType && item.titleIconValue);
                 const showParticipants = people.length > 0;
                 const avatarSize = size === 'small' ? 18 : size === 'large' ? 24 : 22;
                 const avatarMax = size === 'small' ? 2 : size === 'large' ? 4 : 3;
                 const maxCardWidth = isDayMode ? 'none' : `${CARD_MAX_WIDTH[size]}px`;
                 const entering = item.id === enteringItemId || item.id.startsWith(`${enteringItemId}::`);
                 return (
-                    <article key={item.id} class={`cal-tg-event tone-${itemTone(item)} ${density}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasLongTitle ? ' has-long-title' : ''}${showParticipants ? ' has-participants' : ''}${deadline ? ` has-deadline is-deadline-${deadline.state}` : ''}${spansMultipleDays ? ' is-multi-day' : ''}${lanes > 1 ? ' is-overlapping' : ''}${isMinimized ? ' is-minimized' : ''}${onMoveItem && item.editable ? ' is-movable' : ''}${cardMove?.item.id === item.id && !cardMove.dragged ? ' is-pressed' : ''}${cardMove?.dragged && cardMove.item.id === item.id ? ' is-being-moved' : ''}${cardResize?.item.id === item.id ? ' is-being-resized' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
+                    <article key={item.id} class={`cal-tg-event tone-${itemTone(item)} ${density}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasTitleIcon ? ' has-title-icon' : ''}${showParticipants ? ' has-participants' : ''}${deadline ? ` has-deadline is-deadline-${deadline.state}` : ''}${spansMultipleDays ? ' is-multi-day' : ''}${lanes > 1 ? ' is-overlapping' : ''}${isMinimized ? ' is-minimized' : ''}${onMoveItem && item.editable ? ' is-movable' : ''}${cardMove?.item.id === item.id && !cardMove.dragged ? ' is-pressed' : ''}${cardMove?.dragged && cardMove.item.id === item.id ? ' is-being-moved' : ''}${cardResize?.item.id === item.id ? ' is-being-resized' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
                       data-card-size={size} data-calendar-lanes={lanes} data-calendar-item-id={item.id}
-                      style={`top:${top}px;height:${height - 4}px;left:${cardLeft};width:${cardWidth};max-width:${maxCardWidth};--cal-overlap-layer:${lane + 2};${customColorVariables}`}
+                      style={`top:${top}px;height:${renderedEventHeight(height)}px;left:${cardLeft};width:${cardWidth};max-width:${maxCardWidth};--cal-overlap-layer:${lane + 2};${customColorVariables}`}
                       onAnimationEnd={entering ? () => onEntryAnimationEnd?.(item.id) : undefined}
                       onPointerDown={event => beginCardMove(event, item, event.currentTarget)}
                       onPointerMove={event => moveCard(event, event.currentTarget)}
@@ -857,18 +855,17 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                         setContext(null);
                         onOpenItem(item, { x: event.clientX, y: event.clientY });
                       }}>
-                        <span class="cal-tg-event-head"><span class="cal-tg-event-source"><LucideIcon name={meta.icon} size={11} /><span class="cal-tg-event-source-label">{meta.label}</span></span></span>
-                        <span class="cal-tg-event-title"><CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={12} /><span>{item.title}</span></span>
+                        {isDayMode ? <span class="cal-tg-event-head"><span class="cal-tg-event-source"><LucideIcon name={meta.icon} size={11} /><span class="cal-tg-event-source-label">{meta.label}</span></span></span> : null}
+                        <span class="cal-tg-event-title">{isDayMode && hasTitleIcon ? <span class="cal-tg-title-glyph"><CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={12} /></span> : null}<span>{item.title}</span></span>
                         {showTime ? <span class="cal-tg-event-time">
-                          <span class="cal-tg-time-icon" aria-hidden="true"><LucideIcon name="Clock3" size={9} /></span>
                           {spansMultipleDays && item.startsAt && item.endsAt
                             ? <><span class="cal-tg-time-token">{shortDateLabel(item.startsAt)} {startTimeLabel}</span><span class="cal-tg-time-token">– {shortDateLabel(item.endsAt)} {endTimeLabel}</span></>
                             : <><span class="cal-tg-time-token">{startTimeLabel}</span>{endTimeLabel ? <span class="cal-tg-time-token">– {endTimeLabel}</span> : null}</>}
                         </span> : null}
                         {deadline ? <span class="cal-tg-event-deadline"><LucideIcon name="Flag" size={9} />{deadline.label}</span> : null}
-                        {item.locationLabel ? <span class="cal-tg-event-location"><LucideIcon name="MapPin" size={11} />{item.locationLabel}</span> : null}
-                        {showDescription ? <span class="cal-tg-event-notes">{description.text}</span> : null}
+                        {item.locationLabel ? <span class="cal-tg-event-location">{item.locationLabel}</span> : null}
                         {showParticipants ? <span class="cal-tg-event-people-slot"><AvatarGroup people={people} max={avatarMax} size={avatarSize} totalCount={Math.max(item.attendeeCount, people.length)} label={`${item.title} people`} class="cal-tg-event-people" /></span> : null}
+                        {!isDayMode ? <span class="cal-tg-week-card-icon" aria-hidden="true">{hasTitleIcon ? <CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={12} /> : <LucideIcon name={meta.icon} size={12} />}</span> : null}
                       </button>
                       {isDayMode && onMoveItem && item.editable ? <button type="button" class="cal-tg-event-resize" aria-label={`Resize ${item.title} in 15-minute increments`} onPointerDown={event => beginCardResize(event, item, event.currentTarget)} onPointerMove={moveCardResize} onPointerUp={event => finishCardResize(event, event.currentTarget)} onPointerCancel={event => cancelCardResize(event, event.currentTarget)} onClick={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => resizeCardByKeyboard(event, item)}><span /></button> : null}
                     </article>

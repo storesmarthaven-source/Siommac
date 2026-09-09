@@ -124,7 +124,7 @@ export function CalendarDashboardRail({
         </div>
       </section>
 
-      <section class="cal-rail-event-preview" aria-label="Selected calendar event">
+      <section class="cal-rail-event-preview" aria-label="Calendar actions for selected date">
         {focusedItem ? <>
           <div class="cal-rail-event-navigator">
             <span>{Math.min(focusedIndex + 1, focusedCount || 1)} of {focusedCount || 1}</span>
@@ -172,8 +172,8 @@ export function CalendarDashboardRail({
             <LucideIcon name="UsersRound" />,
             <LucideIcon name="ListChecks" />,
           ]} />}
-          title="No Event Selected"
-          text="Choose a calendar card to review its schedule, attendees and available actions."
+          title="No Actions Scheduled"
+          text="Tasks, deadlines, invitations and linked operational items for this day will appear here."
           role="status"
         />}
       </section>

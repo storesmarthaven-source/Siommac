@@ -32,7 +32,8 @@ describe('CalendarDashboardRail', () => {
       onToggleCategory={toggleCategory}
     />);
 
-    expect(screen.getByText('No Event Selected')).toBeTruthy();
+    expect(screen.getByText('No Actions Scheduled')).toBeTruthy();
+    expect(screen.getByText('Tasks, deadlines, invitations and linked operational items for this day will appear here.')).toBeTruthy();
     expect(container.querySelector('.ui-empty-icon-cluster')).toBeTruthy();
     expect(container.querySelector('.cal-board-rail')?.classList.contains('is-event-empty')).toBe(true);
     expect(screen.getByText('Categories')).toBeTruthy();

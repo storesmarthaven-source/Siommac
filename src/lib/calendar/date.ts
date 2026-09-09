@@ -60,9 +60,10 @@ export function monthGrid(month: Date): Date[] {
   return Array.from({ length: 42 }, (_, i) => addDays(start, i));
 }
 
-/** The 7 days of the week (Monday-start) containing `d`. */
-export function weekDays(d: Date): Date[] {
-  const start = addDays(d, -((d.getDay() + 6) % 7));
+/** The 7 days of the week containing `d`, using the requested first weekday. */
+export function weekDays(d: Date, firstDay: 'monday' | 'sunday' = 'monday'): Date[] {
+  const firstDayIndex = firstDay === 'sunday' ? 0 : 1;
+  const start = addDays(d, -((d.getDay() - firstDayIndex + 7) % 7));
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 

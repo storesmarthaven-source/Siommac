@@ -8,7 +8,8 @@ import { Button, DropdownMenu, FormField, LucideIcon, SearchField, SegmentedCont
 import { useSessionStore } from '@store/session';
 import { toast } from '@store/ui';
 import { useDemoMode } from '@lib/demoMode';
-import { addDays, itemDateKey, itemEndDateKey, itemOccursOnDate, localTimestamp, monthGrid, monthLabel, parseLocalDate, startOfMonth, toLocalDateKey } from '@lib/calendar/date';
+import { dialog } from '@lib/dialog';
+import { addDays, itemDateKey, itemEndDateKey, itemOccursOnDate, localTimestamp, monthGrid, monthLabel, parseLocalDate, startOfMonth, toLocalDateKey, weekDays } from '@lib/calendar/date';
 import { can } from '@lib/permissions';
 import { DemoLandingPage } from '@/components/demo/DemoLandingPage';
 import { showSection } from '@components/nav/navCore';
@@ -20,7 +21,8 @@ import { CalendarItemActionDialog, type CalendarItemAction } from './CalendarIte
 import { CalendarSettingsDialog } from './CalendarSettingsDialog';
 import { CalendarManagementDialog } from './CalendarManagementDialog';
 import { CreateCalendarItemDialog, type CalendarCreateType, type CalendarPreviewCreateDraft } from './CreateCalendarItemDialog';
-import { applyCalendarStagingPatch, CALENDAR_STAGING_CALENDARS, calendarStagingDetail, calendarStagingDirectory, calendarStagingHolidays, calendarStagingItems, calendarStagingPeople, calendarStagingReminderOffsets, type CalendarStagedAttendee } from './calendarStaging';
+import { applyCalendarStagingPatch, CALENDAR_STAGING_CALENDARS, calendarStagingDetail, calendarStagingDirectory, calendarStagingHolidays, calendarStagingPeople, calendarStagingReminderOffsets, type CalendarStagedAttendee } from './calendarStaging';
+import { defaultCalendarStagingWorkspace, loadCalendarStagingWorkspace, saveCalendarStagingWorkspace } from './calendarStagingWorkspace';
 import { CalendarDashboardRail } from './CalendarDashboardRail';
 import { CalendarItemEditor } from './CalendarItemEditor';
 import { CalendarItemPreview } from './CalendarItemPreview';
@@ -203,11 +205,12 @@ export function CalendarPage(): VNode {
   const [viewMenuAnchor, setViewMenuAnchor] = useState<HTMLElement | null>(null);
   const [createMenuAnchor, setCreateMenuAnchor] = useState<HTMLElement | null>(null);
   const [enteringItemId, setEnteringItemId] = useState<string | null>(null);
-  const [stagedResponses, setStagedResponses] = useState<Record<string, Exclude<CalendarAttendeeResponse, 'invited'>>>({});
+  const [initialStagingWorkspace] = useState(loadCalendarStagingWorkspace);
+  const [stagedResponses, setStagedResponses] = useState<Record<string, Exclude<CalendarAttendeeResponse, 'invited'>>>(initialStagingWorkspace.responses);
   const [stagedPreview, setStagedPreview] = useState(initialStagedPreview);
-  const [stagedItems, setStagedItems] = useState<CalendarItemDTO[]>(() => calendarStagingItems());
-  const [stagedPeopleByItem, setStagedPeopleByItem] = useState<Record<string, CalendarStagedAttendee[]>>({});
-  const [stagedReminderOffsetsByItem, setStagedReminderOffsetsByItem] = useState<Record<string, number[]>>({});
+  const [stagedItems, setStagedItems] = useState<CalendarItemDTO[]>(initialStagingWorkspace.items);
+  const [stagedPeopleByItem, setStagedPeopleByItem] = useState<Record<string, CalendarStagedAttendee[]>>(initialStagingWorkspace.peopleByItem);
+  const [stagedReminderOffsetsByItem, setStagedReminderOffsetsByItem] = useState<Record<string, number[]>>(initialStagingWorkspace.reminderOffsetsByItem);
 
   const grid = useMemo(() => monthGrid(viewMonth), [viewMonth]);
   const from = toLocalDateKey(grid[0]!);
@@ -297,7 +300,7 @@ export function CalendarPage(): VNode {
     return next;
   });
   const selectedDate = useMemo(() => parseLocalDate(selectedKey), [selectedKey]);
-  const gridDays = useMemo(() => view === 'week' ? Array.from({ length: 4 }, (_, index) => addDays(selectedDate, index)) : view === 'day' ? [selectedDate] : [], [view, selectedDate]);
+  const gridDays = useMemo(() => view === 'week' ? weekDays(selectedDate, 'sunday') : view === 'day' ? [selectedDate] : [], [view, selectedDate]);
   const gridFrom = gridDays[0] ? toLocalDateKey(gridDays[0]) : null;
   const gridTo = gridDays.length ? toLocalDateKey(gridDays[gridDays.length - 1]!) : null;
   const stagedHolidays = useMemo(() => calendarStagingHolidays(gridDays), [gridDays]);
@@ -355,6 +358,16 @@ export function CalendarPage(): VNode {
   useEffect(() => {
     window.localStorage.setItem(CALENDAR_HIDDEN_SOURCES_KEY, JSON.stringify([...hiddenSources]));
   }, [hiddenSources]);
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    saveCalendarStagingWorkspace({
+      version: 1,
+      items: stagedItems,
+      peopleByItem: stagedPeopleByItem,
+      reminderOffsetsByItem: stagedReminderOffsetsByItem,
+      responses: stagedResponses,
+    });
+  }, [stagedItems, stagedPeopleByItem, stagedReminderOffsetsByItem, stagedResponses]);
   useEffect(() => {
     let active = true;
     if (!userId || demoMode.enabled) {
@@ -444,14 +457,14 @@ export function CalendarPage(): VNode {
   };
   const step = (delta: number): void => {
     if (view === 'month' || view === 'agenda' || view === 'tasks') { shiftMonth(delta); return; }
-    const next = addDays(selectedDate, delta * (view === 'week' ? 4 : 1));
+    const next = addDays(selectedDate, delta * (view === 'week' ? 7 : 1));
     setSelectedKey(toLocalDateKey(next));
     setViewMonth(startOfMonth(next));
   };
   const periodTitle = view === 'day'
     ? selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
     : view === 'week'
-      ? `${gridDays[0]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${gridDays[3]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+      ? `${gridDays[0]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${gridDays[gridDays.length - 1]!.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
       : monthLabel(viewMonth);
   const goToday = (): void => {
     const now = new Date();
@@ -716,7 +729,29 @@ export function CalendarPage(): VNode {
     setSelectedItem(current => current?.id === item.id ? null : current);
     setPreviewItem(current => current?.id === item.id ? null : current);
     setPreviewPoint(null);
-    toast.success('Event removed from the staged preview.');
+    toast.success('Calendar item removed from the staged preview.');
+  };
+  const resetStagedCalendar = async (): Promise<void> => {
+    const confirmed = await dialog.confirm({
+      title: 'Reset staged calendar?',
+      text: 'This restores the original staged events, meetings, tasks and deadlines. Your staged edits, colour changes and deletions will be removed.',
+      danger: true,
+      confirmText: 'Reset calendar',
+      panelClass: 'cal-delete-confirm',
+    });
+    if (!confirmed) return;
+    const defaults = defaultCalendarStagingWorkspace();
+    setStagedItems(defaults.items);
+    setStagedPeopleByItem(defaults.peopleByItem);
+    setStagedReminderOffsetsByItem(defaults.reminderOffsetsByItem);
+    setStagedResponses(defaults.responses);
+    setSelectedItem(null);
+    setPreviewItem(null);
+    setPreviewPoint(null);
+    setEditorItem(null);
+    setEditorOpen(false);
+    setEditorColorPreview(null);
+    toast.success('Staged calendar restored to its default examples.');
   };
 
   useEffect(() => {
@@ -790,6 +825,7 @@ export function CalendarPage(): VNode {
               </button>
             ),
           }] : []),
+          ...(import.meta.env.DEV && usingStagedData ? [{ id: 'reset-staged-calendar', label: 'Reset staged calendar', description: 'Restore the original calendar examples', icon: <LucideIcon name="RotateCcw" />, danger: true, onSelect: () => { void resetStagedCalendar(); } }] : []),
           { id: 'today', label: 'Go to today', shortcut: 'T', icon: <LucideIcon name="CalendarCheck" />, onSelect: goToday },
           { id: 'manage-calendars', label: 'Manage calendars', icon: <LucideIcon name="CalendarCog" />, onSelect: openCalendarManager },
           { id: 'settings', label: 'Calendar settings', icon: <LucideIcon name="Settings2" />, onSelect: () => setSettingsOpen(true) },

@@ -2,7 +2,7 @@ import { applyCalendarStagingPatch, CALENDAR_STAGING_CALENDARS, calendarStagingD
 import { toLocalDateKey } from '@lib/calendar/date';
 
 describe('calendar staged workspace', () => {
-  it('provides a varied editable preview week without granting operational actions', () => {
+  it('provides a varied editable preview week with local-only staged actions', () => {
     const start = new Date(2026, 8, 6, 12);
     const items = calendarStagingItems(start);
 
@@ -14,7 +14,7 @@ describe('calendar staged workspace', () => {
     expect(new Set(todayItems.map(item => item.kind))).toEqual(new Set(['event', 'meeting', 'task', 'deadline', 'reminder']));
     expect(new Set(todayItems.map(item => item.titleIconType).filter(Boolean))).toEqual(new Set(['emoji', 'lucide']));
     expect(items.filter(item => item.kind === 'meeting').every(item => item.colorKey === 'blue')).toBe(true);
-    expect(items.every(item => item.editable && !item.completable && !item.assignable && !item.cancelable)).toBe(true);
+    expect(items.every(item => item.editable && !item.completable && !item.assignable && item.cancelable)).toBe(true);
     expect(items.filter(item => (item.startsOn ?? item.startsAt?.slice(0, 10)) === toLocalDateKey(start)).length).toBeGreaterThanOrEqual(3);
     for (let offset = 0; offset < 7; offset += 1) {
       const key = toLocalDateKey(new Date(2026, 8, 6 + offset, 12));
