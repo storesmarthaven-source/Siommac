@@ -23,6 +23,10 @@ const DAY_HOUR_H = 88;        // compact Day view while preserving precise minut
 // horizontally instead of compressing rich cards below their content budget.
 const DAY_W = 220;
 const GRID_GUTTER_W = 78;
+const WEEK_DAY_RAIL_W = 118;
+const WEEK_HOUR_W = 104;
+const WEEK_CARD_H = 58;
+const WEEK_STACK_STEP = 24;
 const HOURS = 24;
 // These heights are content budgets, not decoration. They fit a complete line
 // box for every element each tier exposes so titles and metadata are never
@@ -54,15 +58,15 @@ function renderedEventHeight(layoutHeight: number): number {
   return Math.max(EVENT_MIN_RENDER_HEIGHT_PX, layoutHeight - EVENT_VERTICAL_GUTTER_PX);
 }
 
-interface EventBlock { item: CalendarItemDTO; top: number; height: number; lane: number; lanes: number; size: CardSize; spansMultipleDays: boolean }
+interface EventBlock { item: CalendarItemDTO; top: number; height: number; lane: number; lanes: number; stackGroup: number; size: CardSize; spansMultipleDays: boolean }
 type HolidayTheme = 'national' | 'emancipation' | 'divali' | 'eid' | 'christmas' | 'arrival' | 'labour' | 'faith' | 'new-year' | 'civic';
 type GridContext =
   | { kind: 'slot'; x: number; y: number; key: string; time: string }
   | { kind: 'item'; x: number; y: number; item: CalendarItemDTO };
 interface TimelineLine { top: number; minutes: number; label: string }
-interface DragSelection { key: string; pointerId: number; anchorMinutes: number; focusMinutes: number; startY: number; dragged: boolean }
+interface DragSelection { key: string; pointerId: number; anchorMinutes: number; focusMinutes: number; startX: number; startY: number; dragged: boolean }
 interface CardMoveSelection { item: CalendarItemDTO; pointerId: number; targetKey: string; startMinutes: number; durationMinutes: number; grabOffsetMinutes: number; startX: number; startY: number; dragged: boolean }
-interface CardResizeSelection { item: CalendarItemDTO; pointerId: number; startY: number; startDurationMinutes: number; durationMinutes: number; dragged: boolean }
+interface CardResizeSelection { item: CalendarItemDTO; pointerId: number; startX: number; startY: number; pixelsPerMinute: number; startDurationMinutes: number; durationMinutes: number; dragged: boolean }
 export interface CalendarDraftSelection { key: string; startTime: string; endTime: string }
 
 const HOLIDAY_THEME_ICONS = {
@@ -159,6 +163,7 @@ function layoutDay(
   cardMinHeight: Readonly<Record<CardSize, number>> = CARD_MIN_HEIGHT,
   scaleBase = HOUR_H,
   fitToDuration = false,
+  collisionByDuration = false,
 ): EventBlock[] {
   const dayEnd = new Date(day.getFullYear(), day.getMonth(), day.getDate() + 1).getTime();
   const timed = items
@@ -185,7 +190,8 @@ function layoutDay(
       const visualDuration = (renderedEventHeight(height) / hourHeight) * 60;
       // A multi-day card's collision footprint follows its compact visual card,
       // not all remaining hours in the first day.
-      const collisionDuration = Math.max(30, visualDuration);
+      const semanticDuration = Math.max(15, Math.min((24 * 60) - startMin, (itemEnd - itemStart) / 60_000));
+      const collisionDuration = collisionByDuration ? semanticDuration : Math.max(30, visualDuration);
       const visualEndMin = startMin + collisionDuration;
       return { item, startMin, endMin: visualEndMin, top: (startMin / 60) * hourHeight, height, size, spansMultipleDays };
     })
@@ -194,6 +200,7 @@ function layoutDay(
   const out: EventBlock[] = [];
   let cluster: (typeof timed) = [];
   let clusterEnd = -1;
+  let nextStackGroup = 0;
   const flush = (): void => {
     if (!cluster.length) return;
     const laneEnds: number[] = [];
@@ -204,7 +211,8 @@ function layoutDay(
       laneOf.set(b, lane);
     }
     const lanes = laneEnds.length;
-    for (const b of cluster) out.push({ item: b.item, top: b.top, height: b.height, lane: laneOf.get(b) ?? 0, lanes, size: b.size, spansMultipleDays: b.spansMultipleDays });
+    const stackGroup = nextStackGroup++;
+    for (const b of cluster) out.push({ item: b.item, top: b.top, height: b.height, lane: laneOf.get(b) ?? 0, lanes, stackGroup, size: b.size, spansMultipleDays: b.spansMultipleDays });
     cluster = [];
   };
   for (const b of timed) {
@@ -328,15 +336,20 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
   const cardMoveRef = useRef<CardMoveSelection | null>(null);
   const [cardResize, setCardResize] = useState<CardResizeSelection | null>(null);
   const cardResizeRef = useRef<CardResizeSelection | null>(null);
+  const [promotedStackItemId, setPromotedStackItemId] = useState<string | null>(null);
   const suppressItemClickRef = useRef<string | null>(null);
   const [now, setNow] = useState(() => new Date());
   const effectiveMode = mode ?? (days.length === 1 ? 'day' : 'week');
   const isDayMode = effectiveMode === 'day';
   const hourHeightBase = isDayMode ? DAY_HOUR_H : HOUR_H;
   const hourHeight = Math.round(hourHeightBase * zoom);
+  const weekHourWidth = Math.round(WEEK_HOUR_W * zoom);
   const previousHourHeightRef = useRef(hourHeight);
+  const previousWeekHourWidthRef = useRef(weekHourWidth);
   const zoomAnchorRef = useRef<{ offsetY: number; logicalY: number } | null>(null);
+  const weekZoomAnchorRef = useRef<{ offsetX: number; logicalX: number } | null>(null);
   const daySignature = days.map(toLocalDateKey).join('|');
+  useEffect(() => setPromotedStackItemId(null), [daySignature, isDayMode]);
   useEffect(() => {
     if (!days.some(isToday)) return;
     setNow(new Date());
@@ -348,9 +361,19 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     if (!scroll) return;
     let aligned = false;
     const alignWorkingDay = (): void => {
-      if (aligned || scroll.scrollHeight <= scroll.clientHeight) return;
-      const now = new Date();
-      const currentTimeTop = ((now.getHours() * 60 + now.getMinutes()) / 60) * hourHeight;
+      if (aligned) return;
+      const currentMoment = new Date();
+      if (!isDayMode) {
+        if (scroll.scrollWidth <= scroll.clientWidth) return;
+        const currentDay = days.findIndex(isToday);
+        const focusMinutes = currentDay >= 0 ? currentMoment.getHours() * 60 + currentMoment.getMinutes() : 9 * 60;
+        const focusX = WEEK_DAY_RAIL_W + (focusMinutes / 60) * Math.round(WEEK_HOUR_W * zoom);
+        scroll.scrollLeft = Math.max(0, Math.min(focusX - scroll.clientWidth * .48, scroll.scrollWidth - scroll.clientWidth));
+        aligned = true;
+        return;
+      }
+      if (scroll.scrollHeight <= scroll.clientHeight) return;
+      const currentTimeTop = ((currentMoment.getHours() * 60 + currentMoment.getMinutes()) / 60) * hourHeight;
       const pinnedHeaderHeight = Array.from(scroll.querySelectorAll<HTMLElement>('.cal-tg-head, .cal-tg-allday'))
         .reduce((total, element) => total + element.getBoundingClientRect().height, 0);
       const visibleTimelineHeight = Math.max(hourHeightBase, scroll.clientHeight - pinnedHeaderHeight);
@@ -380,7 +403,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
       window.clearTimeout(timer);
       observer?.disconnect();
     };
-  }, [daySignature]);
+  }, [daySignature, isDayMode]);
 
   useEffect(() => {
     const previous = previousHourHeightRef.current;
@@ -394,6 +417,18 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     zoomAnchorRef.current = null;
     previousHourHeightRef.current = hourHeight;
   }, [hourHeight]);
+  useEffect(() => {
+    const previous = previousWeekHourWidthRef.current;
+    const scroll = scrollRef.current;
+    if (!isDayMode && scroll && previous !== weekHourWidth) {
+      const anchor = weekZoomAnchorRef.current;
+      scroll.scrollLeft = anchor
+        ? (anchor.logicalX * (weekHourWidth / previous)) - anchor.offsetX
+        : (scroll.scrollLeft / previous) * weekHourWidth;
+    }
+    weekZoomAnchorRef.current = null;
+    previousWeekHourWidthRef.current = weekHourWidth;
+  }, [isDayMode, weekHourWidth]);
 
   const layoutItems = useMemo(() => {
     if (cardMove?.dragged) {
@@ -418,7 +453,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     return {
       day, key,
       allDay: dayItems.filter(item => item.allDay),
-      blocks: layoutDay(dayItems, day, hourHeight, minimizedItemIds, isDayMode ? DAY_CARD_MIN_HEIGHT : CARD_MIN_HEIGHT, hourHeightBase, isDayMode),
+      blocks: layoutDay(dayItems, day, hourHeight, minimizedItemIds, isDayMode ? DAY_CARD_MIN_HEIGHT : CARD_MIN_HEIGHT, hourHeightBase, isDayMode, !isDayMode),
     };
   }), [days, hourHeight, hourHeightBase, isDayMode, layoutItems, minimizedItemIds]);
   const holidaysByDate = useMemo(() => {
@@ -447,9 +482,11 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     || Boolean(item.cancelable && onDeleteItem)
   );
 
-  const slotTime = (clientY: number, column: HTMLElement): string => {
+  const slotTime = (clientX: number, clientY: number, column: HTMLElement): string => {
     const bounds = column.getBoundingClientRect();
-    const rawMinutes = ((clientY - bounds.top) / hourHeight) * 60;
+    const rawMinutes = isDayMode
+      ? ((clientY - bounds.top) / hourHeight) * 60
+      : ((clientX - bounds.left) / Math.max(1, bounds.width)) * HOURS * 60;
     const minutes = Math.max(0, Math.min(23 * 60 + 45, Math.round(rawMinutes / 15) * 15));
     const hour = Math.floor(minutes / 60);
     const minute = minutes % 60;
@@ -473,16 +510,18 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     return `${`${hour}`.padStart(2, '0')}:${`${minute}`.padStart(2, '0')}`;
   };
 
-  const pointerMinutes = (clientY: number, column: HTMLElement): number => {
+  const pointerMinutes = (clientX: number, clientY: number, column: HTMLElement): number => {
     const bounds = column.getBoundingClientRect();
-    const rawMinutes = ((clientY - bounds.top) / hourHeight) * 60;
+    const rawMinutes = isDayMode
+      ? ((clientY - bounds.top) / hourHeight) * 60
+      : ((clientX - bounds.left) / Math.max(1, bounds.width)) * HOURS * 60;
     return Math.max(0, Math.min((24 * 60) - 15, Math.floor(rawMinutes / 15) * 15));
   };
 
   const beginDragSelection = (event: PointerEvent, key: string, column: HTMLElement): void => {
     if (!onCreateForDay || event.button !== 0 || (event.target as HTMLElement).closest('.cal-tg-event')) return;
-    const minutes = pointerMinutes(event.clientY, column);
-    const next = { key, pointerId: event.pointerId, anchorMinutes: minutes, focusMinutes: minutes, startY: event.clientY, dragged: false };
+    const minutes = pointerMinutes(event.clientX, event.clientY, column);
+    const next = { key, pointerId: event.pointerId, anchorMinutes: minutes, focusMinutes: minutes, startX: event.clientX, startY: event.clientY, dragged: false };
     dragSelectionRef.current = next;
     setDragSelection(next);
     setPointerCaptureIfSupported(column, event.pointerId);
@@ -495,8 +534,8 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     event.preventDefault();
     const next = {
       ...current,
-      focusMinutes: pointerMinutes(event.clientY, column),
-      dragged: current.dragged || Math.abs(event.clientY - current.startY) >= 4,
+      focusMinutes: pointerMinutes(event.clientX, event.clientY, column),
+      dragged: current.dragged || Math.hypot(event.clientX - current.startX, event.clientY - current.startY) >= 4,
     };
     dragSelectionRef.current = next;
     setDragSelection(next);
@@ -524,21 +563,31 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     setDragSelection(null);
   };
 
-  const cardMoveTarget = (clientX: number, clientY: number, grabOffsetMinutes: number): { key: string; startMinutes: number } | null => {
+  const cardMoveTarget = (clientX: number, clientY: number, grabOffsetMinutes: number, eventTarget?: EventTarget | null, explicitTarget?: HTMLElement | null): { key: string; startMinutes: number } | null => {
     const grid = gridRef.current;
     if (!grid) return null;
-    const columns = Array.from(grid.querySelectorAll<HTMLElement>('.cal-tg-col'));
+    const columns = Array.from(grid.querySelectorAll<HTMLElement>(isDayMode ? '.cal-tg-col' : '.cal-tg-week-row-track'));
     if (!columns.length) return null;
-    const targetColumn = columns.find(column => {
+    const directTarget = !isDayMode
+      ? explicitTarget ?? (eventTarget instanceof Element ? eventTarget.closest<HTMLElement>('.cal-tg-week-row-track') : null)
+      : null;
+    const targetColumn = directTarget ?? columns.find(column => {
       const bounds = column.getBoundingClientRect();
-      return clientX >= bounds.left && clientX <= bounds.right;
+      return isDayMode
+        ? clientX >= bounds.left && clientX <= bounds.right
+        : clientY >= bounds.top && clientY <= bounds.bottom;
     }) ?? columns.reduce((nearest, column) => {
       const nearestBounds = nearest.getBoundingClientRect();
       const columnBounds = column.getBoundingClientRect();
-      return Math.abs(clientX - (columnBounds.left + columnBounds.right) / 2) < Math.abs(clientX - (nearestBounds.left + nearestBounds.right) / 2) ? column : nearest;
+      const pointer = isDayMode ? clientX : clientY;
+      const nearestCentre = isDayMode ? (nearestBounds.left + nearestBounds.right) / 2 : (nearestBounds.top + nearestBounds.bottom) / 2;
+      const columnCentre = isDayMode ? (columnBounds.left + columnBounds.right) / 2 : (columnBounds.top + columnBounds.bottom) / 2;
+      return Math.abs(pointer - columnCentre) < Math.abs(pointer - nearestCentre) ? column : nearest;
     });
     const bounds = targetColumn.getBoundingClientRect();
-    const rawMinutes = ((clientY - bounds.top) / hourHeight) * 60 - grabOffsetMinutes;
+    const rawMinutes = isDayMode
+      ? ((clientY - bounds.top) / hourHeight) * 60 - grabOffsetMinutes
+      : ((clientX - bounds.left) / Math.max(1, bounds.width)) * HOURS * 60 - grabOffsetMinutes;
     const startMinutes = Math.max(0, Math.min((24 * 60) - 15, Math.round(rawMinutes / 15) * 15));
     const key = targetColumn.dataset.dateKey;
     return key ? { key, startMinutes } : null;
@@ -551,7 +600,9 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     const startsAt = new Date(item.startsAt).getTime();
     const endsAt = item.endsAt ? new Date(item.endsAt).getTime() : startsAt + 60 * 60_000;
     const durationMinutes = Math.max(15, Math.round((endsAt - startsAt) / 60_000));
-    const grabOffsetMinutes = Math.max(0, Math.min(durationMinutes - 15, ((event.clientY - bounds.top) / Math.max(1, bounds.height)) * Math.min(durationMinutes, 120)));
+    const grabOffsetMinutes = Math.max(0, Math.min(durationMinutes - 15, isDayMode
+      ? ((event.clientY - bounds.top) / Math.max(1, bounds.height)) * Math.min(durationMinutes, 120)
+      : ((event.clientX - bounds.left) / Math.max(1, bounds.width)) * durationMinutes));
     const current = {
       item,
       pointerId: event.pointerId,
@@ -567,7 +618,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     setCardMove(current);
   };
 
-  const moveCard = (event: PointerEvent, card: HTMLElement): void => {
+  const moveCard = (event: PointerEvent, card: HTMLElement, explicitTarget?: HTMLElement | null): void => {
     const current = cardMoveRef.current;
     if (current === null) return;
     if (current.pointerId !== event.pointerId) return;
@@ -575,10 +626,10 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     const dragged = current.dragged || Math.hypot(event.clientX - current.startX, event.clientY - current.startY) >= 5;
     if (!dragged) return;
     event.preventDefault();
-    if (!current.dragged) setPointerCaptureIfSupported(card, event.pointerId);
-    const target = cardMoveTarget(event.clientX, event.clientY, current.grabOffsetMinutes);
+    if (!current.dragged) setPointerCaptureIfSupported(isDayMode ? card : scrollRef.current ?? card, event.pointerId);
+    const target = cardMoveTarget(event.clientX, event.clientY, current.grabOffsetMinutes, event.target, explicitTarget);
     if (!target) return;
-    const next = { ...current, ...target, dragged: true };
+    const next = { ...current, targetKey: target.key, startMinutes: target.startMinutes, dragged: true };
     cardMoveRef.current = next;
     setCardMove(next);
   };
@@ -588,7 +639,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     if (current === null) return;
     if (current.pointerId !== event.pointerId) return;
     event.stopPropagation();
-    releasePointerCaptureIfSupported(card, event.pointerId);
+    releasePointerCaptureIfSupported(isDayMode ? card : scrollRef.current ?? card, event.pointerId);
     cardMoveRef.current = null;
     setCardMove(null);
     if (!current.dragged) return;
@@ -601,19 +652,21 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     if (current === null) return;
     if (current.pointerId !== event.pointerId) return;
     event.stopPropagation();
-    releasePointerCaptureIfSupported(card, event.pointerId);
+    releasePointerCaptureIfSupported(isDayMode ? card : scrollRef.current ?? card, event.pointerId);
     cardMoveRef.current = null;
     setCardMove(null);
   };
 
   const beginCardResize = (event: PointerEvent, item: CalendarItemDTO, handle: HTMLElement): void => {
-    if (!isDayMode || !onMoveItem || event.button !== 0 || item.allDay || !item.startsAt || !item.editable) return;
+    if (!onMoveItem || event.button !== 0 || item.allDay || !item.startsAt || !item.editable) return;
     event.preventDefault();
     event.stopPropagation();
     const startsAt = new Date(item.startsAt).getTime();
     const endsAt = item.endsAt ? new Date(item.endsAt).getTime() : startsAt + 60 * 60_000;
     const durationMinutes = Math.max(MIN_RESIZE_DURATION_MINUTES, Math.round((endsAt - startsAt) / 60_000 / 15) * 15);
-    const next: CardResizeSelection = { item, pointerId: event.pointerId, startY: event.clientY, startDurationMinutes: durationMinutes, durationMinutes, dragged: false };
+    const track = handle.closest<HTMLElement>('.cal-tg-week-row-track');
+    const pixelsPerMinute = isDayMode ? hourHeight / 60 : (track?.getBoundingClientRect().width ?? HOURS * WEEK_HOUR_W * zoom) / (HOURS * 60);
+    const next: CardResizeSelection = { item, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, pixelsPerMinute, startDurationMinutes: durationMinutes, durationMinutes, dragged: false };
     cardResizeRef.current = next;
     setCardResize(next);
     setPointerCaptureIfSupported(handle, event.pointerId);
@@ -626,7 +679,8 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     event.preventDefault();
     event.stopPropagation();
     const startMinutes = minutesInto(current.item.startsAt);
-    const deltaMinutes = Math.round(((event.clientY - current.startY) / hourHeight) * 60 / 15) * 15;
+    const deltaPixels = isDayMode ? event.clientY - current.startY : event.clientX - current.startX;
+    const deltaMinutes = Math.round((deltaPixels / Math.max(.01, current.pixelsPerMinute)) / 15) * 15;
     const durationMinutes = Math.max(MIN_RESIZE_DURATION_MINUTES, Math.min((24 * 60) - startMinutes, current.startDurationMinutes + deltaMinutes));
     const next = { ...current, durationMinutes, dragged: current.dragged || durationMinutes !== current.startDurationMinutes };
     cardResizeRef.current = next;
@@ -659,14 +713,16 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
   };
 
   const resizeCardByKeyboard = (event: KeyboardEvent, item: CalendarItemDTO): void => {
-    if (!isDayMode || !onMoveItem || !item.startsAt || !item.editable || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+    const decreaseKey = isDayMode ? 'ArrowUp' : 'ArrowLeft';
+    const increaseKey = isDayMode ? 'ArrowDown' : 'ArrowRight';
+    if (!onMoveItem || !item.startsAt || !item.editable || (event.key !== decreaseKey && event.key !== increaseKey)) return;
     event.preventDefault();
     event.stopPropagation();
     const startsAt = new Date(item.startsAt).getTime();
     const endsAt = item.endsAt ? new Date(item.endsAt).getTime() : startsAt + 60 * 60_000;
     const currentDuration = Math.max(MIN_RESIZE_DURATION_MINUTES, Math.round((endsAt - startsAt) / 60_000 / 15) * 15);
     const startMinutes = minutesInto(item.startsAt);
-    const nextDuration = Math.max(MIN_RESIZE_DURATION_MINUTES, Math.min((24 * 60) - startMinutes, currentDuration + (event.key === 'ArrowDown' ? 15 : -15)));
+    const nextDuration = Math.max(MIN_RESIZE_DURATION_MINUTES, Math.min((24 * 60) - startMinutes, currentDuration + (event.key === increaseKey ? 15 : -15)));
     if (nextDuration === currentDuration) return;
     void onMoveItem(item, itemDateKey(item) ?? toLocalDateKey(days[0] ?? new Date()), inputTime(startMinutes), nextDuration);
   };
@@ -678,6 +734,181 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
     setContext(null);
     onDeleteItem(item);
   };
+
+  if (!isDayMode) {
+    const firstDay = days[0] ?? new Date();
+    const lastDay = days[days.length - 1] ?? firstDay;
+    const sameMonth = firstDay.getMonth() === lastDay.getMonth() && firstDay.getFullYear() === lastDay.getFullYear();
+    const monthLabel = sameMonth
+      ? firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : `${firstDay.toLocaleDateString('en-US', { month: 'short' })} – ${lastDay.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}`;
+    const rangeLabel = `${firstDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${lastDay.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    const weekTimelineWidth = HOURS * weekHourWidth;
+    const overviewMode = zoom < .55;
+    const weekCardHeight = overviewMode ? 44 : WEEK_CARD_H;
+    const weekStackStep = overviewMode ? 18 : WEEK_STACK_STEP;
+    const allDayItems = byDay.flatMap(({ day, allDay }) => allDay.map(item => ({ day, item })));
+
+    return (
+      <div class={`cal-tg cal-tg--week cal-week-timeline${overviewMode ? ' is-week-overview' : ''}${loading ? ' is-loading' : ''}`} style={`--cal-week-hour:${weekHourWidth}px;--cal-week-width:${weekTimelineWidth}px;--cal-week-day-rail:${WEEK_DAY_RAIL_W}px;--cal-tg-zoom:${zoom}`} onWheel={event => {
+        if ((!event.ctrlKey && !event.metaKey) || !onZoomChange) return;
+        event.preventDefault();
+        const scroll = scrollRef.current;
+        if (scroll) {
+          const bounds = scroll.getBoundingClientRect();
+          const offsetX = event.clientX - bounds.left;
+          weekZoomAnchorRef.current = { offsetX, logicalX: scroll.scrollLeft + offsetX };
+        }
+        onZoomChange(Math.max(.35, Math.min(1.6, Number((zoom + (event.deltaY < 0 ? .1 : -.1)).toFixed(2)))));
+      }} data-widget-content-root>
+        <div class="cal-tg-scroll cal-week-scroll" ref={scrollRef}
+          onPointerMove={event => {
+            if (!cardMoveRef.current) return;
+            // A row handles the first move so it can preserve the destination day.
+            // After pointer capture, subsequent events target the scroller directly.
+            if (event.target !== event.currentTarget) return;
+            moveCard(event, event.currentTarget);
+          }}
+          onPointerUp={event => { if (cardMoveRef.current) finishCardMove(event, event.currentTarget); }}
+          onPointerCancel={event => { if (cardMoveRef.current) cancelCardMove(event, event.currentTarget); }}>
+          <header class="cal-week-time-head">
+            <div class="cal-week-period">
+              <div class="cal-week-period-copy"><strong>{monthLabel}</strong><span>{rangeLabel}</span></div>
+              <div class="cal-week-period-nav" role="group" aria-label="Week navigation">
+                <Button variant="ghost" size="sm" iconOnly onClick={onPrevious} disabled={!onPrevious} aria-label="Previous week" iconLeft={<LucideIcon name="ChevronLeft" size={15} />} />
+                <Button variant="ghost" size="sm" iconOnly onClick={onNext} disabled={!onNext} aria-label="Next week" iconLeft={<LucideIcon name="ChevronRight" size={15} />} />
+              </div>
+            </div>
+            <div class="cal-week-hours" aria-label="Time of day">
+              {hours.map(hour => <span key={hour}>{hourLabel(hour)}</span>)}
+              {days.some(isToday) ? <div class="cal-week-now-head" style={`left:${nowMinutes / (HOURS * 60) * 100}%`}><span>{timeLabel(now.toISOString())}</span></div> : null}
+            </div>
+          </header>
+
+          {hasAllDay ? <section class="cal-week-all-day" aria-label="All-day events">
+            <div class="cal-week-all-day-label"><LucideIcon name="CalendarClock" size={15} strokeWidth={1.45} /><span>All Day</span></div>
+            <div class="cal-week-all-day-track">
+              {allDayItems.length ? allDayItems.map(({ day, item }) => {
+                const meta = sourceMeta(item);
+                const hasTitleIcon = Boolean(item.titleIconType && item.titleIconValue);
+                return <button type="button" key={item.id} class={`cal-tg-allday-chip cal-week-all-day-chip tone-${itemTone(item)}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}`} style={calendarCustomColorVariables(item.customColor) || undefined} onKeyDown={event => deleteCardByKeyboard(event, item)} onClick={event => onOpenItem(item, { x: event.clientX, y: event.clientY })} onContextMenu={event => {
+                  if (!hasItemActions(item)) return;
+                  event.preventDefault();
+                  setContext({ kind: 'item', x: event.clientX, y: event.clientY, item });
+                }}>
+                  <span class="cal-week-all-day-day">{weekdayShort(day)} {day.getDate()}</span>
+                  <span class="cal-week-all-day-icon" aria-hidden="true">{hasTitleIcon ? <CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={13} /> : <LucideIcon name={meta.icon} size={13} />}</span>
+                  <strong>{item.title}</strong>
+                </button>;
+              }) : <div class="cal-week-all-day-empty" role="status"><span>No All-Day Events Scheduled</span></div>}
+            </div>
+          </section> : null}
+
+          <div class="cal-week-rows" ref={gridRef}>
+            {days.some(isToday) ? <div class="cal-week-now-column" style={`left:calc(var(--cal-week-day-rail) + ${(nowMinutes / 60) * weekHourWidth}px)`} aria-hidden="true" /> : null}
+            {byDay.map(({ day, key, blocks }) => {
+              const activeSelection = dragSelection?.dragged && dragSelection.key === key ? dragSelection : null;
+              const pendingSelection = !activeSelection && draftSelection?.key === key
+                ? { anchorMinutes: inputMinutes(draftSelection.startTime), focusMinutes: Math.max(inputMinutes(draftSelection.startTime), inputMinutes(draftSelection.endTime) - 15) }
+                : null;
+              const visibleSelection = activeSelection ?? pendingSelection;
+              const dayWeather = weatherByDate.get(key);
+              const dayWeatherLabel = dayWeather ? titleCase(dayWeather.label) : '';
+              const dayHolidays = holidaysByDate.get(key) ?? [];
+              const primaryHoliday = dayHolidays[0];
+              const promotedStackBlock = blocks.find(block => block.item.id === promotedStackItemId) ?? null;
+              const maxLanes = Math.max(1, ...blocks.map(block => block.lanes));
+              const rowHeight = weekCardHeight + 20 + (maxLanes - 1) * weekStackStep;
+              return <section class={`cal-tg-week-row${isToday(day) ? ' is-today' : ''}${day.getDay() === 0 || day.getDay() === 6 ? ' is-weekend' : ''}`} key={key} style={`--cal-week-row-height:${rowHeight}px`}>
+                <header class="cal-tg-week-day">
+                  <span class="cal-tg-week-weekday">{weekdayShort(day)}</span>
+                  <strong>{day.getDate()}</strong>
+                  <span class="cal-tg-week-day-meta">
+                    {dayWeather ? <span class="cal-tg-week-weather" title={`${weatherLocationLabel ?? 'Trinidad & Tobago'} · ${dayWeatherLabel}`}><WeatherConditionIcon code={dayWeather.code} /><span><b>{Math.round(dayWeather.maxC)}°</b><small>{dayWeatherLabel}</small></span></span> : null}
+                    {primaryHoliday ? <small class="cal-tg-week-holiday">{primaryHoliday.name}</small> : null}
+                  </span>
+                </header>
+                <div class={`cal-tg-week-row-track${activeSelection ? ' is-drag-selecting' : ''}`} data-date-key={key}
+                  onPointerLeave={() => { if (!cardMoveRef.current && !cardResizeRef.current) setPromotedStackItemId(null); }}
+                  onPointerDown={event => beginDragSelection(event, key, event.currentTarget)}
+                  onPointerMove={event => {
+                    if (cardMoveRef.current) { moveCard(event, scrollRef.current ?? event.currentTarget, event.currentTarget); return; }
+                    moveDragSelection(event, key, event.currentTarget);
+                  }}
+                  onPointerUp={event => finishDragSelection(event, key, event.currentTarget)}
+                  onPointerCancel={event => cancelDragSelection(event, key, event.currentTarget)}
+                  onContextMenu={event => {
+                    if ((event.target as HTMLElement).closest('.cal-tg-event')) return;
+                    event.preventDefault();
+                    setContext({ kind: 'slot', x: event.clientX, y: event.clientY, key, time: slotTime(event.clientX, event.clientY, event.currentTarget) });
+                  }}
+                  onDblClick={event => {
+                    if (!onCreateForDay) return;
+                    onCreateForDay(key, slotTime(event.clientX, event.clientY, event.currentTarget), 'event', { x: event.clientX, y: event.clientY });
+                  }}>
+                  {visibleSelection ? <div class={`cal-tg-create-ghost cal-week-create-ghost${pendingSelection ? ' is-pending-create' : ''}`} style={`left:${Math.min(visibleSelection.anchorMinutes, visibleSelection.focusMinutes) / (HOURS * 60) * 100}%;width:${Math.max(15, Math.abs(visibleSelection.focusMinutes - visibleSelection.anchorMinutes) + 15) / (HOURS * 60) * 100}%`} aria-hidden="true">
+                    <span>{timelineLabel(Math.min(visibleSelection.anchorMinutes, visibleSelection.focusMinutes))} – {timelineLabel(Math.min((24 * 60) - 1, Math.max(visibleSelection.anchorMinutes, visibleSelection.focusMinutes) + 15))}</span><strong>New calendar item</strong>
+                  </div> : null}
+                  {blocks.map(({ item, lane, lanes, stackGroup, size, spansMultipleDays }) => {
+                    if (!item.startsAt) return null;
+                    const startMinutes = minutesInto(item.startsAt);
+                    const itemStart = new Date(item.startsAt).getTime();
+                    const itemEnd = item.endsAt ? new Date(item.endsAt).getTime() : itemStart + 60 * 60_000;
+                    const durationMinutes = Math.max(15, Math.min((HOURS * 60) - startMinutes, Math.round((itemEnd - itemStart) / 60_000)));
+                    const swapApplies = Boolean(promotedStackBlock && promotedStackBlock.stackGroup === stackGroup && promotedStackBlock.lanes === lanes);
+                    const displayLane = swapApplies ? item.id === promotedStackItemId ? lanes - 1 : lane === lanes - 1 ? promotedStackBlock!.lane : lane : lane;
+                    const meta = sourceMeta(item);
+                    const people = calendarItemKind(item) === 'meeting'
+                      ? attendeePeople?.[item.id] ?? [...new Set([item.ownerName].filter((name): name is string => Boolean(name)))].map(name => ({ id: `${item.id}-${name}`, name }))
+                      : [];
+                    const hasTitleIcon = Boolean(item.titleIconType && item.titleIconValue);
+                    const entering = item.id === enteringItemId || item.id.startsWith(`${enteringItemId}::`);
+                    return <article key={item.id} class={`cal-tg-event cal-week-event tone-${itemTone(item)} size-${size}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasTitleIcon ? ' has-title-icon' : ''}${people.length ? ' has-participants' : ''}${spansMultipleDays ? ' is-multi-day' : ''}${lanes > 1 ? ' is-overlapping' : ''}${item.id === promotedStackItemId ? ' is-stack-promoted' : ''}${onMoveItem && item.editable ? ' is-movable' : ''}${cardMove?.item.id === item.id && !cardMove.dragged ? ' is-pressed' : ''}${cardMove?.dragged && cardMove.item.id === item.id ? ' is-being-moved' : ''}${cardResize?.item.id === item.id ? ' is-being-resized' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
+                      data-card-size={size} data-calendar-lanes={lanes} data-calendar-stack-group={stackGroup} data-calendar-item-id={item.id}
+                      style={`left:${startMinutes / (HOURS * 60) * 100}%;top:${10 + displayLane * weekStackStep}px;width:calc(${durationMinutes / (HOURS * 60) * 100}% - ${overviewMode ? 3 : 8}px);min-width:${overviewMode ? 30 : 76}px;height:${weekCardHeight}px;z-index:${displayLane + 2};${calendarCustomColorVariables(item.customColor)}`}
+                      onPointerEnter={() => { if (lanes > 1 && lane < lanes - 1) setPromotedStackItemId(item.id); }}
+                      onAnimationEnd={entering ? () => onEntryAnimationEnd?.(item.id) : undefined}
+                      onPointerDown={event => beginCardMove(event, item, event.currentTarget)}
+                      onContextMenu={event => {
+                        if (!hasItemActions(item)) return;
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setContext({ kind: 'item', x: event.clientX, y: event.clientY, item });
+                      }} onDblClick={event => event.stopPropagation()}>
+                      <button type="button" class={`cal-tg-event-main cal-week-event-main tone-${itemTone(item)}`} aria-label={`${meta.label}: ${item.title}`} onKeyDown={event => deleteCardByKeyboard(event, item)} onClick={event => {
+                        if (suppressItemClickRef.current === item.id) { suppressItemClickRef.current = null; return; }
+                        setContext(null);
+                        onOpenItem(item, { x: event.clientX, y: event.clientY });
+                      }}>
+                        <span class="cal-tg-week-card-icon" aria-hidden="true">{hasTitleIcon ? <CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={14} /> : <LucideIcon name={meta.icon} size={14} />}</span>
+                        <span class="cal-tg-week-card-copy"><span class="cal-tg-event-title"><span>{item.title}</span></span><span class="cal-tg-event-time">{spansMultipleDays && item.endsAt
+                          ? <><span>{shortDateLabel(item.startsAt)} {timeLabel(item.startsAt)}</span><span>– {shortDateLabel(item.endsAt)} {timeLabel(item.endsAt)}</span></>
+                          : <><span>{timeLabel(item.startsAt)}</span>{item.endsAt ? <span>– {timeLabel(item.endsAt)}</span> : null}</>}</span>{item.locationLabel ? <span class="cal-tg-event-location">{item.locationLabel}</span> : null}</span>
+                        {people.length ? <span class="cal-tg-event-people-slot"><AvatarGroup people={people} max={3} size={20} totalCount={Math.max(item.attendeeCount, people.length)} label={`${item.title} people`} /></span> : null}
+                      </button>
+                      {onMoveItem && item.editable ? <button type="button" class="cal-tg-event-resize cal-week-event-resize" aria-label={`Resize ${item.title} in 15-minute increments`} onPointerDown={event => beginCardResize(event, item, event.currentTarget)} onPointerMove={moveCardResize} onPointerUp={event => finishCardResize(event, event.currentTarget)} onPointerCancel={event => cancelCardResize(event, event.currentTarget)} onClick={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => resizeCardByKeyboard(event, item)}><span /></button> : null}
+                    </article>;
+                  })}
+                </div>
+              </section>;
+            })}
+          </div>
+        </div>
+        <span ref={setContextAnchor} class="cal-context-anchor" style={context ? `left:${context.x}px;top:${context.y}px` : undefined} aria-hidden="true" />
+        <DropdownMenu id="cal-tg-context-menu" open={Boolean(context)} anchor={contextAnchor} onClose={() => setContext(null)} align="start" placement={context?.kind === 'slot' ? 'right' : 'auto'} label={context?.kind === 'item' ? 'Calendar item actions' : 'Calendar slot actions'} items={context?.kind === 'item' ? [
+          ...(context.item.origin === 'calendar' && context.item.status !== 'done' && context.item.status !== 'cancelled' && onSetReminder ? [{ id: 'reminder', label: 'Set reminder', icon: <LucideIcon name="BellRing" size={17} />, onSelect: () => onSetReminder(context.item) }] : []),
+          { id: 'edit', label: 'Edit event', icon: <LucideIcon name="PanelsTopLeft" size={17} />, disabled: !context.item.editable || !onEditItem, onSelect: () => onEditItem?.(context.item, { x: context.x, y: context.y }) },
+          ...(context.item.sourceRoute && onOpenSource ? [{ id: 'source', label: 'Open source', icon: <LucideIcon name="ExternalLink" size={17} />, onSelect: () => onOpenSource(context.item) }] : []),
+          ...(context.item.cancelable && onDeleteItem ? [{ id: 'delete', label: 'Delete', icon: <LucideIcon name="Trash2" size={17} />, danger: true, onSelect: () => onDeleteItem(context.item) }] : []),
+        ] : context?.kind === 'slot' ? [
+          { id: 'event', label: 'Create event', description: `${context.key} at ${context.time}`, icon: <LucideIcon name="CalendarPlus" size={15} />, disabled: !onCreateForDay, onSelect: () => onCreateForDay?.(context.key, context.time, 'event', { x: context.x, y: context.y }) },
+          { id: 'task', label: 'Create task', icon: <LucideIcon name="ListPlus" size={15} />, disabled: !onCreateForDay, onSelect: () => onCreateForDay?.(context.key, context.time, 'task', { x: context.x, y: context.y }) },
+          { id: 'meeting', label: 'Schedule meeting', icon: <LucideIcon name="Video" size={15} />, disabled: !onCreateMeeting, onSelect: () => onCreateMeeting?.(context.key, context.time) },
+          { id: 'reminder', label: 'Add standalone reminder', icon: <LucideIcon name="BellPlus" size={15} />, disabled: !onCreateForDay, onSelect: () => onCreateForDay?.(context.key, context.time, 'reminder', { x: context.x, y: context.y }) },
+        ] : []} />
+      </div>
+    );
+  }
 
   return (
     <div class={`cal-tg cal-tg--${effectiveMode}${loading ? ' is-loading' : ''}`} style={`--cal-tg-cols:${cols};--cal-tg-hour:${hourHeight}px;--cal-tg-half-hour:${hourHeight / 2}px;--cal-tg-h:${HOURS * hourHeight}px;--cal-tg-day-w:${dayMinWidth}px;--cal-tg-min-width:${gridMinWidth}px;--cal-tg-zoom:${zoom}`} onWheel={event => {
@@ -787,22 +1018,27 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
               ? { anchorMinutes: inputMinutes(draftSelection.startTime), focusMinutes: Math.max(inputMinutes(draftSelection.startTime), inputMinutes(draftSelection.endTime) - 15) }
               : null;
             const visibleSelection = activeSelection ?? pendingSelection;
+            const promotedStackBlock = isDayMode ? null : blocks.find(block => block.item.id === promotedStackItemId) ?? null;
             return <div class={`cal-tg-col${isToday(day) ? ' is-today' : ''}${day.getDay() === 0 || day.getDay() === 6 ? ' is-weekend' : ''}${activeSelection ? ' is-drag-selecting' : ''}`} data-date-key={key} key={key} onPointerDown={event => beginDragSelection(event, key, event.currentTarget)} onPointerMove={event => moveDragSelection(event, key, event.currentTarget)} onPointerUp={event => finishDragSelection(event, key, event.currentTarget)} onPointerCancel={event => cancelDragSelection(event, key, event.currentTarget)} onContextMenu={event => {
               if ((event.target as HTMLElement).closest('.cal-tg-event')) return;
               event.preventDefault();
-              setContext({ kind: 'slot', x: event.clientX, y: event.clientY, key, time: slotTime(event.clientY, event.currentTarget) });
+              setContext({ kind: 'slot', x: event.clientX, y: event.clientY, key, time: slotTime(event.clientX, event.clientY, event.currentTarget) });
             }} onDblClick={event => {
               if (!onCreateForDay) return;
-              onCreateForDay(key, slotTime(event.clientY, event.currentTarget), 'event', { x: event.clientX, y: event.clientY });
+              onCreateForDay(key, slotTime(event.clientX, event.clientY, event.currentTarget), 'event', { x: event.clientX, y: event.clientY });
             }}>
               {visibleSelection ? <div class={`cal-tg-create-ghost${pendingSelection ? ' is-pending-create' : ''}`} style={`top:${Math.min(visibleSelection.anchorMinutes, visibleSelection.focusMinutes) / 60 * hourHeight}px;height:${Math.max(15, Math.abs(visibleSelection.focusMinutes - visibleSelection.anchorMinutes) + 15) / 60 * hourHeight}px`} aria-hidden="true">
                 <span>{timelineLabel(Math.min(visibleSelection.anchorMinutes, visibleSelection.focusMinutes))} – {timelineLabel(Math.min((24 * 60) - 1, Math.max(visibleSelection.anchorMinutes, visibleSelection.focusMinutes) + 15))}</span>
                 <strong>New calendar item</strong>
               </div> : null}
-              {blocks.map(({ item, top, height, lane, lanes, size, spansMultipleDays }) => {
-                const overlapStep = 12;
+              {blocks.map(({ item, top, height, lane, lanes, stackGroup, size, spansMultipleDays }) => {
+                const overlapStep = 18;
                 const overlapSpread = (lanes - 1) * overlapStep;
-                const overlapOffset = lane * overlapStep;
+                const swapApplies = Boolean(promotedStackBlock && promotedStackBlock.stackGroup === stackGroup && promotedStackBlock.lanes === lanes);
+                const displayLane = swapApplies
+                  ? item.id === promotedStackItemId ? lanes - 1 : lane === lanes - 1 ? promotedStackBlock!.lane : lane
+                  : lane;
+                const overlapOffset = displayLane * overlapStep;
                 const dayLanePercent = 100 / lanes;
                 const cardLeft = isDayMode && lanes > 1
                   ? `${(lane + .5) * dayLanePercent}%`
@@ -832,9 +1068,10 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                 const maxCardWidth = isDayMode ? 'none' : `${CARD_MAX_WIDTH[size]}px`;
                 const entering = item.id === enteringItemId || item.id.startsWith(`${enteringItemId}::`);
                 return (
-                    <article key={item.id} class={`cal-tg-event tone-${itemTone(item)} ${density}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasTitleIcon ? ' has-title-icon' : ''}${showParticipants ? ' has-participants' : ''}${deadline ? ` has-deadline is-deadline-${deadline.state}` : ''}${spansMultipleDays ? ' is-multi-day' : ''}${lanes > 1 ? ' is-overlapping' : ''}${isMinimized ? ' is-minimized' : ''}${onMoveItem && item.editable ? ' is-movable' : ''}${cardMove?.item.id === item.id && !cardMove.dragged ? ' is-pressed' : ''}${cardMove?.dragged && cardMove.item.id === item.id ? ' is-being-moved' : ''}${cardResize?.item.id === item.id ? ' is-being-resized' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
-                      data-card-size={size} data-calendar-lanes={lanes} data-calendar-item-id={item.id}
-                      style={`top:${top}px;height:${renderedEventHeight(height)}px;left:${cardLeft};width:${cardWidth};max-width:${maxCardWidth};--cal-overlap-layer:${lane + 2};${customColorVariables}`}
+                    <article key={item.id} class={`cal-tg-event tone-${itemTone(item)} ${density}${item.colorKey ? ' has-custom-tone' : ''}${item.customColor ? ' has-custom-color' : ''}${hasTitleIcon ? ' has-title-icon' : ''}${showParticipants ? ' has-participants' : ''}${deadline ? ` has-deadline is-deadline-${deadline.state}` : ''}${spansMultipleDays ? ' is-multi-day' : ''}${lanes > 1 ? ' is-overlapping' : ''}${item.id === promotedStackItemId ? ' is-stack-promoted' : ''}${isMinimized ? ' is-minimized' : ''}${onMoveItem && item.editable ? ' is-movable' : ''}${cardMove?.item.id === item.id && !cardMove.dragged ? ' is-pressed' : ''}${cardMove?.dragged && cardMove.item.id === item.id ? ' is-being-moved' : ''}${cardResize?.item.id === item.id ? ' is-being-resized' : ''}${entering ? ' cal-entry-is-entering' : ''}`}
+                      data-card-size={size} data-calendar-lanes={lanes} data-calendar-stack-group={stackGroup} data-calendar-item-id={item.id}
+                      style={`top:${top}px;height:${renderedEventHeight(height)}px;left:${cardLeft};width:${cardWidth};max-width:${maxCardWidth};--cal-overlap-layer:${displayLane + 2};${customColorVariables}`}
+                      onPointerEnter={() => { if (!isDayMode && lanes > 1 && lane < lanes - 1) setPromotedStackItemId(item.id); }}
                       onAnimationEnd={entering ? () => onEntryAnimationEnd?.(item.id) : undefined}
                       onPointerDown={event => beginCardMove(event, item, event.currentTarget)}
                       onPointerMove={event => moveCard(event, event.currentTarget)}
@@ -867,7 +1104,7 @@ export function TimeGridView({ mode, days, items, holidays = [], weatherDays = [
                         {showParticipants ? <span class="cal-tg-event-people-slot"><AvatarGroup people={people} max={avatarMax} size={avatarSize} totalCount={Math.max(item.attendeeCount, people.length)} label={`${item.title} people`} class="cal-tg-event-people" /></span> : null}
                         {!isDayMode ? <span class="cal-tg-week-card-icon" aria-hidden="true">{hasTitleIcon ? <CalendarTitleIcon type={item.titleIconType} value={item.titleIconValue} size={12} /> : <LucideIcon name={meta.icon} size={12} />}</span> : null}
                       </button>
-                      {isDayMode && onMoveItem && item.editable ? <button type="button" class="cal-tg-event-resize" aria-label={`Resize ${item.title} in 15-minute increments`} onPointerDown={event => beginCardResize(event, item, event.currentTarget)} onPointerMove={moveCardResize} onPointerUp={event => finishCardResize(event, event.currentTarget)} onPointerCancel={event => cancelCardResize(event, event.currentTarget)} onClick={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => resizeCardByKeyboard(event, item)}><span /></button> : null}
+                      {onMoveItem && item.editable ? <button type="button" class="cal-tg-event-resize" aria-label={`Resize ${item.title} in 15-minute increments`} onPointerDown={event => beginCardResize(event, item, event.currentTarget)} onPointerMove={moveCardResize} onPointerUp={event => finishCardResize(event, event.currentTarget)} onPointerCancel={event => cancelCardResize(event, event.currentTarget)} onClick={event => { event.preventDefault(); event.stopPropagation(); }} onKeyDown={event => resizeCardByKeyboard(event, item)}><span /></button> : null}
                     </article>
                 );
               })}

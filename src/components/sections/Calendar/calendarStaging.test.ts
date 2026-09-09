@@ -75,6 +75,9 @@ describe('calendar staged workspace', () => {
       endsAt: '2026-09-08T17:00:00.000Z',
       colorKey: null,
       customColor: '#2a8f64',
+      categoryId: 'calendar-demo-category-general',
+      availability: 'free',
+      recurrenceRule: 'FREQ=WEEKLY',
     });
 
     expect(updated.id).toBe(original.id);
@@ -82,6 +85,9 @@ describe('calendar staged workspace', () => {
     expect(updated.endsAt).toBe('2026-09-08T17:00:00.000Z');
     expect(updated.colorKey).toBeNull();
     expect(updated.customColor).toBe('#2a8f64');
+    expect(updated.categoryId).toBe('calendar-demo-category-general');
+    expect(updated.availability).toBe('free');
+    expect(updated.recurrenceRule).toBe('FREQ=WEEKLY');
   });
 
   it('includes one overnight multi-day record for lane and continuation staging', () => {

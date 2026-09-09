@@ -8,6 +8,7 @@ import {
   useSetCalendarReminders,
   useUpdateEntry,
   type CalendarColorKey,
+  type CalendarCategoryDTO,
   type CalendarItemDTO,
   type CalendarCollectionDTO,
   type CalendarTaskPriority,
@@ -25,6 +26,11 @@ import { CalendarTitleIconPicker } from './CalendarTitleIconPicker';
 
 const EMPTY_PEOPLE: readonly PersonOption[] = [];
 
+export interface CalendarPreviewEditorDetails {
+  people: readonly PersonOption[];
+  reminderOffsets: readonly number[];
+}
+
 function recipientName(person: MessageRecipient): string {
   const displayName = person.displayName?.trim();
   if (displayName) return displayName;
@@ -32,7 +38,7 @@ function recipientName(person: MessageRecipient): string {
   return username && username.length > 0 ? username : 'SIOMAC employee';
 }
 
-export function CalendarItemEditor({ open = true, item, calendars = [], preview = false, titleIconMode = 'emoji', previewPeople = EMPTY_PEOPLE, previewDirectory = EMPTY_PEOPLE, onPreviewSave, onColourPreview, onClose }: {
+export function CalendarItemEditor({ open = true, item, calendars = [], preview = false, titleIconMode = 'emoji', previewPeople = EMPTY_PEOPLE, previewDirectory = EMPTY_PEOPLE, previewCategories = [], previewReminderOffset = null, onPreviewSave, onColourPreview, onClose }: {
   open?: boolean;
   item: CalendarItemDTO | null;
   calendars?: readonly CalendarCollectionDTO[];
@@ -40,7 +46,9 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
   titleIconMode?: CalendarTitleIconType;
   previewPeople?: readonly PersonOption[];
   previewDirectory?: readonly PersonOption[];
-  onPreviewSave?: (item: CalendarItemDTO, patch: UpdateEntryRequest['patch'], people?: readonly PersonOption[]) => void;
+  previewCategories?: readonly CalendarCategoryDTO[];
+  previewReminderOffset?: number | null;
+  onPreviewSave?: (item: CalendarItemDTO, patch: UpdateEntryRequest['patch'], details: CalendarPreviewEditorDetails) => void;
   onColourPreview?: (item: CalendarItemDTO, colorKey: CalendarColorKey | null, customColor: string | null) => void;
   onClose: () => void;
 }): VNode | null {
@@ -80,6 +88,7 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
   const departments = useCalendarDepartments(Boolean(item?.editable));
   const categories = useCalendarCategories(Boolean(item?.editable && !preview));
   const directory = useMessageRecipients(peopleSearch, { enabled: Boolean(item?.editable && (item.type === 'activity' || item.assignable)) && !preview });
+  const previewPeopleSignature = previewPeople.map(person => person.id).join('\u0000');
 
   useEffect(() => {
     if (!item) return;
@@ -97,13 +106,13 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
     setPriority(item.priority ?? 'medium');
     setColorKey(item.colorKey);
     setCustomColor(item.customColor);
-    setCalendarId(item.calendarId ?? calendars.find(calendar => calendar.isDefault)?.id ?? calendars[0]?.id ?? '');
+    setCalendarId(item.calendarId ?? '');
     setVisibility(item.visibility ?? 'personal');
     setDepartmentId(item.departmentId ?? '');
     setCategoryId(item.categoryId ?? '');
     setAvailability(item.availability ?? 'busy');
     setRecurrenceRule(item.recurrenceRule ?? '');
-    setReminderOffset('none');
+    setReminderOffset(preview && previewReminderOffset !== null ? String(previewReminderOffset) : 'none');
     setDeadlineEnabled(Boolean(item.deadlineAt));
     setDeadlineDate(item.deadlineAt ? toLocalDateKey(new Date(item.deadlineAt)) : itemEndDateKey(item) ?? firstDay);
     setDeadlineTime(localTimeValue(item.deadlineAt ?? null, '17:00'));
@@ -111,7 +120,13 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
     setAttendeeUserIds(preview ? previewPeople.map(person => person.id) : []);
     setScope('series');
     setError(null);
-  }, [calendars, item, preview, previewPeople]);
+  }, [item, preview, previewPeopleSignature, previewReminderOffset]);
+
+  useEffect(() => {
+    if (!item || calendarId || item.calendarId) return;
+    const fallbackId = calendars.find(calendar => calendar.isDefault)?.id ?? calendars[0]?.id;
+    if (fallbackId) setCalendarId(fallbackId);
+  }, [calendarId, calendars, item]);
 
   useEffect(() => {
     if (!preview && detail.data?.attendees) setAttendeeUserIds(detail.data.attendees.map(attendee => attendee.userId));
@@ -144,7 +159,7 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
   const selectedAttendees = attendeeUserIds.map(userId => peopleById.get(userId) ?? { id: userId, name: 'SIOMAC employee' });
   const selectedAssignee = assigneeUserId ? [peopleById.get(assigneeUserId) ?? { id: assigneeUserId, name: item.assigneeName ?? 'Current assignee' }] : [];
   const categoryOptions = preview
-    ? item.categoryId ? [{ value: item.categoryId, label: item.categoryName ?? 'General' }] : []
+    ? previewCategories.map(category => ({ value: category.id, label: category.name }))
     : (categories.data ?? []).map(category => ({ value: category.id, label: category.name }));
 
   const save = async (): Promise<void> => {
@@ -174,7 +189,10 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
       } : {}),
     };
     if (preview && onPreviewSave) {
-      onPreviewSave(item, patch, item.type === 'activity' ? selectedAttendees : undefined);
+      onPreviewSave(item, patch, {
+        people: item.type === 'activity' ? selectedAttendees : selectedAssignee,
+        reminderOffsets: reminderOffset === 'none' ? [] : [Number(reminderOffset)],
+      });
       onClose();
       return;
     }
@@ -213,7 +231,7 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
       {error ? <div class="cal-form-error" role="alert"><LucideIcon name="CircleAlert" size={15} />{error}</div> : null}
       <section class="cal-editor-primary" aria-label="Calendar item details">
         <FormField label="Title" required charCount={{ value: title.length, max: 200 }}><div class="cal-title-field-row"><CalendarTitleIconPicker mode={titleIconMode} type={titleIconType} value={titleIconValue} disabled={scope === 'occurrence'} onChange={(type, value) => { setTitleIconType(type); setTitleIconValue(value); }} /><TextInput value={title} onInput={setTitle} maxLength={200} autoFocus /></div></FormField>
-        <FormGrid2><FormField label="Calendar" required><Select value={calendarId} onChange={setCalendarId} options={calendars.map(calendar => ({ value: calendar.id, label: `${calendar.name}${calendar.isDefault ? ' · Default' : ''}` }))} disabled={!calendars.length || scope === 'occurrence'} /></FormField><FormField label="Category" required error={categories.isError ? 'Categories could not be loaded.' : undefined}><Select value={categoryId} onChange={setCategoryId} options={categoryOptions} searchable disabled={categories.isLoading || scope === 'occurrence' || preview} /></FormField></FormGrid2>
+        <FormGrid2><FormField label="Calendar" required><Select value={calendarId} onChange={setCalendarId} options={calendars.map(calendar => ({ value: calendar.id, label: `${calendar.name}${calendar.isDefault ? ' · Default' : ''}` }))} disabled={!calendars.length || scope === 'occurrence'} /></FormField><FormField label="Category" required error={!preview && categories.isError ? 'Categories could not be loaded.' : undefined}><Select value={categoryId} onChange={setCategoryId} options={categoryOptions} searchable disabled={(!preview && categories.isLoading) || !categoryOptions.length || scope === 'occurrence'} /></FormField></FormGrid2>
         <FormField label="Card Colour"><CalendarColorPicker value={customColor ? null : colorKey} customColor={customColor} onChange={next => { setColorKey(next); if (next) setCustomColor(null); onColourPreview?.(item, next, null); }} onCustomColorChange={next => { setCustomColor(next); if (next) setColorKey(null); onColourPreview?.(item, null, next); }} allowAutomatic allowCustom disabled={update.isPending || scope === 'occurrence'} label="Edit card colour" /></FormField>
         <div class="cal-editor-all-day">
           <Checkbox checked={allDay} onChange={setAllDay} label="All Day" />

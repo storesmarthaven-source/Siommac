@@ -14,28 +14,28 @@ function cardShell(button: HTMLElement): HTMLElement {
 }
 
 describe('TimeGridView', () => {
-  it('fits a complete Sunday-to-Saturday week into the calendar frame', () => {
+  it('renders Sunday-to-Saturday as day rows against a shared horizontal time scale', () => {
     const sunday = new Date(2026, 8, 6, 12);
     const days = Array.from({ length: 7 }, (_, offset) => addDays(sunday, offset));
     const { container } = render(<TimeGridView mode="week" days={days} items={[]} onOpenItem={vi.fn()} />);
     const grid = container.querySelector<HTMLElement>('.cal-tg')!;
-    const headers = [...container.querySelectorAll('.cal-tg-dayhead')];
+    const rows = [...container.querySelectorAll('.cal-tg-week-row')];
 
-    expect(grid.style.getPropertyValue('--cal-tg-cols')).toBe('7');
-    expect(grid.style.getPropertyValue('--cal-tg-day-w')).toBe('0px');
-    expect(grid.style.getPropertyValue('--cal-tg-min-width')).toBe('0px');
-    expect(headers).toHaveLength(7);
-    expect(headers[0]?.textContent).toContain('Sun');
-    expect(headers[6]?.textContent).toContain('Sat');
+    expect(grid.style.getPropertyValue('--cal-week-width')).toBe('2496px');
+    expect(container.querySelectorAll('.cal-week-hours > span')).toHaveLength(24);
+    expect(rows).toHaveLength(7);
+    expect(rows[0]?.textContent).toContain('Sun');
+    expect(rows[6]?.textContent).toContain('Sat');
   });
 
-  it('moves the single card icon to the bottom-right in Week view', () => {
+  it('places the single Week card icon at the top-left of its text block', () => {
     const sunday = new Date(2026, 8, 6, 12);
     const item = calendarStagingItems(sunday).find(candidate => candidate.titleIconType === 'lucide' && Boolean(candidate.startsAt))!;
     const { container } = render(<TimeGridView mode="week" days={[sunday]} items={[item]} onOpenItem={vi.fn()} />);
     const card = container.querySelector('.cal-tg-event')!;
 
     expect(card.querySelector('.cal-tg-week-card-icon')).toBeTruthy();
+    expect(card.querySelector('.cal-week-event-main')?.firstElementChild?.classList.contains('cal-tg-week-card-icon')).toBe(true);
     expect(card.querySelector('.cal-tg-event-head')).toBeNull();
     expect(card.querySelectorAll('.cal-tg-week-card-icon')).toHaveLength(1);
   });
@@ -93,26 +93,13 @@ describe('TimeGridView', () => {
     expect(container.querySelector('.cal-tg-allday')).toBeNull();
   });
 
-  it('renders rich holiday artwork in the headers without styling the full day columns', () => {
+  it('keeps holiday context compact in the Week day rail', () => {
     const days = Array.from({ length: 4 }, (_, offset) => new Date(2026, 8, 7 + offset, 12));
     const { container } = render(<TimeGridView days={days} items={[]} holidays={calendarStagingHolidays(days)} showAllDay={false} onOpenItem={vi.fn()} />);
-    const cards = [...container.querySelectorAll<HTMLElement>('.cal-tg-holiday-card')];
-    const headers = [...container.querySelectorAll<HTMLElement>('.cal-tg-dayhead')];
-    const columns = [...container.querySelectorAll<HTMLElement>('.cal-tg-col')];
-
-    expect(cards).toHaveLength(4);
-    expect(cards.map(card => card.dataset.holidayTheme)).toEqual(['national', 'emancipation', 'divali', 'eid']);
-    expect(cards.every(card => Boolean(card.querySelector('.cal-tg-holiday-art')))).toBe(true);
-    expect(cards[0]?.querySelector('.cal-holiday-flag-brush')).toBeTruthy();
-    expect(cards[0]?.querySelector('.cal-holiday-skyline')).toBeTruthy();
-    expect(cards[1]?.querySelector('.cal-holiday-textile')).toBeTruthy();
-    expect(cards[2]?.querySelectorAll('.cal-holiday-deya')).toHaveLength(3);
-    expect(cards[3]?.querySelector('.cal-holiday-crescent')).toBeTruthy();
-    expect(cards[3]?.querySelector('.cal-holiday-mosque')).toBeTruthy();
-    expect(headers.map(header => header.classList.contains('is-holiday'))).toEqual([true, true, true, true]);
-    expect(columns.map(column => column.classList.contains('is-holiday'))).toEqual([false, false, false, false]);
-    expect(headers[0]?.classList.contains('holiday-national')).toBe(true);
-    expect(columns[0]?.classList.contains('holiday-national')).toBe(false);
+    const labels = [...container.querySelectorAll<HTMLElement>('.cal-tg-week-holiday')];
+    expect(labels).toHaveLength(4);
+    expect(labels.map(label => label.textContent)).toEqual(['Independence Day', 'African Emancipation Day', 'Divali', 'Eid-ul-Fitr']);
+    expect(container.querySelectorAll('.cal-tg-week-row-track')).toHaveLength(4);
     expect(container.querySelector('.cal-tg-allday')).toBeNull();
   });
 
@@ -220,6 +207,48 @@ describe('TimeGridView', () => {
     fireEvent.keyDown(handle, { key: 'ArrowDown' });
 
     expect(move).toHaveBeenCalledWith(item, toLocalDateKey(monday), expect.any(String), 135);
+  });
+
+  it('exposes the same governed resize control in Week view', () => {
+    const monday = new Date(2026, 7, 31, 12);
+    const item = calendarStagingItems(monday).find(candidate => candidate.title === 'North Field Mobilisation')!;
+    const move = vi.fn();
+    render(<TimeGridView mode="week" days={[monday]} items={[item]} onOpenItem={vi.fn()} onMoveItem={move} />);
+
+    const handle = screen.getByRole('button', { name: `Resize ${item.title} in 15-minute increments` });
+    fireEvent.keyDown(handle, { key: 'ArrowRight' });
+
+    expect(move).toHaveBeenCalledWith(item, toLocalDateKey(monday), expect.any(String), 135);
+  });
+
+  it('resizes Week cards horizontally against the shared time scale', () => {
+    const monday = new Date(2026, 7, 31, 12);
+    const item = calendarStagingItems(monday).find(candidate => candidate.title === 'North Field Mobilisation')!;
+    const move = vi.fn();
+    const { container } = render(<TimeGridView mode="week" days={[monday]} items={[item]} onOpenItem={vi.fn()} onMoveItem={move} />);
+    const track = container.querySelector<HTMLElement>('.cal-tg-week-row-track')!;
+    vi.spyOn(track, 'getBoundingClientRect').mockReturnValue({ x: 118, y: 104, top: 104, left: 118, right: 2614, bottom: 182, width: 2496, height: 78, toJSON: () => ({}) });
+    const handle = screen.getByRole('button', { name: `Resize ${item.title} in 15-minute increments` });
+
+    fireEvent.pointerDown(handle, { button: 0, pointerId: 14, clientX: 300, clientY: 160 });
+    fireEvent.pointerMove(handle, { pointerId: 14, clientX: 352, clientY: 160 });
+    fireEvent.pointerUp(handle, { pointerId: 14, clientX: 352, clientY: 160 });
+
+    expect(move).toHaveBeenCalledWith(item, toLocalDateKey(monday), expect.any(String), 150);
+  });
+
+  it('uses Ctrl plus wheel to reach a complete 24-hour Week overview', () => {
+    const monday = new Date(2026, 7, 31, 12);
+    const zoomChange = vi.fn();
+    const { container, rerender } = render(<TimeGridView mode="week" days={[monday]} items={[]} zoom={0.45} onZoomChange={zoomChange} onOpenItem={vi.fn()} />);
+
+    fireEvent.wheel(container.querySelector('.cal-week-timeline')!, { ctrlKey: true, deltaY: 100, clientX: 400 });
+    expect(zoomChange).toHaveBeenCalledWith(0.35);
+
+    rerender(<TimeGridView mode="week" days={[monday]} items={[]} zoom={0.35} onZoomChange={zoomChange} onOpenItem={vi.fn()} />);
+    const overview = container.querySelector<HTMLElement>('.cal-week-timeline')!;
+    expect(overview.classList.contains('is-week-overview')).toBe(true);
+    expect(overview.style.getPropertyValue('--cal-week-width')).toBe('864px');
   });
 
   it('does not resize a Day-view card below the readable 45-minute minimum', () => {
@@ -405,7 +434,7 @@ describe('TimeGridView', () => {
       expect(card.querySelector('.ui-avatar-group')).toBeTruthy();
     }
     const [first, second] = titles.map(title => cardShell(screen.getByRole('button', { name: new RegExp(title, 'i') })));
-    expect(first?.style.height).toBe('136px');
+    expect(first?.style.height).toBe('58px');
     expect(second?.style.height).toBe(first?.style.height);
   });
 
@@ -417,7 +446,7 @@ describe('TimeGridView', () => {
 
     expect(card).toBeTruthy();
     expect(card?.classList.contains('size-medium')).toBe(true);
-    expect(Number.parseFloat(card?.style.height ?? '0')).toBeGreaterThanOrEqual(62);
+    expect(Number.parseFloat(card?.style.height ?? '0')).toBeGreaterThanOrEqual(58);
     expect(card?.className).not.toMatch(/backdrop-/);
     expect(card?.querySelector('.cal-tg-event-time')?.textContent).toMatch(/11:15 AM.*12:00 PM/);
     expect(card?.querySelector('.cal-tg-time-icon')).toBeNull();
@@ -474,10 +503,16 @@ describe('TimeGridView', () => {
     const overlappingCard = container.querySelector<HTMLElement>('[data-calendar-item-id="overlapping-shift"]');
     expect(overlappingCard?.getAttribute('data-calendar-lanes')).toBe('2');
     expect(overlappingCard?.classList.contains('is-overlapping')).toBe(true);
-    expect(segments[0]?.style.width).toBe('calc(100% - 36px)');
-    expect(overlappingCard?.style.width).toBe('calc(100% - 36px)');
-    expect(segments[0]?.style.left).toBe('50%');
-    expect(overlappingCard?.style.left).toBe('calc(50% + 12px)');
+    expect(segments[0]?.style.width).toContain('calc(');
+    expect(segments[0]?.style.minWidth).toBe('76px');
+    expect(overlappingCard?.style.width).toContain('calc(');
+    expect(segments[0]?.style.left).toContain('91.666');
+    expect(overlappingCard?.style.left).toContain('93.75');
+
+    fireEvent.pointerEnter(segments[0]!);
+    expect(segments[0]?.style.top).toBe('34px');
+    expect(overlappingCard?.style.top).toBe('10px');
+    expect(segments[0]?.classList.contains('is-stack-promoted')).toBe(true);
   });
 
   it('places overlapping Day events in equal side-by-side lanes', () => {
@@ -529,18 +564,19 @@ describe('TimeGridView', () => {
     const deadline = cardShell(screen.getByRole('button', { name: /Insurance Certificate Due/i }));
 
     expect(meeting.classList.contains('size-medium')).toBe(true);
-    expect(meeting.style.maxWidth).toBe('380px');
+    expect(meeting.style.width).toContain('calc(');
+    expect(meeting.style.minWidth).toBe('76px');
     expect(meeting.querySelector('.cal-tg-event-time')).toBeTruthy();
     expect(meeting.querySelector('.cal-tg-event-notes')).toBeNull();
     expect(meeting.querySelector('.cal-tg-event-people-slot')).toBeTruthy();
     expect(deadline.classList.contains('size-medium')).toBe(true);
-    expect(deadline.style.maxWidth).toBe('380px');
+    expect(deadline.style.width).toContain('calc(');
     expect(deadline.querySelector('.cal-tg-event-time')?.textContent).toMatch(/11:00 AM.*11:30 AM/);
     expect(deadline.querySelector('.cal-tg-event-notes')).toBeNull();
     expect(deadline.querySelector('.ui-avatar-group')).toBeNull();
   });
 
-  it('keeps standard task cards content-sized instead of stretching to their duration', () => {
+  it('maps a standard task card width to its duration', () => {
     const start = new Date(2026, 7, 31, 12);
     const wednesday = addDays(start, 2);
     const task = calendarStagingItems(start).find(item => item.title === 'Approve September Crew Roster')!;
@@ -548,7 +584,9 @@ describe('TimeGridView', () => {
     const card = container.querySelector<HTMLElement>('[data-calendar-item-id]')!;
 
     expect(card.getAttribute('data-card-size')).toBe('medium');
-    expect(card.style.height).toBe('136px');
+    expect(card.style.height).toBe('58px');
+    expect(card.style.width).toContain('calc(');
+    expect(card.style.minWidth).toBe('76px');
   });
 
   it('renders a location deadline as a standard all-day card without invented participants', () => {
@@ -606,15 +644,15 @@ describe('TimeGridView', () => {
     expect(container.querySelector('.cal-tg-allday')).toBeNull();
   });
 
-  it('puts a location tag in the header and keeps time and place in the body', () => {
+  it('keeps a field-operation source, time, and place readable on the card', () => {
     const monday = new Date(2026, 7, 31, 12);
-    const item = calendarStagingItems(monday).find(candidate => candidate.title === 'Vendor Access Briefing')!;
-    const { container } = render(<TimeGridView days={[monday]} items={[item]} onOpenItem={vi.fn()} />);
+    const item = calendarStagingItems(monday).find(candidate => candidate.title === 'North Field Mobilisation')!;
+    const { container } = render(<TimeGridView mode="week" days={[monday]} items={[item]} onOpenItem={vi.fn()} />);
     const card = container.querySelector('.cal-tg-event');
 
-    expect(card?.querySelector('.cal-tg-event-source')?.textContent).toContain('Location');
-    expect(card?.querySelector('.cal-tg-event-time')?.textContent).toMatch(/9:00 AM.*11:00 AM/);
-    expect(card?.querySelector('.cal-tg-event-location')?.textContent).toContain('Head Office · Reception');
+    expect(card?.querySelector('.cal-tg-week-card-icon')).toBeTruthy();
+    expect(card?.querySelector('.cal-tg-event-time')?.textContent).toMatch(/7:00 AM.*9:00 AM/);
+    expect(card?.querySelector('.cal-tg-event-location')?.textContent).toContain('North Field · Gate 2');
     expect(card?.querySelector('.cal-card-zoom, .cal-card-map')).toBeNull();
   });
 
@@ -711,6 +749,27 @@ describe('TimeGridView', () => {
     expect(move).toHaveBeenCalledWith(item, '2026-09-08', '09:00', 120);
   });
 
+  it('moves a Week card across both the time scale and day rows', () => {
+    const monday = new Date(2026, 7, 31, 12);
+    const tuesday = addDays(monday, 1);
+    const item = calendarStagingItems(monday).find(candidate => candidate.title === 'North Field Mobilisation')!;
+    const move = vi.fn();
+    const { container } = render(<TimeGridView mode="week" days={[monday, tuesday]} items={[item]} onOpenItem={vi.fn()} onMoveItem={move} />);
+    const scroll = container.querySelector<HTMLElement>('.cal-week-scroll')!;
+    const card = container.querySelector<HTMLElement>('.cal-week-event')!;
+    vi.spyOn(card, 'getBoundingClientRect').mockReturnValue({ x: 180, y: 114, top: 114, left: 180, right: 284, bottom: 172, width: 104, height: 58, toJSON: () => ({}) });
+
+    fireEvent.pointerDown(card, { button: 0, pointerId: 13, clientX: 200, clientY: 130 });
+    const activeTracks = [...container.querySelectorAll<HTMLElement>('.cal-tg-week-row-track')];
+    expect(activeTracks.map(track => track.dataset.dateKey)).toEqual([toLocalDateKey(monday), toLocalDateKey(tuesday)]);
+    vi.spyOn(activeTracks[0]!, 'getBoundingClientRect').mockReturnValue({ x: 118, y: 104, top: 104, left: 118, right: 2614, bottom: 182, width: 2496, height: 78, toJSON: () => ({}) });
+    vi.spyOn(activeTracks[1]!, 'getBoundingClientRect').mockReturnValue({ x: 118, y: 182, top: 182, left: 118, right: 2614, bottom: 260, width: 2496, height: 78, toJSON: () => ({}) });
+    fireEvent.pointerMove(activeTracks[1]!, { pointerId: 13, clientX: 600, clientY: 210 });
+    fireEvent.pointerUp(scroll, { pointerId: 13, clientX: 600, clientY: 210 });
+
+    expect(move).toHaveBeenCalledWith(item, toLocalDateKey(tuesday), expect.any(String), 120);
+  });
+
   it('smoothly previews a dragged card entering and leaving an overlap lane', () => {
     const day = new Date(2026, 8, 8, 12);
     const items = calendarStagingItems(day).filter(candidate => ['North Field Mobilisation', 'Site Readiness Sync', 'Vendor Access Briefing'].includes(candidate.title));
@@ -758,13 +817,13 @@ describe('TimeGridView', () => {
 
     expect(cardShell(screen.getByRole('button', { name: /Submit Permit Pack/i })).className).not.toMatch(/backdrop-/);
 
-    expect(screen.getByRole('button', { name: /Pre-job Safety Talk/i }).getAttribute('data-card-size')).toBe('medium');
+    expect(cardShell(screen.getByRole('button', { name: /Pre-job Safety Talk/i })).getAttribute('data-card-size')).toBe('medium');
     expect(cardShell(screen.getByRole('button', { name: /Pre-job Safety Talk/i })).classList.contains('tone-navy')).toBe(true);
     for (const name of ['Submit Permit Pack', 'Pre-job Safety Talk', 'Insurance Certificate Due', 'Mobilisation Gate Ready']) {
       const card = screen.getByRole('button', { name: new RegExp(name, 'i') });
-      expect(card.getAttribute('data-card-size')).toBe('medium');
+      expect(cardShell(card).getAttribute('data-card-size')).toBe('medium');
       expect(card.querySelector('.cal-tg-event-time')).toBeTruthy();
-      expect(cardShell(card).style.height).toBe('136px');
+      expect(cardShell(card).style.height).toBe('58px');
     }
     for (const name of names) expect(screen.getByRole('button', { name: new RegExp(name, 'i') }).querySelector('.ui-avatar-group')).toBeNull();
   });

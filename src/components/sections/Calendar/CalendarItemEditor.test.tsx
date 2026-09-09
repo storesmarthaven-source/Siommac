@@ -5,6 +5,10 @@ import { localTimestamp } from '@lib/calendar/date';
 import { CalendarItemEditor } from './CalendarItemEditor';
 
 const CALENDARS = [{ id: '00000000-0000-4000-8000-000000000001', name: 'My Calendar', description: null, ownerUserId: 'user-1', ownerName: 'User', visibility: 'personal' as const, departmentId: null, departmentName: null, colorKey: 'blue' as const, customColor: null, isDefault: true, status: 'active' as const, canEdit: true, canArchive: false, provider: null, readOnly: false }];
+const CATEGORIES = [
+  { id: '00000000-0000-4000-8000-000000000099', key: 'operations', name: 'Operations', iconName: 'BriefcaseBusiness', scope: 'system' as const, sortOrder: 1, active: true, canManage: false },
+  { id: '00000000-0000-4000-8000-000000000100', key: 'general', name: 'General', iconName: 'CalendarDays', scope: 'system' as const, sortOrder: 2, active: true, canManage: false },
+];
 
 const update = vi.hoisted(() => vi.fn());
 const setReminders = vi.hoisted(() => vi.fn());
@@ -15,7 +19,7 @@ vi.mock('@api/calendar', async importOriginal => {
     ...original,
     useCalendarItem: () => ({ data: undefined, isLoading: false }),
     useCalendarDepartments: () => ({ data: [{ id: 'dept-1', name: 'Operations' }], isLoading: false }),
-    useCalendarCategories: () => ({ data: [{ id: '00000000-0000-4000-8000-000000000099', key: 'operations', name: 'Operations', iconName: 'BriefcaseBusiness', scope: 'system', sortOrder: 1, active: true, canManage: false }], isLoading: false, isError: false }),
+    useCalendarCategories: () => ({ data: CATEGORIES, isLoading: false, isError: false }),
     useCalendarReminders: () => ({ data: [], isLoading: false }),
     useSetCalendarReminders: () => ({ mutateAsync: setReminders, isPending: false }),
     useUpdateEntry: () => ({ mutateAsync: update, isPending: false }),
@@ -79,11 +83,33 @@ describe('CalendarItemEditor', () => {
 
   it('edits staged cards without calling the live mutation', async () => {
     const savePreview = vi.fn();
-    render(<CalendarItemEditor item={item} calendars={CALENDARS} preview onPreviewSave={savePreview} onClose={vi.fn()} />);
+    render(<CalendarItemEditor item={item} calendars={CALENDARS} preview previewCategories={CATEGORIES} onPreviewSave={savePreview} onClose={vi.fn()} />);
     fireEvent.input(screen.getByLabelText(/^Title/), { target: { value: 'Staged editor update' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
-    await waitFor(() => expect(savePreview).toHaveBeenCalledWith(item, expect.objectContaining({ title: 'Staged editor update' }), undefined));
+    await waitFor(() => expect(savePreview).toHaveBeenCalledWith(item, expect.objectContaining({ title: 'Staged editor update' }), { people: [], reminderOffsets: [] }));
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it('keeps a staged draft intact across parent renders and saves its category and reminder', async () => {
+    const savePreview = vi.fn();
+    const people = [{ id: 'person-1', name: 'Alicia Moore' }];
+    const view = render(<CalendarItemEditor item={item} calendars={CALENDARS} preview previewCategories={CATEGORIES} previewPeople={people} previewReminderOffset={15} onPreviewSave={savePreview} onClose={vi.fn()} />);
+
+    fireEvent.input(screen.getByLabelText(/^Title/), { target: { value: 'Day view staged update' } });
+    view.rerender(<CalendarItemEditor item={item} calendars={CALENDARS} preview previewCategories={CATEGORIES} previewPeople={[...people]} previewReminderOffset={15} onPreviewSave={savePreview} onClose={vi.fn()} />);
+    expect((screen.getByLabelText(/^Title/) as HTMLInputElement).value).toBe('Day view staged update');
+
+    fireEvent.click(screen.getByLabelText(/^Category/));
+    fireEvent.pointerDown(screen.getByRole('option', { name: 'General' }));
+    fireEvent.click(screen.getByLabelText('Reminder'));
+    fireEvent.pointerDown(screen.getByRole('option', { name: '1 hour before' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
+
+    await waitFor(() => expect(savePreview).toHaveBeenCalledWith(
+      item,
+      expect.objectContaining({ title: 'Day view staged update', categoryId: CATEGORIES[1]!.id }),
+      { people: [], reminderOffsets: [60] },
+    ));
   });
 
   it('uses an agenda-oriented field only for meetings', () => {

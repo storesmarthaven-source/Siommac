@@ -225,7 +225,7 @@ function stagedItem(value: StagedItem, index: number): CalendarItemDTO {
 }
 
 /** Isolated Calendar examples used only by governed Demo Mode. Edits are
- * session-local preview state and never mutate operational records. */
+ * browser-local preview state and never mutate operational records. */
 export function calendarStagingItems(today = new Date()): CalendarItemDTO[] {
   const people = {
     alicia: { ownerUserId: 'demo-alicia', ownerName: 'Alicia Moore' },
@@ -325,10 +325,13 @@ export function applyCalendarStagingPatch(item: CalendarItemDTO, patch: UpdateEn
     deadlineAt: patch.deadlineAt !== undefined ? patch.deadlineAt : item.deadlineAt,
     priority: patch.priority ?? item.priority,
     visibility: patch.visibility ?? item.visibility,
+    availability: patch.availability !== undefined ? patch.availability : item.availability,
     assigneeUserId: patch.assigneeUserId !== undefined ? patch.assigneeUserId : item.assigneeUserId,
     departmentId: patch.departmentId !== undefined ? patch.departmentId : item.departmentId,
     locationLabel: patch.locationLabel !== undefined ? patch.locationLabel : item.locationLabel,
     calendarId: patch.calendarId !== undefined ? patch.calendarId : item.calendarId,
+    categoryId: patch.categoryId !== undefined ? patch.categoryId : item.categoryId,
+    recurrenceRule: patch.recurrenceRule !== undefined ? patch.recurrenceRule : item.recurrenceRule,
     colorKey,
     customColor,
   };

@@ -24,7 +24,7 @@ import { CreateCalendarItemDialog, type CalendarCreateType, type CalendarPreview
 import { applyCalendarStagingPatch, CALENDAR_STAGING_CALENDARS, calendarStagingDetail, calendarStagingDirectory, calendarStagingHolidays, calendarStagingPeople, calendarStagingReminderOffsets, type CalendarStagedAttendee } from './calendarStaging';
 import { defaultCalendarStagingWorkspace, loadCalendarStagingWorkspace, saveCalendarStagingWorkspace } from './calendarStagingWorkspace';
 import { CalendarDashboardRail } from './CalendarDashboardRail';
-import { CalendarItemEditor } from './CalendarItemEditor';
+import { CalendarItemEditor, type CalendarPreviewEditorDetails } from './CalendarItemEditor';
 import { CalendarItemPreview } from './CalendarItemPreview';
 import { CalendarCollectionDialog } from './CalendarCollectionDialog';
 import {
@@ -308,9 +308,10 @@ export function CalendarPage(): VNode {
   const visibleHolidays = usingStagedData ? stagedHolidays : dayContextQ.data ?? [];
   const weatherMeta = CALENDAR_WEATHER_LOCATION_META[weatherLocation];
   const weatherQ = useWeatherSnapshot(showWeather && gridDays.length ? { latitude: weatherMeta.latitude, longitude: weatherMeta.longitude, name: weatherMeta.label } : null);
-  const focusedItem = useMemo(() => selectedItem
-    ? selectedActionItems.find(item => item.id === selectedItem.id) ?? null
-    : selectedActionItems.find(item => item.sourceModule === 'meetings') ?? selectedActionItems[0] ?? null, [selectedItem, selectedActionItems]);
+  const focusedItem = useMemo(() => selectedActionItems.find(item => item.id === selectedItem?.id)
+    ?? selectedActionItems.find(item => item.sourceModule === 'meetings')
+    ?? selectedActionItems[0]
+    ?? null, [selectedItem, selectedActionItems]);
   const focusedIndex = focusedItem ? Math.max(0, selectedActionItems.findIndex(item => item.id === focusedItem.id)) : 0;
   const cycleFocusedItem = (delta: number): void => {
     if (!selectedActionItems.length) return;
@@ -359,7 +360,6 @@ export function CalendarPage(): VNode {
     window.localStorage.setItem(CALENDAR_HIDDEN_SOURCES_KEY, JSON.stringify([...hiddenSources]));
   }, [hiddenSources]);
   useEffect(() => {
-    if (!import.meta.env.DEV) return;
     saveCalendarStagingWorkspace({
       version: 1,
       items: stagedItems,
@@ -616,8 +616,22 @@ export function CalendarPage(): VNode {
     const nativeId = id.split('::')[0] ?? id;
     setEnteringItemId(current => current === nativeId ? null : current);
   };
-  const saveStagedItem = (item: CalendarItemDTO, patch: UpdateEntryRequest['patch'], people?: readonly PersonOption[]): void => {
-    const updatedItem = { ...applyCalendarStagingPatch(item, patch), ...(people ? { attendeeCount: people.length } : {}) };
+  const saveStagedItem = (item: CalendarItemDTO, patch: UpdateEntryRequest['patch'], details?: CalendarPreviewEditorDetails): void => {
+    const people = details?.people;
+    const patchedItem = applyCalendarStagingPatch(item, patch);
+    const calendar = calendars.find(value => value.id === patchedItem.calendarId);
+    const category = categories.find(value => value.id === patchedItem.categoryId);
+    const updatedItem: CalendarItemDTO = {
+      ...patchedItem,
+      ...(calendar ? { calendarName: calendar.name } : {}),
+      ...(category ? {
+        categoryKey: category.key,
+        categoryName: category.name,
+        categoryIcon: category.iconName,
+      } : {}),
+      ...(people && item.type === 'activity' ? { attendeeCount: people.length } : {}),
+      ...(people && item.type === 'task' ? { assigneeName: people[0]?.name ?? null } : {}),
+    };
     setStagedItems(current => current.map(candidate => candidate.id === item.id ? updatedItem : candidate));
     setSelectedItem(current => current?.id === item.id ? updatedItem : current);
     setPreviewItem(current => current?.id === item.id ? updatedItem : current);
@@ -635,6 +649,9 @@ export function CalendarPage(): VNode {
           })),
         };
       });
+    }
+    if (details) {
+      setStagedReminderOffsetsByItem(current => ({ ...current, [item.id]: [...details.reminderOffsets] }));
     }
   };
   const createStagedItem = (draft: CalendarPreviewCreateDraft): string => {
@@ -859,7 +876,7 @@ export function CalendarPage(): VNode {
             </section>
             {previewPoint ? <span class="cal-preview-anchor" ref={setPreviewAnchor} style={`left:${previewPoint.x}px;top:${previewPoint.y}px`} aria-hidden="true" /> : null}
             <CalendarItemPreview item={previewItem} anchor={previewAnchor} boundary={calendarFrameElement} people={previewItem && focusedItem?.id === previewItem.id ? focusedPeople : []} agenda={previewItem?.kind === 'meeting' && previewItem.id === focusedItem?.id ? focusedStagedDetail?.agenda ?? [] : []} reminderLabel={previewItem && focusedItem?.id === previewItem.id ? focusedReminderLabel : null} onEdit={openItemEditor} onDuplicate={previewItem?.editable ? openDuplicate : undefined} onDelete={previewItem?.cancelable ? item => setItemAction({ item, action: 'delete' }) : undefined} onSetReminder={!usingStagedData && previewItem?.origin === 'calendar' && previewItem.status !== 'done' && previewItem.status !== 'cancelled' ? item => setItemAction({ item, action: 'reminder' }) : undefined} onOpenSource={previewItem?.sourceRoute ? item => { if (item.sourceRoute) showSection(item.sourceRoute); } : undefined} onClose={() => { setPreviewItem(null); setPreviewPoint(null); }} />
-            <CalendarItemEditor open={editorOpen} item={editorItem} calendars={calendars} preview={usingStagedData} titleIconMode={titleIconType} previewPeople={usingStagedData && editorItem ? (stagedPeopleByItem[editorItem.id] ?? calendarStagingPeople(editorItem)).map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewDirectory={usingStagedData ? calendarStagingDirectory().map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} onPreviewSave={saveStagedItem} onColourPreview={(item, colorKey, customColor) => setEditorColorPreview({ id: item.id, colorKey, customColor })} onClose={closeItemEditor} />
+            <CalendarItemEditor open={editorOpen} item={editorItem} calendars={calendars} preview={usingStagedData} titleIconMode={titleIconType} previewPeople={usingStagedData && editorItem ? (stagedPeopleByItem[editorItem.id] ?? calendarStagingPeople(editorItem)).map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewDirectory={usingStagedData ? calendarStagingDirectory().map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewCategories={usingStagedData ? categories : []} previewReminderOffset={usingStagedData && editorItem ? (stagedReminderOffsetsByItem[editorItem.id] ?? calendarStagingReminderOffsets(editorItem))[0] ?? null : null} onPreviewSave={saveStagedItem} onColourPreview={(item, colorKey, customColor) => setEditorColorPreview({ id: item.id, colorKey, customColor })} onClose={closeItemEditor} />
             {(canCreate || canCreateMeeting) ? <CreateCalendarItemDialog open={createOpen} calendars={calendars} categoriesOverride={usingStagedData ? categories : undefined} preview={usingStagedData} titleIconMode={titleIconType} initialCalendarId={createCalendarId} initialDate={createDate} initialTime={createTime} initialEndTime={createEndTime} initialTitle={createTitle} initialType={createType} initialColorKey={createColorKey} initialCustomColor={createCustomColor} initialItem={createDuplicateSource} initialPeople={createDuplicateSource && focusedItem?.id === createDuplicateSource.id ? focusedPeople.map(person => ({ id: person.id, name: person.name, photoUrl: person.src })) : []} initialReminderOffsets={createDuplicateSource && focusedItem?.id === createDuplicateSource.id ? (usingStagedData ? stagedReminderOffsetsByItem[createDuplicateSource.id] ?? calendarStagingReminderOffsets(createDuplicateSource) : focusedRemindersQ.data ?? []) : []} canCreateMeeting={canCreateMeeting} onPreviewCreate={usingStagedData ? createStagedItem : undefined} onClose={() => { setCreateOpen(false); setCreateDraftSelection(null); setCreateDuplicateSource(null); }} onCreated={markCalendarEntryCreated} /> : null}
           </main>
         </div>
