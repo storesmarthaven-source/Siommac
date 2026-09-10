@@ -412,24 +412,47 @@ export function sanitizeToastPreference(value: unknown): ToastPreference | null 
 // ── Calendar navigator ─────────────────────────────────────────────────────
 
 export const CALENDAR_NAVIGATOR_PREFERENCE_KEY = 'calendar.navigator';
-export const CALENDAR_NAVIGATOR_PREFERENCE_VERSION = 8;
+export const CALENDAR_NAVIGATOR_PREFERENCE_VERSION = 11;
 
 export const CALENDAR_NAVIGATOR_VIEWS = ['day', 'week', 'month', 'agenda', 'tasks'] as const;
 export const CALENDAR_NAVIGATOR_SCOPES = ['all', 'mine', 'shared', 'public', 'archived'] as const;
 export const CALENDAR_NAVIGATOR_SECTIONS = ['navigator'] as const;
 export const CALENDAR_WEATHER_LOCATIONS = ['port-of-spain', 'san-fernando', 'scarborough'] as const;
+export const CALENDAR_WEEK_LAYOUTS = ['columns', 'timeline'] as const;
+export const CALENDAR_WEEK_STARTS = ['sunday', 'monday'] as const;
+export const CALENDAR_SNAP_MINUTES = [15, 30, 60] as const;
+export const CALENDAR_DEFAULT_DURATIONS = [30, 60, 90, 120] as const;
+export const CALENDAR_MONTH_EVENT_LIMITS = [2, 3, 4] as const;
 
 export type CalendarNavigatorView = typeof CALENDAR_NAVIGATOR_VIEWS[number];
 export type CalendarNavigatorScope = typeof CALENDAR_NAVIGATOR_SCOPES[number];
 export type CalendarNavigatorCategory = string;
 export type CalendarNavigatorSection = typeof CALENDAR_NAVIGATOR_SECTIONS[number];
 export type CalendarWeatherLocation = typeof CALENDAR_WEATHER_LOCATIONS[number];
+export type CalendarWeekLayoutPreference = typeof CALENDAR_WEEK_LAYOUTS[number];
+export type CalendarWeekStart = typeof CALENDAR_WEEK_STARTS[number];
+export type CalendarSnapMinutes = typeof CALENDAR_SNAP_MINUTES[number];
+export type CalendarDefaultDuration = typeof CALENDAR_DEFAULT_DURATIONS[number];
+export type CalendarMonthEventLimit = typeof CALENDAR_MONTH_EVENT_LIMITS[number];
 
 export interface CalendarNavigatorPreference {
   view: CalendarNavigatorView;
   scope: CalendarNavigatorScope;
   zoom: number;
+  weekLayout: CalendarWeekLayoutPreference;
+  weekTimelineZoom: number;
+  weekStartsOn: CalendarWeekStart;
+  snapMinutes: CalendarSnapMinutes;
   showAllDay: boolean;
+  showCurrentTime: boolean;
+  autoFocusTimeline: boolean;
+  defaultDurationMinutes: CalendarDefaultDuration;
+  showWeekends: boolean;
+  dimPastEvents: boolean;
+  showCardLocations: boolean;
+  showCardAttendees: boolean;
+  showCardIcons: boolean;
+  monthEventLimit: CalendarMonthEventLimit;
   showWeather: boolean;
   showHolidays: boolean;
   weatherLocation: CalendarWeatherLocation;
@@ -452,11 +475,32 @@ function exactEnumArray<T extends string>(value: unknown, allowed: readonly T[],
 export function sanitizeCalendarNavigatorPreference(value: unknown): CalendarNavigatorPreference | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
   const raw = value as Record<string, unknown>;
-  const allowedKeys = new Set(['view', 'scope', 'zoom', 'showAllDay', 'showWeather', 'showHolidays', 'weatherLocation', 'titleIconType', 'hiddenSources', 'hiddenCategories', 'hiddenCalendarIds', 'expandedSections']);
+  const allowedKeys = new Set(['view', 'scope', 'zoom', 'weekLayout', 'weekTimelineZoom', 'weekStartsOn', 'snapMinutes', 'showAllDay', 'showCurrentTime', 'autoFocusTimeline', 'defaultDurationMinutes', 'showWeekends', 'dimPastEvents', 'showCardLocations', 'showCardAttendees', 'showCardIcons', 'monthEventLimit', 'showWeather', 'showHolidays', 'weatherLocation', 'titleIconType', 'hiddenSources', 'hiddenCategories', 'hiddenCalendarIds', 'expandedSections']);
   if (Object.keys(raw).some(key => !allowedKeys.has(key))) return null;
   if (!CALENDAR_NAVIGATOR_VIEWS.includes(raw.view as CalendarNavigatorView)) return null;
   if (!CALENDAR_NAVIGATOR_SCOPES.includes(raw.scope as CalendarNavigatorScope)) return null;
   if (typeof raw.zoom !== 'number' || !Number.isFinite(raw.zoom) || raw.zoom < .75 || raw.zoom > 1.4) return null;
+  const weekLayout = raw.weekLayout ?? 'timeline';
+  const weekTimelineZoom = raw.weekTimelineZoom ?? 1.6;
+  const weekStartsOn = raw.weekStartsOn ?? 'sunday';
+  const snapMinutes = raw.snapMinutes ?? 15;
+  const showCurrentTime = raw.showCurrentTime ?? true;
+  const autoFocusTimeline = raw.autoFocusTimeline ?? true;
+  const defaultDurationMinutes = raw.defaultDurationMinutes ?? 60;
+  const showWeekends = raw.showWeekends ?? true;
+  const dimPastEvents = raw.dimPastEvents ?? false;
+  const showCardLocations = raw.showCardLocations ?? true;
+  const showCardAttendees = raw.showCardAttendees ?? true;
+  const showCardIcons = raw.showCardIcons ?? true;
+  const monthEventLimit = raw.monthEventLimit ?? 3;
+  if (!CALENDAR_WEEK_LAYOUTS.includes(weekLayout as CalendarWeekLayoutPreference)) return null;
+  if (typeof weekTimelineZoom !== 'number' || !Number.isFinite(weekTimelineZoom) || weekTimelineZoom < .35 || weekTimelineZoom > 1.6) return null;
+  if (!CALENDAR_WEEK_STARTS.includes(weekStartsOn as CalendarWeekStart)) return null;
+  if (!CALENDAR_SNAP_MINUTES.includes(snapMinutes as CalendarSnapMinutes)) return null;
+  if (typeof showCurrentTime !== 'boolean' || typeof autoFocusTimeline !== 'boolean') return null;
+  if (!CALENDAR_DEFAULT_DURATIONS.includes(defaultDurationMinutes as CalendarDefaultDuration)) return null;
+  if (!CALENDAR_MONTH_EVENT_LIMITS.includes(monthEventLimit as CalendarMonthEventLimit)) return null;
+  if (typeof showWeekends !== 'boolean' || typeof dimPastEvents !== 'boolean' || typeof showCardLocations !== 'boolean' || typeof showCardAttendees !== 'boolean' || typeof showCardIcons !== 'boolean') return null;
   if (typeof raw.showAllDay !== 'boolean') return null;
   const showWeather = raw.showWeather ?? true;
   const showHolidays = raw.showHolidays ?? false;
@@ -481,7 +525,20 @@ export function sanitizeCalendarNavigatorPreference(value: unknown): CalendarNav
     view: raw.view as CalendarNavigatorView,
     scope: raw.scope as CalendarNavigatorScope,
     zoom: raw.zoom,
+    weekLayout: weekLayout as CalendarWeekLayoutPreference,
+    weekTimelineZoom,
+    weekStartsOn: weekStartsOn as CalendarWeekStart,
+    snapMinutes: snapMinutes as CalendarSnapMinutes,
     showAllDay: raw.showAllDay,
+    showCurrentTime,
+    autoFocusTimeline,
+    defaultDurationMinutes: defaultDurationMinutes as CalendarDefaultDuration,
+    showWeekends,
+    dimPastEvents,
+    showCardLocations,
+    showCardAttendees,
+    showCardIcons,
+    monthEventLimit: monthEventLimit as CalendarMonthEventLimit,
     showWeather,
     showHolidays,
     weatherLocation: weatherLocation as CalendarWeatherLocation,

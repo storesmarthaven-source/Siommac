@@ -17,7 +17,7 @@ function deadlineLabel(deadlineAt: string): string {
 }
 
 function iconFor(item: CalendarItemDTO): 'Video' | 'Flag' | 'BellRing' | 'ListChecks' | 'CalendarDays' {
-  const kind = item.kind;
+  const kind = item.kind ?? (item.sourceModule === 'meetings' ? 'meeting' : item.type === 'deadline' ? 'deadline' : item.type === 'task' ? 'task' : 'event');
   if (kind === 'meeting') return 'Video';
   if (kind === 'deadline') return 'Flag';
   if (kind === 'reminder') return 'BellRing';
@@ -62,9 +62,8 @@ export function CalendarItemPreview({ item, anchor, boundary, people = [], agend
   onClose: () => void;
 }): VNode | null {
   if (!item || !anchor) return null;
-  const kind = item.kind;
+  const kind = item.kind ?? (item.sourceModule === 'meetings' ? 'meeting' : item.type === 'deadline' ? 'deadline' : item.type === 'task' ? 'task' : 'event');
   const agendaItems = kind === 'meeting' ? meetingAgenda(item.notes, agenda) : [];
-  const notes = item.notes?.trim();
   return <Popover open anchor={anchor} boundary={boundary} onClose={onClose} label={item.title} class="cal-item-preview-popover" align="start" placement="auto" offset={8} maxHeight={420}>
     <article class="cal-item-preview">
       <header>
@@ -90,7 +89,7 @@ export function CalendarItemPreview({ item, anchor, boundary, people = [], agend
         <strong>{aboutLabel(kind)}</strong>
         {kind === 'meeting' && agendaItems.length
           ? <ul>{agendaItems.map(entry => <li key={entry}>{entry}</li>)}</ul>
-          : <p>{notes && notes.length > 0 ? notes : (kind === 'meeting' ? 'No agenda items were added.' : 'No additional details were added.')}</p>}
+          : <p>{item.notes?.trim() || (kind === 'meeting' ? 'No agenda items were added.' : 'No additional details were added.')}</p>}
       </section>
       {people.length ? <div class="cal-item-preview-people"><AvatarGroup people={people} max={3} size={26} totalCount={Math.max(item.attendeeCount, people.length)} label={`${item.title} people`} /><span>{item.type === 'task' ? 'Owner and collaborators' : 'Organizer and invitees'}</span></div> : null}
       <footer>

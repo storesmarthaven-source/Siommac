@@ -4,7 +4,7 @@ import { useCalendarCategories, useCalendarCollections, useCalendarDayContext, u
 import { useMessageRecipients } from '@api/communications';
 import { useWeatherSnapshot } from '@api/weather';
 import { getUiPreference, saveUiPreference } from '@api/uiPreferences';
-import { Button, DropdownMenu, FormField, LucideIcon, SearchField, SegmentedControl, Select, SwitchArtwork, TextInput, type PersonOption } from '@ui';
+import { Button, DropdownMenu, FormField, LucideIcon, SearchField, SegmentedControl, Select, SwitchArtwork, TextInput, type MenuGroup, type PersonOption } from '@ui';
 import { useSessionStore } from '@store/session';
 import { toast } from '@store/ui';
 import { useDemoMode } from '@lib/demoMode';
@@ -16,23 +16,38 @@ import { showSection } from '@components/nav/navCore';
 import { MonthView } from './MonthView';
 import { AgendaView } from './AgendaView';
 import { TasksView } from './TasksView';
-import { TimeGridView, type CalendarDraftSelection } from './TimeGridView';
+import { TimeGridView, type CalendarDraftSelection, type CalendarWeekLayout } from './TimeGridView';
 import { CalendarItemActionDialog, type CalendarItemAction } from './CalendarItemActionDialog';
 import { CalendarSettingsDialog } from './CalendarSettingsDialog';
 import { CalendarManagementDialog } from './CalendarManagementDialog';
 import { CreateCalendarItemDialog, type CalendarCreateType, type CalendarPreviewCreateDraft } from './CreateCalendarItemDialog';
 import { applyCalendarStagingPatch, CALENDAR_STAGING_CALENDARS, calendarStagingDetail, calendarStagingDirectory, calendarStagingHolidays, calendarStagingPeople, calendarStagingReminderOffsets, type CalendarStagedAttendee } from './calendarStaging';
-import { defaultCalendarStagingWorkspace, loadCalendarStagingWorkspace, saveCalendarStagingWorkspace } from './calendarStagingWorkspace';
+import {
+  applyCalendarStagingTemplate,
+  createCalendarStagingTemplate,
+  defaultCalendarStagingWorkspace,
+  loadCalendarStagingDefaults,
+  loadCalendarStagingWorkspace,
+  saveCalendarStagingDefaults,
+  saveCalendarStagingWorkspace,
+  type CalendarStagingTemplateScope,
+  type CalendarStagingWorkspace,
+} from './calendarStagingWorkspace';
 import { CalendarDashboardRail } from './CalendarDashboardRail';
-import { CalendarItemEditor, type CalendarPreviewEditorDetails } from './CalendarItemEditor';
+import { CalendarItemEditor, type CalendarEditorDraftPreview, type CalendarPreviewEditorDetails } from './CalendarItemEditor';
 import { CalendarItemPreview } from './CalendarItemPreview';
 import { CalendarCollectionDialog } from './CalendarCollectionDialog';
 import {
   CALENDAR_NAVIGATOR_PREFERENCE_KEY,
+  CALENDAR_NAVIGATOR_PREFERENCE_VERSION,
   CALENDAR_WEATHER_LOCATIONS,
+  type CalendarDefaultDuration,
+  type CalendarMonthEventLimit,
+  type CalendarSnapMinutes,
   type CalendarNavigatorPreference,
   type CalendarNavigatorSection,
   type CalendarWeatherLocation,
+  type CalendarWeekStart,
 } from '../../../../types/uiPreferences';
 import {
   EMPTY_FILTERS,
@@ -48,12 +63,18 @@ import {
 } from './calendarViewModel';
 import './calendar.css';
 
-const CALENDAR_ZOOM_KEY = 'siomac.calendar.zoom.v1';
+const CALENDAR_ZOOM_KEY = 'siomac.calendar.zoom.v2';
 const CALENDAR_ALL_DAY_KEY = 'siomac.calendar.show-all-day.v3';
 const CALENDAR_VIEW_KEY = 'siomac.calendar.view.v1';
+const CALENDAR_WEEK_LAYOUT_KEY = 'siomac.calendar.week-layout.v3';
+const CALENDAR_WEEK_TIMELINE_ZOOM_KEY = 'siomac.calendar.week-timeline-zoom.v3';
 const CALENDAR_SCOPE_KEY = 'siomac.calendar.scope.v1';
 const CALENDAR_HIDDEN_SOURCES_KEY = 'siomac.calendar.hidden-sources.v1';
 const CALENDAR_STAGED_PREVIEW_KEY = 'siomac.calendar.staged-preview.v2';
+const CALENDAR_WEEK_START_KEY = 'siomac.calendar.week-start.v1';
+const CALENDAR_SNAP_MINUTES_KEY = 'siomac.calendar.snap-minutes.v1';
+const CALENDAR_CURRENT_TIME_KEY = 'siomac.calendar.show-current-time.v1';
+const CALENDAR_AUTO_FOCUS_KEY = 'siomac.calendar.auto-focus-timeline.v1';
 const CALENDAR_WEATHER_LOCATION_META: Record<CalendarWeatherLocation, { label: string; latitude: number; longitude: number }> = {
   'port-of-spain': { label: 'Port of Spain', latitude: 10.67, longitude: -61.52 },
   'san-fernando': { label: 'San Fernando', latitude: 10.28, longitude: -61.47 },
@@ -61,9 +82,9 @@ const CALENDAR_WEATHER_LOCATION_META: Record<CalendarWeatherLocation, { label: s
 };
 
 function initialCalendarZoom(): number {
-  if (typeof window === 'undefined') return 1;
+  if (typeof window === 'undefined') return 1.2;
   const stored = Number(window.localStorage.getItem(CALENDAR_ZOOM_KEY));
-  return Number.isFinite(stored) && stored >= .35 && stored <= 1.6 ? stored : 1;
+  return Number.isFinite(stored) && stored >= .75 && stored <= 1.4 ? stored : 1.2;
 }
 
 function initialAllDayVisibility(): boolean {
@@ -74,7 +95,43 @@ function initialAllDayVisibility(): boolean {
 function initialCalendarView(): CalendarViewMode {
   if (typeof window === 'undefined') return 'week';
   const stored = window.localStorage.getItem(CALENDAR_VIEW_KEY);
-  return stored === 'day' || stored === 'week' || stored === 'month' || stored === 'agenda' || stored === 'tasks' ? stored : 'week';
+  return stored === 'day' || stored === 'week' || stored === 'month' ? stored : 'week';
+}
+
+function primaryCalendarView(view: CalendarViewMode): CalendarViewMode {
+  return view === 'agenda' || view === 'tasks' ? 'week' : view;
+}
+
+function initialCalendarWeekLayout(): CalendarWeekLayout {
+  if (typeof window === 'undefined') return 'timeline';
+  return window.localStorage.getItem(CALENDAR_WEEK_LAYOUT_KEY) === 'columns' ? 'columns' : 'timeline';
+}
+
+function initialCalendarWeekTimelineZoom(): number {
+  if (typeof window === 'undefined') return 1.6;
+  const stored = Number(window.localStorage.getItem(CALENDAR_WEEK_TIMELINE_ZOOM_KEY));
+  return Number.isFinite(stored) && stored >= .35 && stored <= 1.6 ? stored : 1.6;
+}
+
+function initialCalendarWeekStart(): CalendarWeekStart {
+  if (typeof window === 'undefined') return 'sunday';
+  return window.localStorage.getItem(CALENDAR_WEEK_START_KEY) === 'monday' ? 'monday' : 'sunday';
+}
+
+function initialCalendarSnapMinutes(): CalendarSnapMinutes {
+  if (typeof window === 'undefined') return 15;
+  const stored = Number(window.localStorage.getItem(CALENDAR_SNAP_MINUTES_KEY));
+  return stored === 30 || stored === 60 ? stored : 15;
+}
+
+function initialCurrentTimeVisibility(): boolean {
+  if (typeof window === 'undefined') return true;
+  return window.localStorage.getItem(CALENDAR_CURRENT_TIME_KEY) !== 'false';
+}
+
+function initialAutoFocusTimeline(): boolean {
+  if (typeof window === 'undefined') return true;
+  return window.localStorage.getItem(CALENDAR_AUTO_FOCUS_KEY) !== 'false';
 }
 
 function initialCalendarScope(): CalendarScope {
@@ -114,6 +171,12 @@ function timeInputValue(iso: string | null | undefined, fallback: string): strin
   const value = new Date(iso);
   if (Number.isNaN(value.getTime())) return fallback;
   return `${`${value.getHours()}`.padStart(2, '0')}:${`${value.getMinutes()}`.padStart(2, '0')}`;
+}
+
+function endTimeAfter(startTime: string, durationMinutes: CalendarDefaultDuration): string {
+  const [hours = 0, minutes = 0] = startTime.split(':').map(Number);
+  const endMinutes = Math.min((24 * 60) - 1, (hours * 60) + minutes + durationMinutes);
+  return `${`${Math.floor(endMinutes / 60)}`.padStart(2, '0')}:${`${endMinutes % 60}`.padStart(2, '0')}`;
 }
 
 function FilterPanel({ filters, sources, scope, query, onChange, onScopeChange, onQueryChange, onClear, onClose }: {
@@ -156,8 +219,21 @@ export function CalendarPage(): VNode {
   const canCreateMeeting = demoMode.enabled ? demoPage.useStagedData : can('meetings.create');
   const [viewMonth, setViewMonth] = useState<Date>(() => startOfMonth(new Date()));
   const [view, setView] = useState<CalendarViewMode>(initialCalendarView);
+  const [weekLayout, setWeekLayout] = useState<CalendarWeekLayout>(initialCalendarWeekLayout);
   const [calendarZoom, setCalendarZoom] = useState(initialCalendarZoom);
+  const [weekTimelineZoom, setWeekTimelineZoom] = useState(initialCalendarWeekTimelineZoom);
+  const [weekStartsOn, setWeekStartsOn] = useState<CalendarWeekStart>(initialCalendarWeekStart);
+  const [snapMinutes, setSnapMinutes] = useState<CalendarSnapMinutes>(initialCalendarSnapMinutes);
   const [showAllDay, setShowAllDay] = useState(initialAllDayVisibility);
+  const [showCurrentTime, setShowCurrentTime] = useState(initialCurrentTimeVisibility);
+  const [autoFocusTimeline, setAutoFocusTimeline] = useState(initialAutoFocusTimeline);
+  const [defaultDurationMinutes, setDefaultDurationMinutes] = useState<CalendarDefaultDuration>(60);
+  const [showWeekends, setShowWeekends] = useState(true);
+  const [dimPastEvents, setDimPastEvents] = useState(false);
+  const [showCardLocations, setShowCardLocations] = useState(true);
+  const [showCardAttendees, setShowCardAttendees] = useState(true);
+  const [showCardIcons, setShowCardIcons] = useState(true);
+  const [monthEventLimit, setMonthEventLimit] = useState<CalendarMonthEventLimit>(3);
   const [showWeather, setShowWeather] = useState(true);
   const [showHolidays, setShowHolidays] = useState(false);
   const [weatherLocation, setWeatherLocation] = useState<CalendarWeatherLocation>('port-of-spain');
@@ -170,8 +246,8 @@ export function CalendarPage(): VNode {
   const [hiddenCalendarIds, setHiddenCalendarIds] = useState<Set<string>>(new Set());
   const [expandedNavigatorSections, setExpandedNavigatorSections] = useState<CalendarNavigatorSection[]>(['navigator']);
   const [navigatorPreferenceReady, setNavigatorPreferenceReady] = useState(false);
-  const navigatorSaveErrorShownRef = useRef(false);
-  const [calendarFrameElement, setCalendarFrameElement] = useState<HTMLElement | null>(null);
+  const navigatorSaveErrorShown = useRef(false);
+  const calendarFrameRef = useRef<HTMLElement | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string>(() => toLocalDateKey(new Date()));
   const [selectedItem, setSelectedItem] = useState<CalendarItemDTO | null>(null);
@@ -181,6 +257,8 @@ export function CalendarPage(): VNode {
   const [createTime, setCreateTime] = useState('09:00');
   const [createEndTime, setCreateEndTime] = useState<string | undefined>(undefined);
   const [createDraftSelection, setCreateDraftSelection] = useState<CalendarDraftSelection | null>(null);
+  const [createLiveDraft, setCreateLiveDraft] = useState<CalendarDraftSelection | null>(null);
+  const [createPreviewSessionId, setCreatePreviewSessionId] = useState(0);
   const [createTitle, setCreateTitle] = useState('');
   const [createType, setCreateType] = useState<CalendarCreateType>('event');
   const [createColorKey, setCreateColorKey] = useState<CalendarColorKey>('blue');
@@ -189,30 +267,34 @@ export function CalendarPage(): VNode {
   const [createDuplicateSource, setCreateDuplicateSource] = useState<CalendarItemDTO | null>(null);
   const [editorItem, setEditorItem] = useState<CalendarItemDTO | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
-  const editorEnterFrameRef = useRef<number | null>(null);
-  const editorExitTimerRef = useRef<number | null>(null);
-  const [editorColorPreview, setEditorColorPreview] = useState<{ id: string; colorKey: CalendarColorKey | null; customColor: string | null } | null>(null);
+  const [editorPreviewSessionId, setEditorPreviewSessionId] = useState(0);
+  const editorEnterFrame = useRef<number | null>(null);
+  const editorExitTimer = useRef<number | null>(null);
+  const [editorDraftPreview, setEditorDraftPreview] = useState<CalendarEditorDraftPreview | null>(null);
   const [previewItem, setPreviewItem] = useState<CalendarItemDTO | null>(null);
   const [previewPoint, setPreviewPoint] = useState<{ x: number; y: number } | null>(null);
   const [previewAnchor, setPreviewAnchor] = useState<HTMLElement | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarManagerOpen, setCalendarManagerOpen] = useState(false);
-  const oauthCallbackHandledRef = useRef(false);
+  const oauthCallbackHandled = useRef(false);
   const completeCalendarOAuth = useCompleteCalendarOAuth();
   const moveEntry = useUpdateEntry({ announceSuccess: false });
   const [collectionDialog, setCollectionDialog] = useState<{ open: boolean; calendar: CalendarCollectionDTO | null }>({ open: false, calendar: null });
   const [returnToCalendarManager, setReturnToCalendarManager] = useState(false);
   const [viewMenuAnchor, setViewMenuAnchor] = useState<HTMLElement | null>(null);
+  const [weekLayoutMenuAnchor, setWeekLayoutMenuAnchor] = useState<HTMLElement | null>(null);
   const [createMenuAnchor, setCreateMenuAnchor] = useState<HTMLElement | null>(null);
   const [enteringItemId, setEnteringItemId] = useState<string | null>(null);
   const [initialStagingWorkspace] = useState(loadCalendarStagingWorkspace);
+  const [stagedAnchorDate, setStagedAnchorDate] = useState(initialStagingWorkspace.anchorDate);
+  const [stagingDefaults, setStagingDefaults] = useState(loadCalendarStagingDefaults);
   const [stagedResponses, setStagedResponses] = useState<Record<string, Exclude<CalendarAttendeeResponse, 'invited'>>>(initialStagingWorkspace.responses);
   const [stagedPreview, setStagedPreview] = useState(initialStagedPreview);
   const [stagedItems, setStagedItems] = useState<CalendarItemDTO[]>(initialStagingWorkspace.items);
   const [stagedPeopleByItem, setStagedPeopleByItem] = useState<Record<string, CalendarStagedAttendee[]>>(initialStagingWorkspace.peopleByItem);
   const [stagedReminderOffsetsByItem, setStagedReminderOffsetsByItem] = useState<Record<string, number[]>>(initialStagingWorkspace.reminderOffsetsByItem);
 
-  const grid = useMemo(() => monthGrid(viewMonth), [viewMonth]);
+  const grid = useMemo(() => monthGrid(viewMonth, weekStartsOn), [viewMonth, weekStartsOn]);
   const from = toLocalDateKey(grid[0]!);
   const to = toLocalDateKey(grid[grid.length - 1]!);
   const usingStagedData = (demoMode.enabled && demoPage.useStagedData) || stagedPreview;
@@ -230,8 +312,8 @@ export function CalendarPage(): VNode {
   const cold = !usingStagedData && listQ.isLoading && !listQ.data;
 
   useEffect(() => {
-    if (typeof window === 'undefined' || window.location.pathname !== '/calendar/oauth/callback' || oauthCallbackHandledRef.current) return;
-    oauthCallbackHandledRef.current = true;
+    if (typeof window === 'undefined' || window.location.pathname !== '/calendar/oauth/callback' || oauthCallbackHandled.current) return;
+    oauthCallbackHandled.current = true;
     const params = new URLSearchParams(window.location.search);
     const code = params.get('code');
     const state = params.get('state');
@@ -254,9 +336,17 @@ export function CalendarPage(): VNode {
 
   const visibleItems = useMemo(() => filterCalendarItems(rawItems, { scope, search, filters, userId })
     .filter(item => !hiddenSources.has(calendarSource(item)) && !hiddenCategories.has(calendarCategory(item)) && (!item.calendarId || !hiddenCalendarIds.has(item.calendarId))), [rawItems, scope, search, filters, userId, hiddenSources, hiddenCategories, hiddenCalendarIds]);
-  const displayedItems = useMemo(() => editorColorPreview
-    ? visibleItems.map(item => item.id === editorColorPreview.id ? { ...item, colorKey: editorColorPreview.colorKey, customColor: editorColorPreview.customColor } : item)
-    : visibleItems, [visibleItems, editorColorPreview]);
+  const displayedItems = useMemo(() => editorDraftPreview
+    ? visibleItems.map(item => item.id === editorDraftPreview.item.id ? editorDraftPreview.item : item)
+    : visibleItems, [visibleItems, editorDraftPreview]);
+  const displayedAttendeePeople = useMemo(() => {
+    const base = usingStagedData ? stagedAttendeePeople : {};
+    if (!editorDraftPreview) return usingStagedData ? base : undefined;
+    return {
+      ...base,
+      [editorDraftPreview.item.id]: editorDraftPreview.details.people.map(person => ({ id: person.id, name: person.name, src: person.photoUrl })),
+    };
+  }, [editorDraftPreview, stagedAttendeePeople, usingStagedData]);
   const miniMonthEventDateKeys = useMemo(() => new Set(grid
     .filter(day => visibleItems.some(item => itemOccursOnDate(item, toLocalDateKey(day))))
     .map(toLocalDateKey)), [grid, visibleItems]);
@@ -300,7 +390,12 @@ export function CalendarPage(): VNode {
     return next;
   });
   const selectedDate = useMemo(() => parseLocalDate(selectedKey), [selectedKey]);
-  const gridDays = useMemo(() => view === 'week' ? weekDays(selectedDate, 'sunday') : view === 'day' ? [selectedDate] : [], [view, selectedDate]);
+  const gridDays = useMemo(() => {
+    if (view === 'day') return [selectedDate];
+    if (view !== 'week') return [];
+    const days = weekDays(selectedDate, weekStartsOn);
+    return showWeekends ? days : days.filter(day => day.getDay() !== 0 && day.getDay() !== 6);
+  }, [view, selectedDate, weekStartsOn, showWeekends]);
   const gridFrom = gridDays[0] ? toLocalDateKey(gridDays[0]) : null;
   const gridTo = gridDays.length ? toLocalDateKey(gridDays[gridDays.length - 1]!) : null;
   const stagedHolidays = useMemo(() => calendarStagingHolidays(gridDays), [gridDays]);
@@ -354,6 +449,24 @@ export function CalendarPage(): VNode {
     window.localStorage.setItem(CALENDAR_VIEW_KEY, view);
   }, [view]);
   useEffect(() => {
+    window.localStorage.setItem(CALENDAR_WEEK_LAYOUT_KEY, weekLayout);
+  }, [weekLayout]);
+  useEffect(() => {
+    window.localStorage.setItem(CALENDAR_WEEK_TIMELINE_ZOOM_KEY, `${weekTimelineZoom}`);
+  }, [weekTimelineZoom]);
+  useEffect(() => {
+    window.localStorage.setItem(CALENDAR_WEEK_START_KEY, weekStartsOn);
+  }, [weekStartsOn]);
+  useEffect(() => {
+    window.localStorage.setItem(CALENDAR_SNAP_MINUTES_KEY, `${snapMinutes}`);
+  }, [snapMinutes]);
+  useEffect(() => {
+    window.localStorage.setItem(CALENDAR_CURRENT_TIME_KEY, `${showCurrentTime}`);
+  }, [showCurrentTime]);
+  useEffect(() => {
+    window.localStorage.setItem(CALENDAR_AUTO_FOCUS_KEY, `${autoFocusTimeline}`);
+  }, [autoFocusTimeline]);
+  useEffect(() => {
     window.localStorage.setItem(CALENDAR_SCOPE_KEY, scope);
   }, [scope]);
   useEffect(() => {
@@ -362,12 +475,13 @@ export function CalendarPage(): VNode {
   useEffect(() => {
     saveCalendarStagingWorkspace({
       version: 1,
+      anchorDate: stagedAnchorDate,
       items: stagedItems,
       peopleByItem: stagedPeopleByItem,
       reminderOffsetsByItem: stagedReminderOffsetsByItem,
       responses: stagedResponses,
     });
-  }, [stagedItems, stagedPeopleByItem, stagedReminderOffsetsByItem, stagedResponses]);
+  }, [stagedAnchorDate, stagedItems, stagedPeopleByItem, stagedReminderOffsetsByItem, stagedResponses]);
   useEffect(() => {
     let active = true;
     if (!userId || demoMode.enabled) {
@@ -379,22 +493,36 @@ export function CalendarPage(): VNode {
       .then(saved => {
         if (!active || !saved) return;
         const preference = saved.value;
-        setView(preference.view);
+        const usePresentationDefaults = saved.version < CALENDAR_NAVIGATOR_PREFERENCE_VERSION;
+        setView(primaryCalendarView(preference.view));
         setScope(preference.scope);
-        setCalendarZoom(preference.zoom);
+        setCalendarZoom(usePresentationDefaults ? 1.2 : preference.zoom);
+        setWeekLayout(usePresentationDefaults ? 'timeline' : preference.weekLayout);
+        setWeekTimelineZoom(usePresentationDefaults ? 1.6 : preference.weekTimelineZoom);
+        setWeekStartsOn(preference.weekStartsOn);
+        setSnapMinutes(preference.snapMinutes);
         // v6 restores the redesigned all-day lane as the calendar default. Earlier
         // versions persisted the former hidden-by-default behaviour, so they
         // migrate once; users can still turn the lane off in Calendar Settings.
         setShowAllDay(saved.version >= 6 ? preference.showAllDay : true);
-        setShowWeather(preference.showWeather);
+        setShowCurrentTime(preference.showCurrentTime);
+        setAutoFocusTimeline(preference.autoFocusTimeline);
+        setDefaultDurationMinutes(preference.defaultDurationMinutes);
+        setShowWeekends(preference.showWeekends);
+        setDimPastEvents(preference.dimPastEvents);
+        setShowCardLocations(preference.showCardLocations);
+        setShowCardAttendees(preference.showCardAttendees);
+        setShowCardIcons(preference.showCardIcons);
+        setMonthEventLimit(preference.monthEventLimit);
+        setShowWeather(preference.showWeather ?? true);
         // Holiday artwork was introduced in v3. The v4 calendar-visibility field
         // must not reset an explicit v3 holiday choice during migration.
-        setShowHolidays(saved.version >= 3 ? preference.showHolidays : false);
+        setShowHolidays(saved.version >= 3 ? preference.showHolidays ?? false : false);
         setWeatherLocation(CALENDAR_WEATHER_LOCATIONS.includes(preference.weatherLocation) ? preference.weatherLocation : 'port-of-spain');
-        setTitleIconType(preference.titleIconType);
+        setTitleIconType(preference.titleIconType ?? 'emoji');
         setHiddenSources(new Set(preference.hiddenSources));
         setHiddenCategories(new Set(preference.hiddenCategories));
-        setHiddenCalendarIds(new Set(preference.hiddenCalendarIds));
+        setHiddenCalendarIds(new Set(preference.hiddenCalendarIds ?? []));
         setExpandedNavigatorSections(preference.expandedSections);
       })
       .catch((error: unknown) => {
@@ -409,7 +537,20 @@ export function CalendarPage(): VNode {
       view,
       scope,
       zoom: calendarZoom,
+      weekLayout,
+      weekTimelineZoom,
+      weekStartsOn,
+      snapMinutes,
       showAllDay,
+      showCurrentTime,
+      autoFocusTimeline,
+      defaultDurationMinutes,
+      showWeekends,
+      dimPastEvents,
+      showCardLocations,
+      showCardAttendees,
+      showCardIcons,
+      monthEventLimit,
       showWeather,
       showHolidays,
       weatherLocation,
@@ -421,21 +562,21 @@ export function CalendarPage(): VNode {
     };
     const timer = window.setTimeout(() => {
       void saveUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, preference)
-        .then(() => { navigatorSaveErrorShownRef.current = false; })
+        .then(() => { navigatorSaveErrorShown.current = false; })
         .catch((error: unknown) => {
-          if (navigatorSaveErrorShownRef.current) return;
-          navigatorSaveErrorShownRef.current = true;
+          if (navigatorSaveErrorShown.current) return;
+          navigatorSaveErrorShown.current = true;
           console.error('[calendar] navigator preference save failed:', error);
         });
     }, 350);
     return () => window.clearTimeout(timer);
-  }, [navigatorPreferenceReady, userId, demoMode.enabled, view, scope, calendarZoom, showAllDay, showWeather, showHolidays, weatherLocation, titleIconType, hiddenSources, hiddenCategories, hiddenCalendarIds, expandedNavigatorSections]);
+  }, [navigatorPreferenceReady, userId, demoMode.enabled, view, scope, calendarZoom, weekLayout, weekTimelineZoom, weekStartsOn, snapMinutes, showAllDay, showCurrentTime, autoFocusTimeline, defaultDurationMinutes, showWeekends, dimPastEvents, showCardLocations, showCardAttendees, showCardIcons, monthEventLimit, showWeather, showHolidays, weatherLocation, titleIconType, hiddenSources, hiddenCategories, hiddenCalendarIds, expandedNavigatorSections]);
   useEffect(() => {
     if (import.meta.env.DEV) window.localStorage.setItem(CALENDAR_STAGED_PREVIEW_KEY, `${stagedPreview}`);
   }, [stagedPreview]);
   useEffect(() => () => {
-    if (editorEnterFrameRef.current !== null) window.cancelAnimationFrame(editorEnterFrameRef.current);
-    if (editorExitTimerRef.current !== null) window.clearTimeout(editorExitTimerRef.current);
+    if (editorEnterFrame.current !== null) window.cancelAnimationFrame(editorEnterFrame.current);
+    if (editorExitTimer.current !== null) window.clearTimeout(editorExitTimer.current);
   }, []);
   useEffect(() => {
     if (!enteringItemId) return;
@@ -473,34 +614,35 @@ export function CalendarPage(): VNode {
     setSelectedItem(null);
   };
   const dismissItemEditorImmediately = (): void => {
-    if (editorEnterFrameRef.current !== null) window.cancelAnimationFrame(editorEnterFrameRef.current);
-    if (editorExitTimerRef.current !== null) window.clearTimeout(editorExitTimerRef.current);
-    editorEnterFrameRef.current = null;
-    editorExitTimerRef.current = null;
+    if (editorEnterFrame.current !== null) window.cancelAnimationFrame(editorEnterFrame.current);
+    if (editorExitTimer.current !== null) window.clearTimeout(editorExitTimer.current);
+    editorEnterFrame.current = null;
+    editorExitTimer.current = null;
     setEditorOpen(false);
     setEditorItem(null);
-    setEditorColorPreview(null);
+    setEditorDraftPreview(null);
   };
   const showItemEditor = (item: CalendarItemDTO): void => {
-    if (editorExitTimerRef.current !== null) window.clearTimeout(editorExitTimerRef.current);
-    if (editorEnterFrameRef.current !== null) window.cancelAnimationFrame(editorEnterFrameRef.current);
-    editorExitTimerRef.current = null;
+    setEditorPreviewSessionId(current => current + 1);
+    if (editorExitTimer.current !== null) window.clearTimeout(editorExitTimer.current);
+    if (editorEnterFrame.current !== null) window.cancelAnimationFrame(editorEnterFrame.current);
+    editorExitTimer.current = null;
     setEditorItem(item);
     if (editorOpen) return;
     setEditorOpen(false);
-    editorEnterFrameRef.current = window.requestAnimationFrame(() => {
-      editorEnterFrameRef.current = null;
+    editorEnterFrame.current = window.requestAnimationFrame(() => {
+      editorEnterFrame.current = null;
       setEditorOpen(true);
     });
   };
   const closeItemEditor = (): void => {
-    if (editorEnterFrameRef.current !== null) window.cancelAnimationFrame(editorEnterFrameRef.current);
-    if (editorExitTimerRef.current !== null) window.clearTimeout(editorExitTimerRef.current);
-    editorEnterFrameRef.current = null;
+    if (editorEnterFrame.current !== null) window.cancelAnimationFrame(editorEnterFrame.current);
+    if (editorExitTimer.current !== null) window.clearTimeout(editorExitTimer.current);
+    editorEnterFrame.current = null;
     setEditorOpen(false);
-    setEditorColorPreview(null);
-    editorExitTimerRef.current = window.setTimeout(() => {
-      editorExitTimerRef.current = null;
+    setEditorDraftPreview(null);
+    editorExitTimer.current = window.setTimeout(() => {
+      editorExitTimer.current = null;
       setEditorItem(null);
     }, 230);
   };
@@ -508,8 +650,10 @@ export function CalendarPage(): VNode {
     const defaultCalendar = writableCalendars.find(calendar => calendar.isDefault) ?? writableCalendars[0] ?? null;
     setCreateDate(key);
     setCreateTime(startTime);
-    setCreateEndTime(endTime);
+    setCreateEndTime(endTime ?? (type === 'event' || type === 'meeting' ? endTimeAfter(startTime, defaultDurationMinutes) : undefined));
     setCreateDraftSelection(endTime ? { key, startTime, endTime } : null);
+    setCreateLiveDraft(null);
+    setCreatePreviewSessionId(current => current + 1);
     setCreateTitle('');
     setCreateType(type);
     setCreateColorKey(defaultCalendar?.colorKey ?? 'blue');
@@ -529,6 +673,8 @@ export function CalendarPage(): VNode {
     setCreateTime(timeInputValue(item.startsAt, '09:00'));
     setCreateEndTime(timeInputValue(item.endsAt, '10:00'));
     setCreateDraftSelection(null);
+    setCreateLiveDraft(null);
+    setCreatePreviewSessionId(current => current + 1);
     setCreateTitle(`${item.title} copy`);
     setCreateType(kind);
     setCreateColorKey(item.colorKey ?? 'blue');
@@ -592,7 +738,7 @@ export function CalendarPage(): VNode {
       return;
     }
     if (!focusedItem.editable) return;
-    setEditorColorPreview(null);
+    setEditorDraftPreview(null);
     setSelectedItem(focusedItem);
     showItemEditor(focusedItem);
     setPreviewItem(null);
@@ -600,7 +746,7 @@ export function CalendarPage(): VNode {
     setCreateDraftSelection(null);
   };
   const openItemEditor = (item: CalendarItemDTO, _origin?: HTMLElement | { x: number; y: number }): void => {
-    setEditorColorPreview(null);
+    setEditorDraftPreview(null);
     setSelectedItem(item);
     showItemEditor(item);
     setPreviewItem(null);
@@ -609,6 +755,7 @@ export function CalendarPage(): VNode {
   };
   const markCalendarEntryCreated = (id: string): void => {
     setCreateDraftSelection(null);
+    setCreateLiveDraft(null);
     setEnteringItemId(id);
     void listQ.refetch();
   };
@@ -727,7 +874,7 @@ export function CalendarPage(): VNode {
       return;
     }
     const nativeId = item.id.split('::')[0] ?? item.id;
-    const recurrence = Boolean(item.recurrenceSeriesId ?? item.recurrenceRule ?? item.occurrenceDate);
+    const recurrence = Boolean(item.recurrenceSeriesId || item.recurrenceRule || item.occurrenceDate);
     try {
       await moveEntry.mutateAsync({
         id: nativeId,
@@ -741,34 +888,82 @@ export function CalendarPage(): VNode {
   const deleteStagedItem = (item: CalendarItemDTO): void => {
     setStagedItems(current => current.filter(candidate => candidate.id !== item.id));
     setStagedPeopleByItem(current => {
-      return Object.fromEntries(Object.entries(current).filter(([id]) => id !== item.id));
+      const next = { ...current };
+      delete next[item.id];
+      return next;
     });
     setSelectedItem(current => current?.id === item.id ? null : current);
     setPreviewItem(current => current?.id === item.id ? null : current);
     setPreviewPoint(null);
     toast.success('Calendar item removed from the staged preview.');
   };
+  const stagingWorkspaceSnapshot = (): CalendarStagingWorkspace => ({
+    version: 1,
+    anchorDate: stagedAnchorDate,
+    items: stagedItems,
+    peopleByItem: stagedPeopleByItem,
+    reminderOffsetsByItem: stagedReminderOffsetsByItem,
+    responses: stagedResponses,
+  });
+  const replaceStagingWorkspace = (workspace: CalendarStagingWorkspace): void => {
+    setStagedAnchorDate(workspace.anchorDate);
+    setStagedItems(workspace.items);
+    setStagedPeopleByItem(workspace.peopleByItem);
+    setStagedReminderOffsetsByItem(workspace.reminderOffsetsByItem);
+    setStagedResponses(workspace.responses);
+    setSelectedItem(null);
+    setPreviewItem(null);
+    setPreviewPoint(null);
+    setEditorItem(null);
+    setEditorOpen(false);
+    setEditorDraftPreview(null);
+  };
+  const saveStagingDefault = async (scope: CalendarStagingTemplateScope): Promise<void> => {
+    const label = scope === 'day' ? 'Day' : 'Week';
+    if (stagingDefaults[scope]) {
+      const confirmed = await dialog.confirm({
+        title: `Replace ${label} staging default?`,
+        text: `The saved ${label.toLocaleLowerCase()} layout will be replaced with the cards currently shown, including their times, colours, people and reminders.`,
+        confirmText: 'Replace default',
+        panelClass: 'cal-delete-confirm',
+      });
+      if (!confirmed) return;
+    }
+    const template = createCalendarStagingTemplate(stagingWorkspaceSnapshot(), scope, selectedDate);
+    const nextDefaults = { ...stagingDefaults, version: 1 as const, [scope]: template };
+    saveCalendarStagingDefaults(nextDefaults);
+    setStagingDefaults(nextDefaults);
+    toast.success(`${label} staging default saved.`);
+  };
+  const applyStagingDefault = async (scope: CalendarStagingTemplateScope): Promise<void> => {
+    const template = stagingDefaults[scope];
+    if (!template) return;
+    const label = scope === 'day' ? 'Day' : 'Week';
+    const confirmed = await dialog.confirm({
+      title: `Apply ${label} staging default?`,
+        text:
+          scope === 'day'
+            ? 'The selected day will be replaced with your saved staging layout. Other days in this staged week will keep their layouts.'
+            : 'The complete selected week will be replaced with your saved staging layout.',
+      confirmText: 'Apply default',
+      panelClass: 'cal-delete-confirm',
+    });
+    if (!confirmed) return;
+    replaceStagingWorkspace(applyCalendarStagingTemplate(stagingWorkspaceSnapshot(), template, selectedDate));
+    toast.success(`${label} staging default applied.`);
+  };
   const resetStagedCalendar = async (): Promise<void> => {
     const confirmed = await dialog.confirm({
       title: 'Reset staged calendar?',
-      text: 'This restores the original staged events, meetings, tasks and deadlines. Your staged edits, colour changes and deletions will be removed.',
+      text: 'This restores the complete seven-day staging showcase. Your staged edits, colour changes and deletions will be removed.',
       danger: true,
       confirmText: 'Reset calendar',
       panelClass: 'cal-delete-confirm',
     });
     if (!confirmed) return;
     const defaults = defaultCalendarStagingWorkspace();
-    setStagedItems(defaults.items);
-    setStagedPeopleByItem(defaults.peopleByItem);
-    setStagedReminderOffsetsByItem(defaults.reminderOffsetsByItem);
-    setStagedResponses(defaults.responses);
-    setSelectedItem(null);
-    setPreviewItem(null);
-    setPreviewPoint(null);
-    setEditorItem(null);
-    setEditorOpen(false);
-    setEditorColorPreview(null);
-    toast.success('Staged calendar restored to its default examples.');
+    replaceStagingWorkspace(defaults);
+    toast.success('Seven-day staging showcase restored.');
   };
 
   useEffect(() => {
@@ -778,6 +973,7 @@ export function CalendarPage(): VNode {
       if (event.key === 'Escape') {
         if (previewItem) { setPreviewItem(null); return; }
         if (createMenuAnchor) { setCreateMenuAnchor(null); return; }
+        if (weekLayoutMenuAnchor) { setWeekLayoutMenuAnchor(null); return; }
         if (filtersOpen) { setFiltersOpen(false); return; }
         return;
       }
@@ -794,11 +990,50 @@ export function CalendarPage(): VNode {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [createMenuAnchor, createOpen, editorItem, filtersOpen, itemAction, previewItem, selectedDate, view, viewMonth]);
+  }, [createMenuAnchor, createOpen, editorItem, filtersOpen, itemAction, previewItem, selectedDate, view, viewMonth, weekLayoutMenuAnchor]);
 
   if (demoMode.enabled && (!demoPage.useStagedData || (demoPage.showLandingPage && !enteredDemo))) {
     return <DemoLandingPage page="calendar" stagedEnabled={demoPage.useStagedData} onEnter={() => setEnteredDemo(true)} />;
   }
+
+  const usingWeekTimeline = view === 'week' && weekLayout === 'timeline';
+  const activeCalendarZoom = usingWeekTimeline ? weekTimelineZoom : calendarZoom;
+  const setActiveCalendarZoom = usingWeekTimeline ? setWeekTimelineZoom : setCalendarZoom;
+  const activeStagingScope: CalendarStagingTemplateScope | null = view === 'day' || view === 'week' ? view : null;
+  const stagingMenuGroup: MenuGroup | null = import.meta.env.DEV ? {
+    label: 'Staging options',
+    items: [{
+      id: 'staged-preview',
+      label: 'Staged preview',
+      icon: <LucideIcon name="GalleryVerticalEnd" />,
+      control: ({ ref, tabIndex }) => (
+        <button ref={ref} type="button" role="menuitemcheckbox" tabIndex={tabIndex} aria-checked={stagedPreview} aria-label="Show staged calendar" class={`cal-board-menu-switch ui-choice${stagedPreview ? ' is-on' : ''}`} data-ui-state={stagedPreview ? 'selected' : undefined} onClick={() => setStagedPreview(value => !value)}>
+          <SwitchArtwork size="sm" />
+        </button>
+      ),
+    }, ...(usingStagedData && activeStagingScope ? [{
+      id: 'save-staging-default',
+      label: 'Set current staging as default',
+      description: 'Capture cards, times, colours, people and reminders',
+      icon: <LucideIcon name="Save" />,
+      trailing: stagingDefaults[activeStagingScope] ? <LucideIcon name="Check" size={14} /> : undefined,
+      onSelect: () => { void saveStagingDefault(activeStagingScope); },
+    }, {
+      id: 'apply-staging-default',
+      label: 'Apply saved staging default',
+      description: stagingDefaults[activeStagingScope] ? `Replace this ${activeStagingScope} with the saved layout` : `No ${activeStagingScope} default has been saved`,
+      icon: <LucideIcon name="CopyCheck" />,
+      disabled: !stagingDefaults[activeStagingScope],
+      onSelect: () => { void applyStagingDefault(activeStagingScope); },
+    }, {
+      id: 'reset-staged-calendar',
+      label: 'Restore factory staging',
+      description: 'Replace staged edits with the seven-day showcase',
+      icon: <LucideIcon name="RotateCcw" />,
+      danger: true,
+      onSelect: () => { void resetStagedCalendar(); },
+    }] : [])],
+  } : null;
 
   const calendarToolbar = (
     <header class="cal-board-main-head">
@@ -806,47 +1041,73 @@ export function CalendarPage(): VNode {
           class="cal-board-view-tabs"
           size="sm"
           value={view}
-          onChange={setView}
+          onChange={value => { setWeekLayoutMenuAnchor(null); setView(value); }}
           label="Calendar view"
           options={[
             { value: 'day', label: 'Day', icon: <LucideIcon name="CalendarDays" size={14} /> },
             { value: 'week', label: 'Week', icon: <LucideIcon name="CalendarRange" size={14} /> },
             { value: 'month', label: 'Month', icon: <LucideIcon name="Calendar" size={14} /> },
-            { value: 'agenda', label: 'Schedule', icon: <LucideIcon name="List" size={14} /> },
-            { value: 'tasks', label: 'Tasks', icon: <LucideIcon name="ListChecks" size={14} /> },
           ]}
         />
         <SearchField class="cal-board-search" value={search} onInput={setSearch} aria-label="Search task, event, or people" placeholder="Search task, event, or people…" />
+        {view === 'week' ? <>
+          <Button
+            class="cal-week-layout-trigger"
+            variant="secondary"
+            size="sm"
+            iconOnly
+            title="Change Week view layout"
+            aria-label={`Week view layout: ${weekLayout === 'columns' ? 'Columns' : 'Timeline'}`}
+            aria-haspopup="menu"
+            aria-expanded={Boolean(weekLayoutMenuAnchor)}
+            iconLeft={<LucideIcon name={weekLayout === 'columns' ? 'Columns3' : 'MoveHorizontal'} size={14} />}
+            onClick={event => {
+              setViewMenuAnchor(null);
+              setCreateMenuAnchor(null);
+              setWeekLayoutMenuAnchor(current => current ? null : event.currentTarget as HTMLElement);
+            }}
+          />
+          <DropdownMenu
+            open={Boolean(weekLayoutMenuAnchor)}
+            anchor={weekLayoutMenuAnchor}
+            onClose={() => setWeekLayoutMenuAnchor(null)}
+            align="start"
+            placement="bottom"
+            label="Week view layout"
+            items={[
+              { id: 'columns', label: 'Columns', description: 'Days across the top with time down the left', icon: <LucideIcon name="Columns3" size={15} />, trailing: weekLayout === 'columns' ? <LucideIcon name="Check" size={14} /> : undefined, onSelect: () => setWeekLayout('columns') },
+              { id: 'timeline', label: 'Timeline', description: 'Days down the left with time across the top', icon: <LucideIcon name="MoveHorizontal" size={15} />, trailing: weekLayout === 'timeline' ? <LucideIcon name="Check" size={14} /> : undefined, onSelect: () => setWeekLayout('timeline') },
+            ]}
+          />
+        </> : null}
         <Button variant="secondary" size="sm" iconLeft={<LucideIcon name="ListFilter" size={15} />} onClick={() => {
           setViewMenuAnchor(null);
+          setWeekLayoutMenuAnchor(null);
           setFiltersOpen(value => !value);
         }}>Filter{activeFilterCount(filters) ? ` · ${activeFilterCount(filters)}` : ''}</Button>
         <Button variant="secondary" size="sm" iconOnly aria-label="Calendar settings" aria-haspopup="menu" aria-expanded={Boolean(viewMenuAnchor)} iconLeft={<LucideIcon name="Ellipsis" size={16} />} onClick={event => {
           const nextAnchor = viewMenuAnchor ? null : event.currentTarget as HTMLElement;
           setFiltersOpen(false);
+          setWeekLayoutMenuAnchor(null);
           setViewMenuAnchor(nextAnchor);
         }} />
         <Button class="cal-board-add" variant="primary" size="md" iconLeft={<LucideIcon name="Plus" size={16} />} aria-haspopup="menu" aria-expanded={Boolean(createMenuAnchor)} disabled={!canCreate && !canCreateMeeting} onClick={event => {
           setViewMenuAnchor(null);
+          setWeekLayoutMenuAnchor(null);
           setFiltersOpen(false);
           setCreateMenuAnchor(current => current ? null : event.currentTarget as HTMLElement);
         }}>Create</Button>
         <DropdownMenu open={Boolean(viewMenuAnchor)} anchor={viewMenuAnchor} onClose={() => setViewMenuAnchor(null)} align="end" label="Calendar settings" items={[
-          ...(import.meta.env.DEV ? [{
-            id: 'staged-preview',
-            label: 'Staged preview',
-            icon: <LucideIcon name="GalleryVerticalEnd" />,
-            control: ({ ref, tabIndex }: { ref: (element: HTMLButtonElement | null) => void; tabIndex: number }) => (
-              <button ref={ref} type="button" role="menuitemcheckbox" tabIndex={tabIndex} aria-checked={stagedPreview} aria-label="Show staged calendar" class={`cal-board-menu-switch ui-choice${stagedPreview ? ' is-on' : ''}`} data-ui-state={stagedPreview ? 'selected' : undefined} onClick={() => setStagedPreview(value => !value)}>
-                <SwitchArtwork size="sm" />
-              </button>
-            ),
-          }] : []),
-          ...(import.meta.env.DEV && usingStagedData ? [{ id: 'reset-staged-calendar', label: 'Reset staged calendar', description: 'Restore the original calendar examples', icon: <LucideIcon name="RotateCcw" />, danger: true, onSelect: () => { void resetStagedCalendar(); } }] : []),
-          { id: 'today', label: 'Go to today', shortcut: 'T', icon: <LucideIcon name="CalendarCheck" />, onSelect: goToday },
-          { id: 'manage-calendars', label: 'Manage calendars', icon: <LucideIcon name="CalendarCog" />, onSelect: openCalendarManager },
-          { id: 'settings', label: 'Calendar settings', icon: <LucideIcon name="Settings2" />, onSelect: () => setSettingsOpen(true) },
-          { id: 'refresh', label: 'Refresh calendar', icon: <LucideIcon name="RefreshCw" />, disabled: usingStagedData, onSelect: refresh },
+          {
+            label: 'Calendar',
+            items: [
+              { id: 'today', label: 'Go to today', shortcut: 'T', icon: <LucideIcon name="CalendarCheck" />, onSelect: goToday },
+              { id: 'manage-calendars', label: 'Manage calendars', icon: <LucideIcon name="CalendarCog" />, onSelect: openCalendarManager },
+              { id: 'settings', label: 'Calendar settings', icon: <LucideIcon name="Settings2" />, onSelect: () => setSettingsOpen(true) },
+              { id: 'refresh', label: 'Refresh calendar', icon: <LucideIcon name="RefreshCw" />, disabled: usingStagedData, onSelect: refresh },
+            ],
+          },
+          ...(stagingMenuGroup ? [stagingMenuGroup] : []),
         ]} />
         <DropdownMenu open={Boolean(createMenuAnchor)} anchor={createMenuAnchor} onClose={() => setCreateMenuAnchor(null)} align="end" label="Create calendar item" items={[
           ...(canCreateActivity ? [{ id: 'event', label: 'Event', description: 'Schedule an activity or appointment', icon: <LucideIcon name="CalendarDays" />, onSelect: () => openCreate(selectedKey, '09:00', 'event') }] : []),
@@ -861,29 +1122,29 @@ export function CalendarPage(): VNode {
     <div class="cal-root">
       <section class="cal-board-shell cal-ledger-shell">
         <div class="cal-board-layout cal-workspace">
-          <CalendarDashboardRail month={viewMonth} selectedKey={selectedKey} eventDateKeys={miniMonthEventDateKeys} focusedItem={focusedItem} focusedPeople={focusedPeople} responseStatus={focusedResponse} acceptedCount={focusedAcceptedCount} awaitingCount={focusedAwaitingCount} reminderLabel={focusedReminderLabel} responsePending={focusedRespond.isPending} focusedIndex={focusedIndex} focusedCount={selectedActionItems.length} categories={categories} hiddenCategories={hiddenCategories} calendars={calendars} hiddenCalendarIds={hiddenCalendarIds} expandedSections={expandedNavigatorSections} onPreviousMonth={() => shiftMonth(-1)} onNextMonth={() => shiftMonth(1)} onSelectDate={chooseDate} onRespond={respondToFocusedItem} onOpenFocusedItem={focusedItem && (focusedItem.editable || Boolean(focusedItem.sourceRoute)) ? openFocusedItem : undefined} onPreviousFocusedItem={() => cycleFocusedItem(-1)} onNextFocusedItem={() => cycleFocusedItem(1)} onToggleCategory={toggleCategory} onToggleCalendar={toggleCalendar} onExpandedSectionsChange={sections => setExpandedNavigatorSections(sections.filter((section): section is CalendarNavigatorSection => section === 'navigator'))} />
+          <CalendarDashboardRail month={viewMonth} selectedKey={selectedKey} weekStartsOn={weekStartsOn} eventDateKeys={miniMonthEventDateKeys} focusedItem={focusedItem} focusedPeople={focusedPeople} responseStatus={focusedResponse} acceptedCount={focusedAcceptedCount} awaitingCount={focusedAwaitingCount} reminderLabel={focusedReminderLabel} responsePending={focusedRespond.isPending} focusedIndex={focusedIndex} focusedCount={selectedActionItems.length} categories={categories} hiddenCategories={hiddenCategories} calendars={calendars} hiddenCalendarIds={hiddenCalendarIds} expandedSections={expandedNavigatorSections} onPreviousMonth={() => shiftMonth(-1)} onNextMonth={() => shiftMonth(1)} onSelectDate={chooseDate} onRespond={respondToFocusedItem} onOpenFocusedItem={focusedItem && (focusedItem.editable || Boolean(focusedItem.sourceRoute)) ? openFocusedItem : undefined} onPreviousFocusedItem={() => cycleFocusedItem(-1)} onNextFocusedItem={() => cycleFocusedItem(1)} onToggleCategory={toggleCategory} onToggleCalendar={toggleCalendar} onExpandedSectionsChange={sections => setExpandedNavigatorSections(sections.filter((section): section is CalendarNavigatorSection => section === 'navigator'))} />
 
-          <main class="cal-board-main cal-calendar-card" ref={setCalendarFrameElement}>
+          <main class="cal-board-main cal-calendar-card" ref={calendarFrameRef}>
             {calendarToolbar}
             {filtersOpen ? <FilterPanel filters={filters} sources={sources} scope={scope} query={search} onQueryChange={setSearch} onChange={setFilters} onScopeChange={setScope} onClear={() => { setFilters(EMPTY_FILTERS); setSearch(''); setScope('all'); }} onClose={() => setFiltersOpen(false)} /> : null}
 
             <section class="cal-board-canvas" aria-label={`Calendar ${periodTitle}`}>
               {!usingStagedData && listQ.isError ? <div class="cal-load-error"><div><strong>Calendar could not be loaded</strong><span>{listQ.error instanceof Error ? listQ.error.message : 'The authorised calendar service is unavailable.'}</span></div><Button variant="secondary" size="sm" onClick={() => void listQ.refetch()}>Try again</Button></div>
-                : view === 'month' ? <MonthView month={viewMonth} items={visibleItems} selectedKey={selectedKey} loading={cold} enteringItemId={enteringItemId} onSelectDay={chooseDate} onOpenItem={selectCalendarItem} onEntryAnimationEnd={finishCalendarEntryAnimation} />
-                : view === 'week' || view === 'day' ? <TimeGridView mode={view} days={gridDays} items={displayedItems} holidays={showHolidays ? visibleHolidays : []} weatherDays={showWeather ? weatherQ.data?.daily ?? [] : []} weatherLocationLabel={weatherMeta.label} loading={cold} zoom={calendarZoom} showAllDay={showAllDay} enteringItemId={enteringItemId} draftSelection={createOpen ? createDraftSelection : null} onZoomChange={setCalendarZoom} onOpenItem={selectCalendarItem} onEditItem={openItemEditor} onOpenSource={item => { if (item.sourceRoute) showSection(item.sourceRoute); }} onSetReminder={!usingStagedData ? item => setItemAction({ item, action: 'reminder' }) : undefined} onDeleteItem={item => setItemAction({ item, action: 'delete' })} onMoveItem={moveCalendarItem} onCreateForDay={canCreate ? openCreate : undefined} onCreateMeeting={canCreateMeeting ? (key, startTime) => openCreate(key, startTime, 'meeting') : undefined} onPrevious={() => step(-1)} onNext={() => step(1)} onEntryAnimationEnd={finishCalendarEntryAnimation} attendeePeople={usingStagedData ? stagedAttendeePeople : undefined} />
-                : view === 'agenda' ? <AgendaView items={visibleItems} loading={cold} enteringItemId={enteringItemId} onOpenItem={selectCalendarItem} onEntryAnimationEnd={finishCalendarEntryAnimation} />
-                : <TasksView items={visibleItems} loading={cold} enteringItemId={enteringItemId} onOpenItem={selectCalendarItem} onEntryAnimationEnd={finishCalendarEntryAnimation} />}
+                : view === 'month' ? <MonthView month={viewMonth} items={displayedItems} selectedKey={selectedKey} loading={cold} weekStartsOn={weekStartsOn} showWeekends={showWeekends} eventLimit={monthEventLimit} dimPastEvents={dimPastEvents} showCardIcons={showCardIcons} enteringItemId={enteringItemId} onSelectDay={chooseDate} onOpenItem={selectCalendarItem} onEntryAnimationEnd={finishCalendarEntryAnimation} />
+                : view === 'week' || view === 'day' ? <TimeGridView mode={view} weekLayout={weekLayout} days={gridDays} items={displayedItems} holidays={showHolidays ? visibleHolidays : []} weatherDays={showWeather ? weatherQ.data?.daily ?? [] : []} weatherLocationLabel={weatherMeta.label} loading={cold} zoom={activeCalendarZoom} showAllDay={showAllDay} showCurrentTime={showCurrentTime} autoFocusTimeline={autoFocusTimeline} snapMinutes={snapMinutes} dimPastEvents={dimPastEvents} showCardLocations={showCardLocations} showCardAttendees={showCardAttendees} showCardIcons={showCardIcons} enteringItemId={enteringItemId} draftSelection={createOpen ? createLiveDraft ?? createDraftSelection : null} onZoomChange={setActiveCalendarZoom} onOpenItem={selectCalendarItem} onEditItem={openItemEditor} onOpenSource={item => { if (item.sourceRoute) showSection(item.sourceRoute); }} onSetReminder={!usingStagedData ? item => setItemAction({ item, action: 'reminder' }) : undefined} onDeleteItem={item => setItemAction({ item, action: 'delete' })} onMoveItem={moveCalendarItem} onCreateForDay={canCreate ? openCreate : undefined} onCreateMeeting={canCreateMeeting ? (key, startTime) => openCreate(key, startTime, 'meeting') : undefined} onPrevious={() => step(-1)} onNext={() => step(1)} onEntryAnimationEnd={finishCalendarEntryAnimation} attendeePeople={displayedAttendeePeople} />
+                : view === 'agenda' ? <AgendaView items={displayedItems} loading={cold} enteringItemId={enteringItemId} onOpenItem={selectCalendarItem} onEntryAnimationEnd={finishCalendarEntryAnimation} />
+                : <TasksView items={displayedItems} loading={cold} enteringItemId={enteringItemId} onOpenItem={selectCalendarItem} onEntryAnimationEnd={finishCalendarEntryAnimation} />}
             </section>
             {previewPoint ? <span class="cal-preview-anchor" ref={setPreviewAnchor} style={`left:${previewPoint.x}px;top:${previewPoint.y}px`} aria-hidden="true" /> : null}
-            <CalendarItemPreview item={previewItem} anchor={previewAnchor} boundary={calendarFrameElement} people={previewItem && focusedItem?.id === previewItem.id ? focusedPeople : []} agenda={previewItem?.kind === 'meeting' && previewItem.id === focusedItem?.id ? focusedStagedDetail?.agenda ?? [] : []} reminderLabel={previewItem && focusedItem?.id === previewItem.id ? focusedReminderLabel : null} onEdit={openItemEditor} onDuplicate={previewItem?.editable ? openDuplicate : undefined} onDelete={previewItem?.cancelable ? item => setItemAction({ item, action: 'delete' }) : undefined} onSetReminder={!usingStagedData && previewItem?.origin === 'calendar' && previewItem.status !== 'done' && previewItem.status !== 'cancelled' ? item => setItemAction({ item, action: 'reminder' }) : undefined} onOpenSource={previewItem?.sourceRoute ? item => { if (item.sourceRoute) showSection(item.sourceRoute); } : undefined} onClose={() => { setPreviewItem(null); setPreviewPoint(null); }} />
-            <CalendarItemEditor open={editorOpen} item={editorItem} calendars={calendars} preview={usingStagedData} titleIconMode={titleIconType} previewPeople={usingStagedData && editorItem ? (stagedPeopleByItem[editorItem.id] ?? calendarStagingPeople(editorItem)).map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewDirectory={usingStagedData ? calendarStagingDirectory().map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewCategories={usingStagedData ? categories : []} previewReminderOffset={usingStagedData && editorItem ? (stagedReminderOffsetsByItem[editorItem.id] ?? calendarStagingReminderOffsets(editorItem))[0] ?? null : null} onPreviewSave={saveStagedItem} onColourPreview={(item, colorKey, customColor) => setEditorColorPreview({ id: item.id, colorKey, customColor })} onClose={closeItemEditor} />
-            {(canCreate || canCreateMeeting) ? <CreateCalendarItemDialog open={createOpen} calendars={calendars} categoriesOverride={usingStagedData ? categories : undefined} preview={usingStagedData} titleIconMode={titleIconType} initialCalendarId={createCalendarId} initialDate={createDate} initialTime={createTime} initialEndTime={createEndTime} initialTitle={createTitle} initialType={createType} initialColorKey={createColorKey} initialCustomColor={createCustomColor} initialItem={createDuplicateSource} initialPeople={createDuplicateSource && focusedItem?.id === createDuplicateSource.id ? focusedPeople.map(person => ({ id: person.id, name: person.name, photoUrl: person.src })) : []} initialReminderOffsets={createDuplicateSource && focusedItem?.id === createDuplicateSource.id ? (usingStagedData ? stagedReminderOffsetsByItem[createDuplicateSource.id] ?? calendarStagingReminderOffsets(createDuplicateSource) : focusedRemindersQ.data ?? []) : []} canCreateMeeting={canCreateMeeting} onPreviewCreate={usingStagedData ? createStagedItem : undefined} onClose={() => { setCreateOpen(false); setCreateDraftSelection(null); setCreateDuplicateSource(null); }} onCreated={markCalendarEntryCreated} /> : null}
+            <CalendarItemPreview item={previewItem} anchor={previewAnchor} boundary={calendarFrameRef.current} people={previewItem && focusedItem?.id === previewItem.id ? focusedPeople : []} agenda={previewItem?.kind === 'meeting' && previewItem.id === focusedItem?.id ? focusedStagedDetail?.agenda ?? [] : []} reminderLabel={previewItem && focusedItem?.id === previewItem.id ? focusedReminderLabel : null} onEdit={openItemEditor} onDuplicate={previewItem?.editable ? openDuplicate : undefined} onDelete={previewItem?.cancelable ? item => setItemAction({ item, action: 'delete' }) : undefined} onSetReminder={!usingStagedData && previewItem?.origin === 'calendar' && previewItem.status !== 'done' && previewItem.status !== 'cancelled' ? item => setItemAction({ item, action: 'reminder' }) : undefined} onOpenSource={previewItem?.sourceRoute ? item => { if (item.sourceRoute) showSection(item.sourceRoute); } : undefined} onClose={() => { setPreviewItem(null); setPreviewPoint(null); }} />
+            <CalendarItemEditor open={editorOpen} item={editorItem} calendars={calendars} preview={usingStagedData} titleIconMode={titleIconType} previewSessionId={editorPreviewSessionId} previewPeople={usingStagedData && editorItem ? (stagedPeopleByItem[editorItem.id] ?? calendarStagingPeople(editorItem)).map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewDirectory={usingStagedData ? calendarStagingDirectory().map(person => ({ id: person.userId, name: person.name, jobTitle: person.role, photoUrl: person.profileImage })) : []} previewCategories={usingStagedData ? categories : []} previewReminderOffset={usingStagedData && editorItem ? (stagedReminderOffsetsByItem[editorItem.id] ?? calendarStagingReminderOffsets(editorItem))[0] ?? null : null} onPreviewSave={saveStagedItem} onDraftPreview={setEditorDraftPreview} onClose={closeItemEditor} />
+            {(canCreate || canCreateMeeting) ? <CreateCalendarItemDialog open={createOpen} calendars={calendars} categoriesOverride={usingStagedData ? categories : undefined} preview={usingStagedData} titleIconMode={titleIconType} previewSessionId={createPreviewSessionId} initialCalendarId={createCalendarId} initialDate={createDate} initialTime={createTime} initialEndTime={createEndTime} initialTitle={createTitle} initialType={createType} initialColorKey={createColorKey} initialCustomColor={createCustomColor} initialItem={createDuplicateSource} initialPeople={createDuplicateSource && focusedItem?.id === createDuplicateSource.id ? focusedPeople.map(person => ({ id: person.id, name: person.name, photoUrl: person.src })) : []} initialReminderOffsets={createDuplicateSource && focusedItem?.id === createDuplicateSource.id ? (usingStagedData ? stagedReminderOffsetsByItem[createDuplicateSource.id] ?? calendarStagingReminderOffsets(createDuplicateSource) : focusedRemindersQ.data ?? []) : []} canCreateMeeting={canCreateMeeting} onPreviewCreate={usingStagedData ? createStagedItem : undefined} onDraftChange={setCreateLiveDraft} onClose={() => { setCreateOpen(false); setCreateDraftSelection(null); setCreateLiveDraft(null); setCreateDuplicateSource(null); }} onCreated={markCalendarEntryCreated} /> : null}
           </main>
         </div>
       </section>
 
       <CalendarItemActionDialog item={itemAction?.item ?? null} action={itemAction?.action ?? null} preview={usingStagedData} onPreviewDelete={deleteStagedItem} onClose={() => setItemAction(null)} />
-      <CalendarSettingsDialog open={settingsOpen} view={view} zoom={calendarZoom} showAllDay={showAllDay} showWeather={showWeather} showHolidays={showHolidays} weatherLocation={weatherLocation} titleIconType={titleIconType} scope={scope} sources={sources} hiddenSources={hiddenSources} onViewChange={setView} onZoomChange={setCalendarZoom} onShowAllDayChange={setShowAllDay} onShowWeatherChange={setShowWeather} onShowHolidaysChange={setShowHolidays} onWeatherLocationChange={setWeatherLocation} onTitleIconTypeChange={setTitleIconType} onScopeChange={setScope} onToggleSource={toggleSource} onClose={() => setSettingsOpen(false)} />
+      <CalendarSettingsDialog open={settingsOpen} view={view} weekLayout={weekLayout} columnZoom={calendarZoom} weekTimelineZoom={weekTimelineZoom} weekStartsOn={weekStartsOn} snapMinutes={snapMinutes} showAllDay={showAllDay} showCurrentTime={showCurrentTime} autoFocusTimeline={autoFocusTimeline} defaultDurationMinutes={defaultDurationMinutes} showWeekends={showWeekends} dimPastEvents={dimPastEvents} showCardLocations={showCardLocations} showCardAttendees={showCardAttendees} showCardIcons={showCardIcons} monthEventLimit={monthEventLimit} showWeather={showWeather} showHolidays={showHolidays} weatherLocation={weatherLocation} titleIconType={titleIconType} scope={scope} sources={sources} hiddenSources={hiddenSources} onViewChange={setView} onWeekLayoutChange={setWeekLayout} onColumnZoomChange={setCalendarZoom} onWeekTimelineZoomChange={setWeekTimelineZoom} onWeekStartsOnChange={setWeekStartsOn} onSnapMinutesChange={setSnapMinutes} onShowAllDayChange={setShowAllDay} onShowCurrentTimeChange={setShowCurrentTime} onAutoFocusTimelineChange={setAutoFocusTimeline} onDefaultDurationMinutesChange={setDefaultDurationMinutes} onShowWeekendsChange={setShowWeekends} onDimPastEventsChange={setDimPastEvents} onShowCardLocationsChange={setShowCardLocations} onShowCardAttendeesChange={setShowCardAttendees} onShowCardIconsChange={setShowCardIcons} onMonthEventLimitChange={setMonthEventLimit} onShowWeatherChange={setShowWeather} onShowHolidaysChange={setShowHolidays} onWeatherLocationChange={setWeatherLocation} onTitleIconTypeChange={setTitleIconType} onScopeChange={setScope} onToggleSource={toggleSource} onClose={() => setSettingsOpen(false)} />
       <CalendarManagementDialog open={calendarManagerOpen} calendars={calendars} connectionsEnabled={!usingStagedData} onCreateCalendar={!usingStagedData && canCreate ? () => openCollectionFromManager(null) : undefined} onClose={() => setCalendarManagerOpen(false)} />
       <CalendarCollectionDialog open={collectionDialog.open} calendar={collectionDialog.calendar} onClose={closeCollectionDialog} />
     </div>

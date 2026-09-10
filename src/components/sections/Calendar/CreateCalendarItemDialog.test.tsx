@@ -131,6 +131,26 @@ describe('CreateCalendarItemDialog', () => {
     expect(screen.getByRole('radio', { name: 'Custom colour' })).toBeTruthy();
   });
 
+  it.each([false, true])('streams a complete live card draft in %s staging mode', async staged => {
+    const onDraftChange = vi.fn();
+    render(<CreateCalendarItemDialog open preview={staged} calendars={CALENDARS} categoriesOverride={staged ? CATEGORIES : undefined} initialDate="2026-09-06" initialTime="13:00" initialEndTime="14:30" onPreviewCreate={staged ? vi.fn(() => 'preview-entry') : undefined} onDraftChange={onDraftChange} onClose={vi.fn()} />);
+
+    fireEvent.input(screen.getByLabelText(/^Title/), { target: { value: 'Live operations review' } });
+    fireEvent.input(screen.getByLabelText('Location'), { target: { value: 'Assurance Room' } });
+    fireEvent.input(screen.getByLabelText(/^Start Time/), { target: { value: '13:15' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'Mint' }));
+
+    await waitFor(() => expect(onDraftChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      key: '2026-09-06',
+      startTime: '13:15',
+      endTime: '14:30',
+      title: 'Live operations review',
+      colorKey: 'mint',
+      customColor: null,
+      locationLabel: 'Assurance Room',
+    })));
+  });
+
   it('uses the session-local adapter in staged preview without calling the live API', async () => {
     const createPreview = vi.fn(() => 'preview-entry-1');
     const created = vi.fn();

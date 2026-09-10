@@ -51,12 +51,13 @@ export function sameDay(a: Date, b: Date): boolean {
 export function isToday(d: Date): boolean { return sameDay(d, new Date()); }
 
 /**
- * The 6×7 grid of days for a month view (weeks start Monday), including the
- * trailing/leading days of the adjacent months so the grid is always full.
+ * The 6×7 grid of days for a month view, including the trailing/leading days
+ * of adjacent months so the grid is always full.
  */
-export function monthGrid(month: Date): Date[] {
+export function monthGrid(month: Date, firstDay: 'monday' | 'sunday' = 'monday'): Date[] {
   const first = startOfMonth(month);
-  const start = addDays(first, -((first.getDay() + 6) % 7));
+  const firstDayIndex = firstDay === 'sunday' ? 0 : 1;
+  const start = addDays(first, -((first.getDay() - firstDayIndex + 7) % 7));
   return Array.from({ length: 42 }, (_, i) => addDays(start, i));
 }
 
@@ -83,6 +84,18 @@ export function longDayLabel(d: Date): string {
 /** '10:00 AM' from an ISO timestamp. */
 export function timeLabel(iso: string): string {
   return new Date(iso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+/** True once the item's effective end has passed in local calendar time. */
+export function calendarItemIsPast(item: { allDay: boolean; startsOn: string | null; endsOn: string | null; startsAt: string | null; endsAt: string | null }, moment = new Date()): boolean {
+  if (item.allDay) {
+    const finalDate = item.endsOn ?? item.startsOn;
+    return Boolean(finalDate) && addDays(parseLocalDate(finalDate!), 1).getTime() <= moment.getTime();
+  }
+  const effectiveEnd = item.endsAt ?? item.startsAt;
+  if (!effectiveEnd) return false;
+  const end = new Date(effectiveEnd).getTime();
+  return Number.isFinite(end) && end <= moment.getTime();
 }
 
 /** The local final day touched by an item. All-day end dates are inclusive. */

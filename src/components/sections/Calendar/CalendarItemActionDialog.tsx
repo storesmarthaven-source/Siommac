@@ -36,14 +36,12 @@ function CalendarDeleteConfirmation({ item, preview, onPreviewDelete, onClose }:
   const cancelRef = useRef(cancel);
   const closeRef = useRef(onClose);
   const previewDeleteRef = useRef(onPreviewDelete);
+  cancelRef.current = cancel;
+  closeRef.current = onClose;
+  previewDeleteRef.current = onPreviewDelete;
 
   useEffect(() => {
-    cancelRef.current = cancel;
-    closeRef.current = onClose;
-    previewDeleteRef.current = onPreviewDelete;
-  }, [cancel, onClose, onPreviewDelete]);
-
-  useEffect(() => {
+    let active = true;
     const recurring = Boolean(item.occurrenceDate);
     let scope: RecurrenceScope = recurring ? 'occurrence' : 'series';
 
@@ -86,6 +84,7 @@ function CalendarDeleteConfirmation({ item, preview, onPreviewDelete, onClose }:
           };
         } : undefined,
       });
+      if (!active) return;
       if (!accepted) {
         closeRef.current();
         return;
@@ -101,16 +100,17 @@ function CalendarDeleteConfirmation({ item, preview, onPreviewDelete, onClose }:
           ...(item.occurrenceDate || item.recurrenceRule ? { scope } : {}),
           ...(scope === 'occurrence' && item.occurrenceDate ? { occurrenceDate: item.occurrenceDate } : {}),
         });
+        if (!active) return;
         if (!response.success) await dialog.error('Calendar item not deleted', response.message ?? 'The calendar item could not be deleted.');
       } catch (cause) {
-        await dialog.error('Calendar item not deleted', cause instanceof Error ? cause.message : 'The calendar item could not be deleted.');
+        if (active) await dialog.error('Calendar item not deleted', cause instanceof Error ? cause.message : 'The calendar item could not be deleted.');
       } finally {
-        closeRef.current();
+        if (active) closeRef.current();
       }
     };
 
     void confirm();
-    return undefined;
+    return () => { active = false; };
   }, [item.id]);
 
   return null;

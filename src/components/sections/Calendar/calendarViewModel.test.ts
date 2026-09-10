@@ -203,6 +203,14 @@ describe('calendar local-date grids', () => {
     expect(grid[41]!.getDay()).toBe(0);
   });
 
+  it('builds the same complete month grid with Sunday as the configured first day', () => {
+    const grid = monthGrid(new Date(2026, 6, 1), 'sunday');
+    expect(grid).toHaveLength(42);
+    expect(toLocalDateKey(grid[0]!)).toBe('2026-06-28');
+    expect(grid[0]!.getDay()).toBe(0);
+    expect(grid[41]!.getDay()).toBe(6);
+  });
+
   it('returns the Monday-first week containing a date', () => {
     const week = weekDays(new Date(2026, 6, 22));
     expect(week.map(toLocalDateKey)).toEqual([

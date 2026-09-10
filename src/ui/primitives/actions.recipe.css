@@ -247,6 +247,8 @@
     font-family: var(--font-mono);
     font-size: var(--ui-font-size-caption);
   }
+  .ui-menu-item-trailing { margin-left: auto; display: inline-flex; align-items: center; color: currentColor; }
+  .ui-menu-item-trailing > svg { width: var(--ui-icon-sm); height: var(--ui-icon-sm); }
   /* ACTIVE is the keyboard cursor, driven by an attribute rather than :hover, so
      mouse and keyboard can never both claim a highlight. */
   .ui-menu-item[data-active='true'] { background: var(--ui-menu-item-bg-active); }

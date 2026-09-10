@@ -1,14 +1,19 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/preact';
+import { useState } from 'preact/hooks';
 import { vi } from 'vitest';
 import type { CalendarItemDTO, UpdateEntryRequest } from '@api/calendar';
 import { localTimestamp } from '@lib/calendar/date';
-import { CalendarItemEditor } from './CalendarItemEditor';
+import { CalendarItemEditor, type CalendarEditorDraftPreview } from './CalendarItemEditor';
+import { TimeGridView } from './TimeGridView';
 
 const CALENDARS = [{ id: '00000000-0000-4000-8000-000000000001', name: 'My Calendar', description: null, ownerUserId: 'user-1', ownerName: 'User', visibility: 'personal' as const, departmentId: null, departmentName: null, colorKey: 'blue' as const, customColor: null, isDefault: true, status: 'active' as const, canEdit: true, canArchive: false, provider: null, readOnly: false }];
 const CATEGORIES = [
   { id: '00000000-0000-4000-8000-000000000099', key: 'operations', name: 'Operations', iconName: 'BriefcaseBusiness', scope: 'system' as const, sortOrder: 1, active: true, canManage: false },
   { id: '00000000-0000-4000-8000-000000000100', key: 'general', name: 'General', iconName: 'CalendarDays', scope: 'system' as const, sortOrder: 2, active: true, canManage: false },
 ];
+const DEPARTMENTS = [{ id: 'dept-1', name: 'Operations' }];
+const EMPTY_REMINDERS: number[] = [];
+const EMPTY_RECIPIENTS: never[] = [];
 
 const update = vi.hoisted(() => vi.fn());
 const setReminders = vi.hoisted(() => vi.fn());
@@ -18,16 +23,16 @@ vi.mock('@api/calendar', async importOriginal => {
   return {
     ...original,
     useCalendarItem: () => ({ data: undefined, isLoading: false }),
-    useCalendarDepartments: () => ({ data: [{ id: 'dept-1', name: 'Operations' }], isLoading: false }),
+    useCalendarDepartments: () => ({ data: DEPARTMENTS, isLoading: false }),
     useCalendarCategories: () => ({ data: CATEGORIES, isLoading: false, isError: false }),
-    useCalendarReminders: () => ({ data: [], isLoading: false }),
+    useCalendarReminders: () => ({ data: EMPTY_REMINDERS, isLoading: false }),
     useSetCalendarReminders: () => ({ mutateAsync: setReminders, isPending: false }),
     useUpdateEntry: () => ({ mutateAsync: update, isPending: false }),
   };
 });
 
 vi.mock('@api/communications', () => ({
-  useMessageRecipients: () => ({ data: [], isFetching: false, isError: false }),
+  useMessageRecipients: () => ({ data: EMPTY_RECIPIENTS, isFetching: false, isError: false }),
 }));
 
 const item: CalendarItemDTO = {
@@ -38,6 +43,15 @@ const item: CalendarItemDTO = {
   visibility: 'team', sourceModule: null, sourceRef: null, sourceRoute: null, sourceLabel: null, sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar',
   recurrenceSeriesId: null, recurrenceRule: null, occurrenceDate: null, editable: true, completable: true, assignable: true, cancelable: true, drillThrough: false,
 };
+const TOOLBOX_ITEM: CalendarItemDTO = { ...item, type: 'activity', kind: 'event', sourceLabel: 'Toolbox Talk' };
+
+function LiveCardColourHarness({ preview }: { preview: boolean }) {
+  const [draft, setDraft] = useState<CalendarEditorDraftPreview | null>(null);
+  return <>
+    <TimeGridView mode="day" days={[new Date(2026, 8, 7, 12)]} items={[draft?.item ?? TOOLBOX_ITEM]} onOpenItem={vi.fn()} />
+    <CalendarItemEditor item={TOOLBOX_ITEM} calendars={CALENDARS} preview={preview} previewCategories={preview ? CATEGORIES : []} onDraftPreview={setDraft} onPreviewSave={preview ? vi.fn() : undefined} onClose={vi.fn()} />
+  </>;
+}
 
 describe('CalendarItemEditor', () => {
   beforeEach(() => {
@@ -47,8 +61,8 @@ describe('CalendarItemEditor', () => {
 
   it('uses the governed editor drawer and saves core card fields', async () => {
     const close = vi.fn();
-    const previewColour = vi.fn();
-    render(<CalendarItemEditor item={item} calendars={CALENDARS} onColourPreview={previewColour} onClose={close} />);
+    const draftPreview = vi.fn();
+    render(<CalendarItemEditor item={item} calendars={CALENDARS} onDraftPreview={draftPreview} onClose={close} />);
 
     expect(screen.getByRole('dialog', { name: 'Edit task' })).toBeTruthy();
     expect(screen.getByRole('checkbox', { name: 'All Day' })).toBeTruthy();
@@ -68,7 +82,17 @@ describe('CalendarItemEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Objects' }));
     fireEvent.click(screen.getByRole('gridcell', { name: 'bar chart' }));
     fireEvent.click(screen.getByRole('radio', { name: 'Violet' }));
-    expect(previewColour).toHaveBeenLastCalledWith(item, 'purple', null);
+    await waitFor(() => expect(draftPreview).toHaveBeenLastCalledWith(expect.objectContaining({
+      item: expect.objectContaining({
+        id: item.id,
+        title: 'Review final roster',
+        titleIconType: 'emoji',
+        titleIconValue: '📊',
+        colorKey: 'purple',
+        startsAt: localTimestamp('2026-09-07', '10:15'),
+        endsAt: localTimestamp('2026-09-07', '11:45'),
+      }),
+    })));
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
 
     await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
@@ -83,11 +107,24 @@ describe('CalendarItemEditor', () => {
 
   it('edits staged cards without calling the live mutation', async () => {
     const savePreview = vi.fn();
-    render(<CalendarItemEditor item={item} calendars={CALENDARS} preview previewCategories={CATEGORIES} onPreviewSave={savePreview} onClose={vi.fn()} />);
+    const draftPreview = vi.fn();
+    render(<CalendarItemEditor item={item} calendars={CALENDARS} preview previewCategories={CATEGORIES} onPreviewSave={savePreview} onDraftPreview={draftPreview} onClose={vi.fn()} />);
     fireEvent.input(screen.getByLabelText(/^Title/), { target: { value: 'Staged editor update' } });
+    await waitFor(() => expect(draftPreview).toHaveBeenLastCalledWith(expect.objectContaining({ item: expect.objectContaining({ title: 'Staged editor update' }) })));
     fireEvent.click(screen.getByRole('button', { name: 'Save Changes' }));
     await waitFor(() => expect(savePreview).toHaveBeenCalledWith(item, expect.objectContaining({ title: 'Staged editor update' }), { people: [], reminderOffsets: [] }));
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it.each([false, true])('updates a %s card colour on the grid before save', async preview => {
+    const { container } = render(<LiveCardColourHarness preview={preview} />);
+    const card = () => container.querySelector<HTMLElement>('[data-calendar-item-id="task-1"]')!;
+
+    expect(card().classList.contains('tone-amber')).toBe(true);
+    fireEvent.click(screen.getByRole('radio', { name: 'Violet' }));
+
+    await waitFor(() => expect(card().classList.contains('tone-purple')).toBe(true));
+    expect(card().classList.contains('tone-navy')).toBe(false);
   });
 
   it('keeps a staged draft intact across parent renders and saves its category and reminder', async () => {

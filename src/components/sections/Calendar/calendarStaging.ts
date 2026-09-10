@@ -133,6 +133,51 @@ export interface CalendarStagedDetail {
   comments: { id: string; author: string; body: string; createdLabel: string }[];
 }
 
+interface DailyStagingContent {
+  code: string;
+  allDayEvent: string;
+  allDayTask: string;
+  longEvent: string;
+  morningMeeting: string;
+  pairedEvent: string;
+  task: string;
+  deadline: string;
+  afternoonEvent: string;
+  reminder: string;
+  eveningMeeting: string;
+  location: string;
+}
+
+interface DailyStagingPalette {
+  allDayEvent: NonNullable<CalendarItemDTO['colorKey']>;
+  allDayTask: NonNullable<CalendarItemDTO['colorKey']>;
+  longEvent: NonNullable<CalendarItemDTO['colorKey']>;
+  pairedEvent: NonNullable<CalendarItemDTO['colorKey']>;
+  deadline: NonNullable<CalendarItemDTO['colorKey']>;
+  afternoonEvent: NonNullable<CalendarItemDTO['colorKey']>;
+  reminder: NonNullable<CalendarItemDTO['colorKey']>;
+}
+
+const DAILY_STAGING_CONTENT: readonly DailyStagingContent[] = [
+  { code: 'SUN', allDayEvent: 'Marine Operations Day', allDayTask: 'Validate Weekend Access', longEvent: 'Marine Logistics Window', morningMeeting: 'Sunday Readiness Huddle', pairedEvent: 'Visitor Escort Coordination', task: 'Close Permit Actions', deadline: 'Crew Manifest Cutoff', afternoonEvent: 'Equipment Readiness Walk', reminder: 'Send Access Reminder', eveningMeeting: 'Night Operations Handoff', location: 'Marine Base · Operations Desk' },
+  { code: 'MON', allDayEvent: 'Contractor Induction Day', allDayTask: 'Reconcile Training Records', longEvent: 'Warehouse Dispatch Window', morningMeeting: 'Monday Mobilisation Sync', pairedEvent: 'Forklift Route Inspection', task: 'Review Isolation Pack', deadline: 'Vendor Documents Due', afternoonEvent: 'Quayside Safety Walk', reminder: 'Confirm Shuttle Roster', eveningMeeting: 'Evening Shift Handoff', location: 'Central Warehouse · Dispatch Bay' },
+  { code: 'TUE', allDayEvent: 'Field Assurance Day', allDayTask: 'Validate Equipment Register', longEvent: 'North Compound Access Window', morningMeeting: 'Contractor Delivery Sync', pairedEvent: 'Temporary Works Review', task: 'Approve Relief Roster', deadline: 'Insurance Evidence Cutoff', afternoonEvent: 'Laydown Yard Inspection', reminder: 'Notify Delivery Leads', eveningMeeting: 'Site Coverage Handoff', location: 'North Compound · Gate 4' },
+  { code: 'WED', allDayEvent: 'Compliance Review Day', allDayTask: 'Verify Certification Records', longEvent: 'Lifting Equipment Window', morningMeeting: 'Corrective Action Review', pairedEvent: 'Evidence Quality Check', task: 'Prepare Audit Responses', deadline: 'Certification Evidence Due', afternoonEvent: 'Supplier Mobilisation Review', reminder: 'Upload Inspection Evidence', eveningMeeting: 'Midweek Control Handoff', location: 'Operations Centre · Assurance Room' },
+  { code: 'THU', allDayEvent: 'Permit Coordination Day', allDayTask: 'Publish Control Register', longEvent: 'Simultaneous Operations Window', morningMeeting: 'SIMOPS Coordination', pairedEvent: 'Workfront Sequencing Review', task: 'Issue Inspection Summary', deadline: 'Permit Activation Cutoff', afternoonEvent: 'Leadership Controls Review', reminder: 'Confirm Permit Owners', eveningMeeting: 'Late Shift Readiness Handoff', location: 'South Field · Permit Office' },
+  { code: 'FRI', allDayEvent: 'Weekly Assurance Day', allDayTask: 'Close Outstanding Findings', longEvent: 'Payroll Review Window', morningMeeting: 'Friday Assurance Forum', pairedEvent: 'Training Completion Review', task: 'Distribute Safety Bulletin', deadline: 'Overtime Approval Cutoff', afternoonEvent: 'Weekly Control Closeout', reminder: 'Send Action Digest', eveningMeeting: 'Weekend Coverage Handoff', location: 'Head Office · Assurance Suite' },
+  { code: 'SAT', allDayEvent: 'Weekend Logistics Day', allDayTask: 'Archive Compliance Records', longEvent: 'Workshop Maintenance Window', morningMeeting: 'Weekend Coordination Huddle', pairedEvent: 'Supply Delivery Window', task: 'Reconcile Maintenance Log', deadline: 'Service Report Cutoff', afternoonEvent: 'Stores Inventory Review', reminder: 'Confirm Monday Deliveries', eveningMeeting: 'Weekend Operations Handoff', location: 'Maintenance Hub · Workshop 2' },
+];
+
+const DAILY_STAGING_PALETTES: readonly DailyStagingPalette[] = [
+  { allDayEvent: 'teal', allDayTask: 'amber', longEvent: 'amber', pairedEvent: 'coral', deadline: 'coral', afternoonEvent: 'mint', reminder: 'slate' },
+  { allDayEvent: 'mint', allDayTask: 'purple', longEvent: 'coral', pairedEvent: 'teal', deadline: 'amber', afternoonEvent: 'slate', reminder: 'teal' },
+  { allDayEvent: 'purple', allDayTask: 'coral', longEvent: 'mint', pairedEvent: 'amber', deadline: 'coral', afternoonEvent: 'teal', reminder: 'slate' },
+  { allDayEvent: 'amber', allDayTask: 'slate', longEvent: 'purple', pairedEvent: 'mint', deadline: 'amber', afternoonEvent: 'coral', reminder: 'teal' },
+  { allDayEvent: 'teal', allDayTask: 'purple', longEvent: 'slate', pairedEvent: 'coral', deadline: 'mint', afternoonEvent: 'amber', reminder: 'slate' },
+  { allDayEvent: 'coral', allDayTask: 'mint', longEvent: 'amber', pairedEvent: 'purple', deadline: 'amber', afternoonEvent: 'teal', reminder: 'slate' },
+  { allDayEvent: 'slate', allDayTask: 'amber', longEvent: 'mint', pairedEvent: 'coral', deadline: 'purple', afternoonEvent: 'amber', reminder: 'teal' },
+];
+
 const HOLIDAY_PREVIEW_SET = [
   {
     name: 'Independence Day',
@@ -256,46 +301,23 @@ export function calendarStagingItems(today = new Date()): CalendarItemDTO[] {
     calendarId: STAGED_CALENDAR_IDS.personal,
     calendarName: 'My Calendar',
   };
-  const values: StagedItem[] = [
-    { ...common, ...people.alicia, day: today, type: 'activity', title: 'Crew Change Window', titleIconType: 'emoji', titleIconValue: '🚢', notes: 'All-day coordination window for crew transfers, access and handover coverage.', colorKey: 'teal', locationLabel: 'Marine Base · Operations Desk', sourceModule: 'operations', sourceRef: 'EVT-DEMO-CREW-CHANGE', sourceLabel: 'Event', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.darius, day: today, type: 'task', title: 'Permit Register Review', titleIconType: 'lucide', titleIconValue: 'ClipboardCheck', notes: 'Complete the daily permit register review before close of business.', status: 'not_started', priority: 'high', colorKey: 'amber', assigneeUserId: 'demo-darius', assigneeName: 'Darius King', sourceModule: 'calendar', sourceRef: 'TSK-DEMO-PERMIT-REGISTER', sourceLabel: 'Task', sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar' },
-    { ...common, ...people.alicia, day: today, startHour: 7, durationMinutes: 120, type: 'activity', title: 'North Field Mobilisation', titleIconType: 'lucide', titleIconValue: 'MapPin', notes: 'Field mobilisation and controlled site-access window.', colorKey: 'amber', locationLabel: 'North Field · Gate 2', sourceModule: 'operations', sourceLabel: 'Field Operation', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.marcus, day: today, startHour: 9, durationMinutes: 120, type: 'activity', title: 'Site Readiness Sync', titleIconType: 'lucide', titleIconValue: 'Video', notes: 'Confirm access, permits and mobilisation readiness for today’s field work.', attendeeCount: 5, colorKey: 'blue', locationLabel: 'North Field · Control Room', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-TODAY', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.alicia, day: today, startHour: 9, durationMinutes: 120, type: 'activity', title: 'Vendor Access Briefing', titleIconType: 'emoji', titleIconValue: '👋', notes: 'Confirm visitor access, escort coverage and reception instructions.', colorKey: 'coral', locationLabel: 'Head Office · Reception', sourceModule: 'calendar', sourceRef: 'EVT-DEMO-VENDOR', sourceLabel: 'Event', sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar' },
-    { ...common, ...people.darius, day: today, startHour: 11, startMinute: 15, durationMinutes: 45, type: 'task', title: 'Permit Handover', titleIconType: 'lucide', titleIconValue: 'ListChecks', notes: 'Review and hand over the active work permits to the incoming supervisor.', status: 'in_progress', priority: 'high', colorKey: 'purple', assigneeUserId: 'demo-darius', assigneeName: 'Darius King', visibility: 'team' },
-    { ...common, ...people.jordan, day: today, startHour: 12, startMinute: 15, durationMinutes: 30, type: 'deadline', origin: 'workflow', title: 'Mobilisation Pack Due', titleIconType: 'lucide', titleIconValue: 'Flag', notes: 'Submit the approved mobilisation pack before the noon control gate.', colorKey: 'coral', sourcePriority: 'high', sourceModule: 'compliance', sourceRef: 'DUE-DEMO-TODAY', sourceLabel: 'Deadline', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.marcus, day: today, startHour: 13, durationMinutes: 75, type: 'activity', title: 'Pelican Platform Safety Review', titleIconType: 'emoji', titleIconValue: '🛡️', notes: 'Review corrective actions and completed deck-inspection evidence with the field team.', attendeeCount: 4, colorKey: 'blue', locationLabel: 'Pelican Platform · Bay 3', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-SAFETY', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-    { ...common, ...people.marcus, day: today, startHour: 15, startMinute: 30, durationMinutes: 30, type: 'activity', title: 'Submit Permit Pack', titleIconType: 'lucide', titleIconValue: 'Bell', notes: 'Reminder to submit the verified permit pack before the mobilisation gate closes.', colorKey: 'slate', sourceModule: 'calendar', sourceRef: 'REM-DEMO-001', sourceLabel: 'Reminder' },
-    { ...common, ...people.jordan, day: today, startHour: 20, startMinute: 30, durationMinutes: 60, type: 'activity', title: 'Night Shift Coordination', titleIconType: 'emoji', titleIconValue: '🌙', notes: 'Confirm overnight priorities, coverage and escalation contacts.', attendeeCount: 4, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-NIGHT', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-
-    { ...common, ...people.darius, day: addDays(today, 1), startHour: 8, startMinute: 30, durationMinutes: 45, type: 'activity', title: 'Pre-job Safety Talk', notes: 'Field briefing covering controls and stop-work responsibilities.', colorKey: 'amber', sourceModule: 'hse', sourceRef: 'TBT-DEMO-001', sourceRoute: 's-hse-toolbox', sourceLabel: 'Toolbox Talk', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-    { ...common, ...people.alicia, day: addDays(today, 1), startHour: 9, startMinute: 30, durationMinutes: 90, type: 'activity', title: 'Weekly Operations Briefing', notes: 'Review readiness, assign open actions and align mobilisation priorities.', attendeeCount: 6, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-OPS', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.jordan, day: addDays(today, 1), startHour: 14, durationMinutes: 75, type: 'task', title: 'Resolve Staffing Gaps', notes: 'Confirm relief coverage for the late and overnight rotations.', status: 'in_progress', priority: 'high', colorKey: 'coral', assigneeUserId: 'demo-jordan', assigneeName: 'Jordan Peters', sourceModule: 'planning', sourceRef: 'TSK-DEMO-STAFF', sourceLabel: 'Task', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.marcus, day: addDays(today, 1), endDay: addDays(today, 2), startHour: 15, endHour: 10, endMinute: 30, type: 'activity', title: 'Offshore Mobilisation Window', notes: 'Coordinate the overnight mobilisation handoff and morning field-readiness checks.', attendeeCount: 5, colorKey: 'amber', locationLabel: 'North Field · Logistics Route', sourceModule: 'operations', sourceLabel: 'Field Operation', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-
-    { ...common, ...people.marcus, day: addDays(today, 2), startHour: 9, durationMinutes: 60, type: 'activity', title: 'Contractor Kickoff', notes: 'Align the contractor leads on induction, permits and delivery sequencing.', attendeeCount: 5, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-KICKOFF', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.alicia, day: addDays(today, 2), startHour: 11, durationMinutes: 30, type: 'deadline', origin: 'module', title: 'Insurance Certificate Due', notes: 'Updated contractor insurance evidence must be on file before mobilisation.', colorKey: 'coral', sourcePriority: 'high', sourceModule: 'compliance', sourceRef: 'DUE-DEMO-001', sourceLabel: 'Deadline', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.jordan, day: addDays(today, 2), startHour: 14, durationMinutes: 90, type: 'task', title: 'Approve September Crew Roster', notes: 'Validate coverage and submit the supervisor approval.', status: 'in_review', priority: 'high', colorKey: 'purple', assigneeUserId: 'demo-jordan', assigneeName: 'Jordan Peters', visibility: 'personal', sourceModule: 'planning', sourceRef: 'TSK-DEMO-ROSTER', sourceLabel: 'Task' },
-
-    { ...common, ...people.darius, day: addDays(today, 3), type: 'deadline', origin: 'workflow', title: 'Equipment Certification Window', notes: 'Final day to validate certification evidence for mobilised equipment.', colorKey: 'amber', locationLabel: 'Operations Centre · Certification Desk', sourcePriority: 'critical', sourceModule: 'compliance', sourceRef: 'DUE-DEMO-EQUIPMENT', sourceLabel: 'Deadline', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-    { ...common, ...people.alicia, day: addDays(today, 3), startHour: 9, startMinute: 30, durationMinutes: 75, type: 'activity', title: 'CAPA Owner Check-in', notes: 'Review evidence readiness and unblock overdue corrective actions.', attendeeCount: 5, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-CAPA', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-    { ...common, ...people.marcus, day: addDays(today, 3), startHour: 12, durationMinutes: 90, type: 'activity', title: 'Contractor Mobilisation Review', notes: 'Confirm induction completion and site-access readiness.', attendeeCount: 4, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-MOB', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.darius, day: addDays(today, 3), startHour: 15, startMinute: 15, durationMinutes: 30, type: 'activity', title: 'Upload CAPA Evidence', notes: 'Reminder to attach final photographs and owner sign-off.', colorKey: 'slate', sourceModule: 'calendar', sourceRef: 'REM-DEMO-CAPA', sourceLabel: 'Reminder', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-
-    { ...common, ...people.marcus, day: addDays(today, 4), startHour: 8, startMinute: 45, durationMinutes: 60, type: 'activity', title: 'Permit-to-work Coordination', notes: 'Review simultaneous operations and confirm permit dependencies.', attendeeCount: 5, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-PTW', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.darius, day: addDays(today, 4), startHour: 10, durationMinutes: 75, type: 'task', title: 'Publish Field Inspection Pack', notes: 'Attach the final inspection pack to the linked incident.', status: 'in_progress', priority: 'medium', colorKey: 'purple', assigneeUserId: 'demo-darius', assigneeName: 'Darius King', sourceModule: 'hse', sourceRef: 'TSK-DEMO-PACK', sourceRoute: 's-hse-incidents', sourceLabel: 'Task', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-    { ...common, ...people.alicia, day: addDays(today, 4), startHour: 13, durationMinutes: 90, type: 'activity', title: 'Leadership Risk Review', notes: 'Review material risks and confirm escalation and mitigation owners.', attendeeCount: 7, colorKey: 'blue', visibility: 'org', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-RISK', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.jordan, day: addDays(today, 4), startHour: 16, durationMinutes: 30, type: 'deadline', origin: 'workflow', title: 'Mobilisation Gate Ready', notes: 'Readiness milestone for access, permits and crew coverage.', colorKey: 'mint', sourcePriority: 'normal', sourceModule: 'planning', sourceRef: 'MS-DEMO-001', sourceLabel: 'Milestone', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-
-    { ...common, ...people.marcus, day: addDays(today, 5), startHour: 9, durationMinutes: 30, type: 'deadline', origin: 'module', title: 'Payroll Variance Submission', notes: 'Final approved variance summary due to Payroll.', colorKey: 'amber', sourcePriority: 'high', sourceModule: 'payroll', sourceRef: 'PAY-2026-09', sourceRoute: 's-payroll', sourceLabel: 'Payroll Deadline', sourceDepartment: 'payroll', sourceDepartmentLabel: 'Payroll' },
-    { ...common, ...people.jordan, day: addDays(today, 5), startHour: 11, durationMinutes: 60, type: 'activity', title: 'Monthly Compliance Forum', notes: 'Review regulatory commitments and outstanding audit evidence.', attendeeCount: 8, colorKey: 'blue', visibility: 'org', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-COMPLIANCE', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.alicia, day: addDays(today, 5), startHour: 14, durationMinutes: 60, type: 'task', title: 'Complete Incident Briefing', notes: 'Issue the approved incident brief and acknowledge distribution.', status: 'in_review', priority: 'medium', colorKey: 'blue', assigneeUserId: 'demo-alicia', assigneeName: 'Alicia Moore', sourceModule: 'hse', sourceRef: 'TSK-DEMO-BRIEF', sourceRoute: 's-hse-incidents', sourceLabel: 'Task', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
-
-    { ...common, ...people.alicia, day: addDays(today, 6), type: 'deadline', origin: 'workflow', title: 'Offshore Supply Arrival', notes: 'Planned supply-vessel arrival and controlled unloading window.', colorKey: 'blue', locationLabel: 'Marine Base · Berth 4', sourcePriority: 'normal', sourceModule: 'planning', sourceRef: 'MS-DEMO-SUPPLY', sourceLabel: 'Milestone', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.darius, day: addDays(today, 6), startHour: 9, durationMinutes: 60, type: 'activity', title: 'Weekend Maintenance Window', notes: 'Planned isolation and preventive maintenance window.', colorKey: 'slate', sourceModule: 'calendar', sourceRef: 'EVT-DEMO-MAINT', sourceLabel: 'Maintenance', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.marcus, day: addDays(today, 6), startHour: 12, durationMinutes: 60, type: 'activity', title: 'Weekly Closeout Review', notes: 'Close completed actions and carry forward controlled exceptions.', attendeeCount: 4, colorKey: 'blue', sourceModule: 'meetings', sourceRef: 'MTG-DEMO-CLOSE', sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
-    { ...common, ...people.jordan, day: addDays(today, 6), startHour: 15, startMinute: 30, durationMinutes: 45, type: 'task', title: 'Archive Weekly Records', notes: 'File approved permits, briefings and inspection evidence.', status: 'not_started', priority: 'low', colorKey: 'purple', assigneeUserId: 'demo-jordan', assigneeName: 'Jordan Peters', sourceModule: 'calendar', sourceRef: 'TSK-DEMO-ARCHIVE', sourceLabel: 'Task' },
-  ];
+  const values: StagedItem[] = DAILY_STAGING_CONTENT.flatMap((content, dayOffset) => {
+    const day = addDays(today, dayOffset);
+    const palette = DAILY_STAGING_PALETTES[dayOffset]!;
+    const ref = (role: string) => `STG-${content.code}-${role}`;
+    return [
+      { ...common, ...people.alicia, day, type: 'activity', title: content.allDayEvent, titleIconType: 'emoji', titleIconValue: '📅', notes: 'An all-day operational window for coordinated work, access and handoffs.', colorKey: palette.allDayEvent, locationLabel: content.location, sourceModule: 'operations', sourceRef: ref('ALL-DAY-EVENT'), sourceLabel: 'Event', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
+      { ...common, ...people.darius, day, type: 'task', title: content.allDayTask, titleIconType: 'lucide', titleIconValue: 'ClipboardCheck', notes: 'Complete the scheduled assurance action before the end of the day.', status: 'not_started', priority: 'high', colorKey: palette.allDayTask, assigneeUserId: 'demo-darius', assigneeName: 'Darius King', sourceModule: 'calendar', sourceRef: ref('ALL-DAY-TASK'), sourceLabel: 'Task', sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar' },
+      { ...common, ...people.alicia, day, startHour: 6, startMinute: 30, durationMinutes: 150, type: 'activity', title: content.longEvent, titleIconType: 'lucide', titleIconValue: 'MapPin', notes: 'A longer operational window staged to demonstrate full-height and full-width calendar cards.', colorKey: palette.longEvent, locationLabel: content.location, sourceModule: 'operations', sourceRef: ref('LONG-EVENT'), sourceLabel: 'Field Operation', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
+      { ...common, ...people.marcus, day, startHour: 9, startMinute: 30, durationMinutes: 105, type: 'activity', title: content.morningMeeting, titleIconType: 'lucide', titleIconValue: 'Video', notes: 'Review readiness, assign owners and confirm the day’s operational handoffs.', attendeeCount: 5, colorKey: 'blue', locationLabel: content.location, sourceModule: 'meetings', sourceRef: ref('MORNING-MEETING'), sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
+      { ...common, ...people.alicia, day, startHour: 9, startMinute: 30, durationMinutes: 105, type: 'activity', title: content.pairedEvent, titleIconType: 'emoji', titleIconValue: '👋', notes: 'A same-start event staged beside the meeting to demonstrate overlap and card stacking.', colorKey: palette.pairedEvent, locationLabel: content.location, sourceModule: 'calendar', sourceRef: ref('PAIRED-EVENT'), sourceLabel: 'Event', sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar' },
+      { ...common, ...people.darius, day, startHour: 11, startMinute: 45, durationMinutes: 45, type: 'task', title: content.task, titleIconType: 'lucide', titleIconValue: 'ListChecks', notes: 'Complete and record the assigned operational action.', status: 'in_progress', priority: 'high', colorKey: 'purple', assigneeUserId: 'demo-darius', assigneeName: 'Darius King', sourceModule: 'calendar', sourceRef: ref('TASK'), sourceLabel: 'Task', sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar' },
+      { ...common, ...people.jordan, day, startHour: 12, startMinute: 45, durationMinutes: 30, type: 'deadline', origin: 'workflow', title: content.deadline, titleIconType: 'lucide', titleIconValue: 'Flag', notes: 'A time-bound submission point staged as the shortest supported card.', colorKey: palette.deadline, sourcePriority: 'high', sourceModule: 'compliance', sourceRef: ref('DEADLINE'), sourceLabel: 'Deadline', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
+      { ...common, ...people.alicia, day, startHour: 14, durationMinutes: 75, type: 'activity', title: content.afternoonEvent, titleIconType: 'emoji', titleIconValue: '🦺', notes: 'A medium-length field activity for demonstrating varied card color and size.', colorKey: palette.afternoonEvent, locationLabel: content.location, sourceModule: 'hse', sourceRef: ref('AFTERNOON-EVENT'), sourceLabel: 'Safety Inspection', sourceDepartment: 'hse', sourceDepartmentLabel: 'HSE' },
+      { ...common, ...people.marcus, day, startHour: 16, durationMinutes: 30, type: 'activity', title: content.reminder, titleIconType: 'lucide', titleIconValue: 'Bell', notes: 'A concise reminder staged without meeting actions or attendee avatars.', colorKey: palette.reminder, sourceModule: 'calendar', sourceRef: ref('REMINDER'), sourceLabel: 'Reminder', sourceDepartment: 'calendar', sourceDepartmentLabel: 'Calendar' },
+      { ...common, ...people.jordan, day, startHour: 18, startMinute: 30, durationMinutes: 90, type: 'activity', title: content.eveningMeeting, titleIconType: 'emoji', titleIconValue: '🌙', notes: 'Confirm completed work, outstanding exceptions and overnight coverage.', attendeeCount: 4, colorKey: 'blue', locationLabel: content.location, sourceModule: 'meetings', sourceRef: ref('EVENING-MEETING'), sourceRoute: 's-meetings', sourceLabel: 'Meeting', sourceDepartment: 'operations', sourceDepartmentLabel: 'Operations' },
+    ];
+  });
   const personalCalendar = CALENDAR_STAGING_CALENDARS[0]!;
   return values.map((value, index) => ({
     ...stagedItem(value, index),
@@ -366,21 +388,12 @@ export function calendarStagingPeople(item: CalendarItemDTO): CalendarStagedAtte
  * continues to come from Calendar and Meetings APIs in standard mode. */
 export function calendarStagingDetail(item: CalendarItemDTO): CalendarStagedDetail | null {
   if (item.sourceModule !== 'meetings') return null;
-  const agendaBySourceRef: Readonly<Record<string, readonly string[]>> = {
-    'MTG-DEMO-TODAY': ['Confirm site access and permit status', 'Review mobilisation blockers', 'Assign owners for today’s field actions'],
-    'MTG-DEMO-SAFETY': ['Review open corrective actions', 'Verify deck-inspection evidence', 'Confirm field-team owners and due dates'],
-    'MTG-DEMO-NIGHT': ['Confirm overnight priorities', 'Validate shift coverage', 'Review escalation contacts'],
-    'MTG-DEMO-OPS': ['Review operational readiness', 'Assign owners for open actions', 'Align mobilisation priorities'],
-    'MTG-DEMO-KICKOFF': ['Confirm contractor induction status', 'Review permit dependencies', 'Align delivery sequencing'],
-    'MTG-DEMO-CAPA': ['Review evidence readiness', 'Identify overdue corrective actions', 'Confirm unblock owners'],
-    'MTG-DEMO-MOB': ['Confirm induction completion', 'Review site-access readiness', 'Close mobilisation blockers'],
-    'MTG-DEMO-PTW': ['Review simultaneous operations', 'Confirm permit dependencies', 'Assign coordination owners'],
-    'MTG-DEMO-RISK': ['Review material risks', 'Confirm mitigation owners', 'Agree escalation thresholds'],
-    'MTG-DEMO-COMPLIANCE': ['Review regulatory commitments', 'Check outstanding audit evidence', 'Confirm closeout owners'],
-    'MTG-DEMO-CLOSE': ['Close completed actions', 'Review controlled exceptions', 'Agree next-week carryovers'],
-  };
+  const isEveningHandoff = item.sourceRef?.endsWith('-EVENING-MEETING');
+  const agenda = isEveningHandoff
+    ? ['Review completed work and open exceptions', 'Confirm overnight coverage and escalation contacts', 'Assign owners for carry-over actions']
+    : ['Review the day’s readiness constraints', 'Confirm accountable owners and due times', 'Agree operational handoffs and escalation points'];
   return {
-    agenda: item.sourceRef ? [...(agendaBySourceRef[item.sourceRef] ?? [item.notes ?? 'Review the scheduled meeting topic'])] : [item.notes ?? 'Review the scheduled meeting topic'],
+    agenda,
     attendees: calendarStagingPeople(item),
     myResponse: 'invited',
     updatedLabel: '2 hours ago',
@@ -394,13 +407,8 @@ export function calendarStagingDetail(item: CalendarItemDTO): CalendarStagedDeta
 /** Reminder examples are explicit so staged cards without a reminder never
  * imply that every SIOMAC calendar item is automatically notified. */
 export function calendarStagingReminderOffsets(item: CalendarItemDTO): number[] {
-  const offsetsBySourceRef: Readonly<Record<string, number>> = {
-    'MTG-DEMO-TODAY': 15,
-    'MTG-DEMO-SAFETY': 30,
-    'MTG-DEMO-OPS': 15,
-    'DUE-DEMO-001': 60,
-    'MTG-DEMO-CAPA': 30,
-  };
-  const offset = item.sourceRef ? offsetsBySourceRef[item.sourceRef] : undefined;
-  return offset === undefined ? [] : [offset];
+  if (item.sourceRef?.endsWith('-MORNING-MEETING')) return [15];
+  if (item.sourceRef?.endsWith('-EVENING-MEETING')) return [30];
+  if (item.sourceRef?.endsWith('-DEADLINE')) return [60];
+  return [];
 }

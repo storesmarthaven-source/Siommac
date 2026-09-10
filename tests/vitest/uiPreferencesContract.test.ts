@@ -21,6 +21,8 @@ import {
   DEFAULT_TOAST_PREFERENCE,
   TOAST_PREFERENCE_KEY,
   TOAST_PREFERENCE_VERSION,
+  CALENDAR_NAVIGATOR_PREFERENCE_KEY,
+  CALENDAR_NAVIGATOR_PREFERENCE_VERSION,
   isKnownUiPreferenceKey,
   sanitizeEmployeeRegisterViews,
   sanitizeUiPreference,
@@ -79,6 +81,76 @@ describe('toast preference', () => {
     }
     expect(sanitizeUiPreference(TOAST_PREFERENCE_KEY, { ...DEFAULT_TOAST_PREFERENCE, position: 'middle' })).toBeNull();
     expect(sanitizeUiPreference(TOAST_PREFERENCE_KEY, { position: 'top-right' })).toBeNull();
+  });
+});
+
+describe('calendar navigator preference', () => {
+  const value = {
+    view: 'agenda',
+    scope: 'mine',
+    zoom: 1.15,
+    weekLayout: 'columns',
+    weekTimelineZoom: 1.4,
+    weekStartsOn: 'monday',
+    snapMinutes: 30,
+    showAllDay: false,
+    showCurrentTime: false,
+    autoFocusTimeline: false,
+    defaultDurationMinutes: 90,
+    showWeekends: false,
+    dimPastEvents: true,
+    showCardLocations: false,
+    showCardAttendees: false,
+    showCardIcons: false,
+    monthEventLimit: 4,
+    showWeather: true,
+    showHolidays: true,
+    weatherLocation: 'san-fernando',
+    titleIconType: 'lucide',
+    hiddenSources: ['payroll', 'hse', 'hse'],
+    hiddenCategories: ['reminder', 'deadline'],
+    hiddenCalendarIds: ['00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000001'],
+    expandedSections: ['navigator'],
+  };
+
+  it('accepts and normalises the complete cross-device calendar state', () => {
+    expect(sanitizeUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, value)).toEqual({
+      version: CALENDAR_NAVIGATOR_PREFERENCE_VERSION,
+      value: { ...value, hiddenSources: ['payroll', 'hse'], hiddenCalendarIds: ['00000000-0000-4000-8000-000000000001'] },
+    });
+  });
+
+  it('upgrades the prior navigator shape with complete calendar defaults', () => {
+    const { weekLayout: _weekLayout, weekTimelineZoom: _weekTimelineZoom, weekStartsOn: _weekStartsOn, snapMinutes: _snapMinutes, showCurrentTime: _currentTime, autoFocusTimeline: _autoFocus, defaultDurationMinutes: _defaultDuration, showWeekends: _showWeekends, dimPastEvents: _dimPast, showCardLocations: _locations, showCardAttendees: _attendees, showCardIcons: _icons, monthEventLimit: _monthLimit, showWeather: _weather, showHolidays: _holidays, weatherLocation: _location, titleIconType: _titleIconType, hiddenCalendarIds: _calendars, ...legacy } = value;
+    expect(sanitizeUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, legacy)?.value).toEqual({
+      ...legacy,
+      weekLayout: 'timeline',
+      weekTimelineZoom: 1.6,
+      weekStartsOn: 'sunday',
+      snapMinutes: 15,
+      showWeather: true,
+      showHolidays: false,
+      showCurrentTime: true,
+      autoFocusTimeline: true,
+      defaultDurationMinutes: 60,
+      showWeekends: true,
+      dimPastEvents: false,
+      showCardLocations: true,
+      showCardAttendees: true,
+      showCardIcons: true,
+      monthEventLimit: 3,
+      weatherLocation: 'port-of-spain',
+      titleIconType: 'emoji',
+      hiddenSources: ['payroll', 'hse'],
+      hiddenCalendarIds: [],
+    });
+  });
+
+  it('rejects partial, unknown, and unbounded navigator values', () => {
+    expect(sanitizeUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, { view: 'week' })).toBeNull();
+    expect(sanitizeUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, { ...value, scope: 'everyone' })).toBeNull();
+    expect(sanitizeUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, { ...value, hiddenSources: ['bad source'] })).toBeNull();
+    expect(sanitizeUiPreference(CALENDAR_NAVIGATOR_PREFERENCE_KEY, { ...value, extra: true })).toBeNull();
   });
 });
 

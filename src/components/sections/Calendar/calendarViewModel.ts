@@ -36,7 +36,7 @@ export function calendarSource(item: CalendarItemDTO): string {
 }
 
 export function calendarCategory(item: CalendarItemDTO): CalendarCategory {
-  return item.categoryKey ?? 'general';
+  return item.categoryKey || 'general';
 }
 
 /** Normalize legacy/projected records at the presentation boundary. Native
@@ -45,7 +45,22 @@ export function calendarCategory(item: CalendarItemDTO): CalendarCategory {
  * fallback kind supplied by an older adapter. */
 export function calendarItemKind(item: CalendarItemDTO): CalendarEntryKind {
   if (item.type === 'deadline') return 'deadline';
-  return item.kind;
+  if (item.kind) return item.kind;
+  if (item.sourceModule === 'meetings') return 'meeting';
+  return item.type === 'task' ? 'task' : 'event';
+}
+
+/** Canonical card palette used by every calendar projection. Meetings are the
+ * one fixed semantic colour; an explicit user selection wins for all others. */
+export function calendarItemTone(item: CalendarItemDTO): string {
+  if (calendarItemKind(item) === 'meeting') return 'blue';
+  if (item.colorKey) return item.colorKey;
+  if (item.sourceLabel?.toLocaleLowerCase().includes('talk')) return 'navy';
+  if (item.type === 'deadline') return 'amber';
+  if (item.type === 'task') return item.priority === 'high' ? 'coral' : 'purple';
+  const tones = ['mint', 'blue', 'coral', 'amber', 'purple'] as const;
+  const hash = Array.from(`${item.sourceModule ?? ''}:${item.title}`).reduce((total, character) => total + (character.codePointAt(0) ?? 0), 0);
+  return tones[hash % tones.length]!;
 }
 
 export function sourceLabel(item: CalendarItemDTO): string {

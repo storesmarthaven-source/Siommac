@@ -30,6 +30,8 @@ export interface MenuAction {
   icon?: VNode;
   /** Keyboard hint shown right-aligned. Display only — bind the key yourself. */
   shortcut?: string;
+  /** Optional non-interactive affordance rendered at the trailing edge. */
+  trailing?: VNode;
   disabled?: boolean;
   /** Renders in the danger colour. Destructive actions must look destructive. */
   danger?: boolean;
@@ -65,6 +67,10 @@ function toGroups(items: MenuItems): readonly MenuGroup[] {
 export interface DropdownMenuProps {
   open: boolean;
   anchor: HTMLElement | null;
+  /** Viewport point used by cursor/context menus instead of a DOM trigger. */
+  anchorPoint?: { x: number; y: number } | null;
+  /** Optional collision boundary. Defaults to the browser viewport. */
+  boundary?: HTMLElement | null;
   onClose: () => void;
   items: MenuItems;
   /** Accessible name for the menu itself. */
@@ -81,7 +87,7 @@ export interface DropdownMenuProps {
 }
 
 export function DropdownMenu({
-  open, anchor, onClose, items, label, matchAnchorWidth = false,
+  open, anchor, anchorPoint = null, boundary = null, onClose, items, label, matchAnchorWidth = false,
   align = 'start', placement = 'auto', pointer = false, id,
 }: DropdownMenuProps): VNode | null {
   const groups = useMemo(() => toGroups(items), [items]);
@@ -162,6 +168,8 @@ export function DropdownMenu({
     <AnchoredPopup
       open={open}
       anchor={anchor}
+      anchorPoint={anchorPoint}
+      boundary={boundary}
       onDismiss={onClose}
       matchAnchorWidth={matchAnchorWidth}
       align={align}
@@ -218,6 +226,7 @@ export function DropdownMenu({
                     {item.description && <span class="ui-menu-item-description">{item.description}</span>}
                   </span>
                   {item.shortcut && <span class="ui-menu-item-shortcut">{item.shortcut}</span>}
+                  {item.trailing && <span class="ui-menu-item-trailing" aria-hidden="true">{item.trailing}</span>}
                 </button>
               );
             })}

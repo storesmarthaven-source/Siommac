@@ -7,8 +7,12 @@ import type { CalendarCategory } from './calendarViewModel';
 import { calendarCollectionPresentation } from './calendarCollectionPresentation';
 import { CalendarProviderMark } from './CalendarProviderMark';
 import { CalendarTitleIcon } from './CalendarTitleIconPicker';
+import type { CalendarWeekStart } from '../../../../types/uiPreferences';
 
-const WEEKDAYS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+const WEEKDAYS: Readonly<Record<CalendarWeekStart, readonly string[]>> = {
+  monday: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'],
+  sunday: ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'],
+};
 const EMPTY_EVENT_DATE_KEYS: ReadonlySet<string> = new Set();
 function eventDateLabel(item: CalendarItemDTO): string {
   const key = itemDateKey(item);
@@ -53,6 +57,7 @@ export function CalendarDashboardRail({
   hiddenCalendarIds = new Set<string>(),
   eventDateKeys = EMPTY_EVENT_DATE_KEYS,
   expandedSections = ['navigator'],
+  weekStartsOn = 'monday',
   onPreviousMonth,
   onNextMonth,
   onSelectDate,
@@ -81,6 +86,7 @@ export function CalendarDashboardRail({
   hiddenCalendarIds?: ReadonlySet<string>;
   eventDateKeys?: ReadonlySet<string>;
   expandedSections?: readonly string[];
+  weekStartsOn?: CalendarWeekStart;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (key: string) => void;
@@ -93,10 +99,10 @@ export function CalendarDashboardRail({
   onExpandedSectionsChange?: (sections: readonly string[]) => void;
 }): VNode {
   const railRef = useRef<HTMLElement>(null);
-  const days = monthGrid(month);
+  const days = monthGrid(month, weekStartsOn);
   const hasParticipants = Boolean(focusedItem && (focusedPeople.length > 0 || focusedItem.attendeeCount > 0));
   const selectedDate = parseLocalDate(selectedKey);
-  const selectedWeekStart = weekDays(selectedDate)[0]!;
+  const selectedWeekStart = weekDays(selectedDate, weekStartsOn)[0]!;
   const selectedWeekStartKey = toLocalDateKey(selectedWeekStart);
   return (
     <aside ref={railRef} class={`cal-board-rail${focusedItem ? '' : ' is-event-empty'}`} aria-label="Calendar navigation and visibility">
@@ -106,7 +112,7 @@ export function CalendarDashboardRail({
           <strong>{month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</strong>
           <Button variant="secondary" size="sm" iconOnly aria-label="Next month" iconLeft={<LucideIcon name="ChevronRight" size={15} />} onClick={onNextMonth} />
         </header>
-        <div class="cal-mini-weekdays" aria-hidden="true">{WEEKDAYS.map(day => <span key={day}>{day}</span>)}</div>
+        <div class="cal-mini-weekdays" aria-hidden="true">{WEEKDAYS[weekStartsOn].map(day => <span key={day}>{day}</span>)}</div>
         <div class="cal-mini-grid">
           {Array.from({ length: 6 }, (_, weekIndex) => {
             const week = days.slice(weekIndex * 7, (weekIndex + 1) * 7);
@@ -172,8 +178,8 @@ export function CalendarDashboardRail({
             <LucideIcon name="UsersRound" />,
             <LucideIcon name="ListChecks" />,
           ]} />}
-          title="No Actions Scheduled"
-          text="Tasks, deadlines, invitations and linked operational items for this day will appear here."
+          title="No Event Actions Today"
+          text="Events with tasks, deadlines, invitations or linked operational actions appear here automatically."
           role="status"
         />}
       </section>

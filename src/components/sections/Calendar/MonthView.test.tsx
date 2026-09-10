@@ -53,6 +53,23 @@ function item(id: string, title: string, startsOn = '2026-07-08'): CalendarItemD
 }
 
 describe('MonthView', () => {
+  it('renders all six calendar rows so late dates in the month remain reachable', () => {
+    const { container } = render(
+      <MonthView
+        month={new Date(2026, 7, 1)}
+        items={[]}
+        selectedKey="2026-08-01"
+        loading={false}
+        onSelectDay={vi.fn()}
+        onOpenItem={vi.fn()}
+      />,
+    );
+
+    const days = container.querySelectorAll('.cal-month-grid > .cal-day');
+    expect(days).toHaveLength(42);
+    expect(screen.getByRole('button', { name: /Monday 31 August/ })).toBeTruthy();
+  });
+
   it('uses a full event card when a day has exactly one item', () => {
     const onlyItem = item('only', 'Monthly payroll cutoff');
     render(
@@ -94,11 +111,38 @@ describe('MonthView', () => {
     expect(open).toHaveBeenCalledWith(first);
   });
 
+  it('updates the month card palette immediately when an editor draft changes', () => {
+    const amber = { ...item('palette', 'Palette preview'), colorKey: 'amber' as const };
+    const view = render(<MonthView month={new Date(2026, 6, 1)} items={[amber]} selectedKey="2026-07-08" loading={false} onSelectDay={vi.fn()} onOpenItem={vi.fn()} />);
+    const card = screen.getByRole('button', { name: /Palette preview/ });
+    expect(card.classList.contains('tone-amber')).toBe(true);
+
+    view.rerender(<MonthView month={new Date(2026, 6, 1)} items={[{ ...amber, colorKey: 'purple' }]} selectedKey="2026-07-08" loading={false} onSelectDay={vi.fn()} onOpenItem={vi.fn()} />);
+    expect(screen.getByRole('button', { name: /Palette preview/ }).classList.contains('tone-purple')).toBe(true);
+  });
+
   it('shows a multi-day item only once on its start day', () => {
     const multiDay = { ...item('multi', 'Two-day shutdown', '2026-07-08'), endsOn: '2026-07-09' };
     render(<MonthView month={new Date(2026, 6, 1)} items={[multiDay]} selectedKey="2026-07-08" loading={false} onSelectDay={vi.fn()} onOpenItem={vi.fn()} />);
 
     expect(screen.getAllByRole('button', { name: /Two-day shutdown/ })).toHaveLength(1);
+  });
+
+  it('can present a five-day workweek without compressing weekend columns', () => {
+    const { container } = render(<MonthView month={new Date(2026, 7, 1)} items={[]} selectedKey="2026-08-03" loading={false} showWeekends={false} onSelectDay={vi.fn()} onOpenItem={vi.fn()} />);
+
+    expect(container.querySelector('.cal-month')?.classList.contains('is-workweek')).toBe(true);
+    expect(container.querySelectorAll('.cal-weekdays > div')).toHaveLength(5);
+    expect(container.querySelectorAll('.cal-month-grid > .cal-day')).toHaveLength(30);
+    expect(container.querySelector('.cal-weekdays')?.textContent).toBe('MonTueWedThuFri');
+  });
+
+  it('uses the configured Month card capacity before showing overflow', () => {
+    const items = ['One', 'Two', 'Three', 'Four'].map((title, index) => item(`${index}`, title));
+    const { container } = render(<MonthView month={new Date(2026, 6, 1)} items={items} selectedKey="2026-07-08" loading={false} eventLimit={2} onSelectDay={vi.fn()} onOpenItem={vi.fn()} />);
+
+    expect(container.querySelectorAll('.cal-event')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: '+2 more' })).toBeTruthy();
   });
 });
 

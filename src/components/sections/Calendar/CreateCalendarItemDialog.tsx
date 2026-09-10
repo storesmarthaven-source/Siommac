@@ -13,6 +13,7 @@ import { Accordion, Button, Checkbox, DateInput, Drawer, FormField, FormGrid2, L
 import { CalendarColorPicker } from './CalendarColorPicker';
 import { CalendarPeoplePicker } from './CalendarPeoplePicker';
 import { CalendarTitleIconPicker } from './CalendarTitleIconPicker';
+import { type CalendarDraftSelection } from './TimeGridView';
 
 export type CalendarCreateType = Exclude<CalendarEntryKind, 'deadline'>;
 
@@ -52,10 +53,7 @@ function addMinutes(time: string, minutes: number): string {
 }
 
 function personName(person: MessageRecipient): string {
-  const displayName = person.displayName?.trim();
-  if (displayName) return displayName;
-  const username = person.username?.trim();
-  return username && username.length > 0 ? username : 'SIOMAC employee';
+  return person.displayName?.trim() || person.username?.trim() || 'SIOMAC employee';
 }
 
 function personOption(person: MessageRecipient): PersonOption {
@@ -85,12 +83,13 @@ function iconFor(kind: CalendarCreateType): 'Video' | 'BellRing' | 'ListChecks' 
   return kind === 'task' ? 'ListChecks' : 'CalendarPlus';
 }
 
-export function CreateCalendarItemDialog({ open, calendars, categoriesOverride, preview = false, titleIconMode = 'emoji', initialCalendarId, initialDate, initialEndDate, initialTime = '09:00', initialEndTime, initialTitle = '', initialType = 'event', initialColorKey = 'blue', initialCustomColor = null, initialItem = null, initialPeople = [], initialReminderOffsets = [], canCreateMeeting = false, onPreviewCreate, onClose, onCreated }: {
+export function CreateCalendarItemDialog({ open, calendars, categoriesOverride, preview = false, titleIconMode = 'emoji', previewSessionId = 0, initialCalendarId, initialDate, initialEndDate, initialTime = '09:00', initialEndTime, initialTitle = '', initialType = 'event', initialColorKey = 'blue', initialCustomColor = null, initialItem = null, initialPeople = [], initialReminderOffsets = [], canCreateMeeting = false, onPreviewCreate, onDraftChange, onClose, onCreated }: {
   open: boolean;
   calendars: readonly CalendarCollectionDTO[];
   categoriesOverride?: readonly CalendarCategoryDTO[];
   preview?: boolean;
   titleIconMode?: CalendarTitleIconType;
+  previewSessionId?: number;
   initialCalendarId?: string | null;
   initialDate: string;
   initialEndDate?: string;
@@ -106,6 +105,7 @@ export function CreateCalendarItemDialog({ open, calendars, categoriesOverride, 
   initialReminderOffsets?: readonly number[];
   canCreateMeeting?: boolean;
   onPreviewCreate?: (draft: CalendarPreviewCreateDraft) => string;
+  onDraftChange?: (draft: CalendarDraftSelection) => void;
   onClose: () => void;
   onCreated?: (id: string) => void;
 }): VNode | null {
@@ -148,6 +148,7 @@ export function CreateCalendarItemDialog({ open, calendars, categoriesOverride, 
   const [confidentiality, setConfidentiality] = useState<'internal' | 'restricted' | 'confidential'>('internal');
   const [expanded, setExpanded] = useState<readonly string[]>(['people']);
   const [error, setError] = useState<string | null>(null);
+  const [readyPreviewSessionId, setReadyPreviewSessionId] = useState(-1);
   const createTask = useCreateTask();
   const createActivity = useCreateActivity();
   const createMeeting = useCreateMeeting();
@@ -178,8 +179,9 @@ export function CreateCalendarItemDialog({ open, calendars, categoriesOverride, 
     setVisibility(initialItem?.visibility ?? selectedCalendar?.visibility ?? 'personal'); setDepartmentId(initialItem?.departmentId ?? selectedCalendar?.departmentId ?? currentDepartmentId ?? '');
     setRecurrenceRule(initialItem?.recurrenceRule ?? ''); setReminderOffset(initialItem ? initialReminderOffsets[0] === undefined ? 'none' : `${initialReminderOffsets[0]}` : '15'); setDeadlineEnabled(Boolean(initialItem?.deadlineAt)); setDeadlineDate(initialItem?.deadlineAt ? toLocalDateKey(new Date(initialItem.deadlineAt)) : sourceEndDate); setDeadlineTime(timeInputValue(initialItem?.deadlineAt, sourceEndTime)); setAvailability(initialItem?.availability ?? 'busy'); setSearch(''); setSelected(sourceKind === 'task' ? [] : sourcePeople); setAssignee(sourceKind === 'task' ? sourcePeople[0] ?? null : null);
     setMeetingProvider('none'); setJoinUrl(''); setConfidentiality('internal'); setExpanded(['people']); setError(null);
+    setReadyPreviewSessionId(previewSessionId);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, initialType, initialCalendarId, initialDate, initialEndDate, initialTime, initialEndTime, initialTitle, initialItem?.id]);
+  }, [open, previewSessionId, initialType, initialCalendarId, initialDate, initialEndDate, initialTime, initialEndTime, initialTitle, initialItem?.id]);
 
   const categoryData = categoriesOverride ?? categories.data ?? [];
 
@@ -187,6 +189,26 @@ export function CreateCalendarItemDialog({ open, calendars, categoriesOverride, 
     if (!open || categoryId || !categoryData.length) return;
     setCategoryId(categoryData.find(category => category.key === 'general')?.id ?? categoryData[0]?.id ?? '');
   }, [categoryData, categoryId, open]);
+
+  useEffect(() => {
+    if (!open || readyPreviewSessionId !== previewSessionId || !onDraftChange) return;
+    const draftEndTime = kind === 'reminder' ? addMinutes(startTime, 15) : endTime;
+    onDraftChange({
+      key: date,
+      endKey: allDay ? (kind === 'reminder' ? date : endDate) : endDate,
+      startTime,
+      endTime: draftEndTime,
+      allDay,
+      kind,
+      title,
+      titleIconType,
+      titleIconValue,
+      colorKey: customColor ? null : colorKey,
+      customColor,
+      locationLabel: kind === 'event' || kind === 'meeting' ? locationLabel : null,
+      peopleCount: kind === 'task' ? (assignee ? 1 : 0) : selected.length,
+    });
+  }, [allDay, assignee, colorKey, customColor, date, endDate, endTime, kind, locationLabel, onDraftChange, open, previewSessionId, readyPreviewSessionId, selected, startTime, title, titleIconType, titleIconValue]);
 
   if (!open) return null;
   const eventFamily = kind === 'event' || kind === 'meeting';

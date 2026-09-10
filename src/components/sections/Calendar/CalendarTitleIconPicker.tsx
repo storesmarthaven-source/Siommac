@@ -52,7 +52,7 @@ export function CalendarTitleIconPicker({ mode, type, value, disabled = false, o
         ? <CalendarTitleIcon type={type} value={value} size={18} />
         : <LucideIcon name={mode === 'emoji' ? 'SmilePlus' : 'Shapes'} size={18} />}
     </button>
-    {open && mode === 'emoji' ? <div class="cal-calendar-emoji-picker"><header><strong>Choose an emoji</strong>{type && value ? <button type="button" onClick={() => { onChange(null, null); setOpen(false); }}>Remove</button> : null}</header><EmojiPicker onSelect={emoji => { onChange('emoji', emoji); setOpen(false); }} onClose={() => setOpen(false)} /></div> : null}
+    {open && mode === 'emoji' ? <div class="cal-calendar-emoji-picker" onPointerDown={event => event.stopPropagation()}><header><strong>Choose an emoji</strong>{type && value ? <button type="button" onClick={() => onChange(null, null)}>Remove</button> : null}</header><EmojiPicker onSelect={emoji => { onChange('emoji', emoji); setOpen(false); }} onClose={() => setOpen(false)} /></div> : null}
     {open && mode === 'lucide' ? <div class="cal-lucide-picker" role="dialog" aria-label="Lucide icon picker">
       <header><strong>Choose an icon</strong>{type && value ? <button type="button" onClick={() => { onChange(null, null); setOpen(false); }}>Remove</button> : null}</header>
       <div class="cal-lucide-picker-grid">

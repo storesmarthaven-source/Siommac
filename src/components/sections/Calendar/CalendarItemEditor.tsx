@@ -31,25 +31,28 @@ export interface CalendarPreviewEditorDetails {
   reminderOffsets: readonly number[];
 }
 
-function recipientName(person: MessageRecipient): string {
-  const displayName = person.displayName?.trim();
-  if (displayName) return displayName;
-  const username = person.username?.trim();
-  return username && username.length > 0 ? username : 'SIOMAC employee';
+export interface CalendarEditorDraftPreview {
+  item: CalendarItemDTO;
+  details: CalendarPreviewEditorDetails;
 }
 
-export function CalendarItemEditor({ open = true, item, calendars = [], preview = false, titleIconMode = 'emoji', previewPeople = EMPTY_PEOPLE, previewDirectory = EMPTY_PEOPLE, previewCategories = [], previewReminderOffset = null, onPreviewSave, onColourPreview, onClose }: {
+function recipientName(person: MessageRecipient): string {
+  return person.displayName?.trim() || person.username?.trim() || 'SIOMAC employee';
+}
+
+export function CalendarItemEditor({ open = true, item, calendars = [], preview = false, titleIconMode = 'emoji', previewSessionId = 0, previewPeople = EMPTY_PEOPLE, previewDirectory = EMPTY_PEOPLE, previewCategories = [], previewReminderOffset = null, onPreviewSave, onDraftPreview, onClose }: {
   open?: boolean;
   item: CalendarItemDTO | null;
   calendars?: readonly CalendarCollectionDTO[];
   preview?: boolean;
   titleIconMode?: CalendarTitleIconType;
+  previewSessionId?: number;
   previewPeople?: readonly PersonOption[];
   previewDirectory?: readonly PersonOption[];
   previewCategories?: readonly CalendarCategoryDTO[];
   previewReminderOffset?: number | null;
   onPreviewSave?: (item: CalendarItemDTO, patch: UpdateEntryRequest['patch'], details: CalendarPreviewEditorDetails) => void;
-  onColourPreview?: (item: CalendarItemDTO, colorKey: CalendarColorKey | null, customColor: string | null) => void;
+  onDraftPreview?: (preview: CalendarEditorDraftPreview) => void;
   onClose: () => void;
 }): VNode | null {
   const [title, setTitle] = useState('');
@@ -80,6 +83,7 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
   const [peopleSearch, setPeopleSearch] = useState('');
   const [scope, setScope] = useState<RecurrenceScope>('series');
   const [error, setError] = useState<string | null>(null);
+  const [readyPreviewSessionId, setReadyPreviewSessionId] = useState(-1);
   const update = useUpdateEntry();
   const setReminders = useSetCalendarReminders();
   const nativeId = !preview && item?.origin === 'calendar' ? item.id.split('::')[0] ?? null : null;
@@ -89,6 +93,8 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
   const categories = useCalendarCategories(Boolean(item?.editable && !preview));
   const directory = useMessageRecipients(peopleSearch, { enabled: Boolean(item?.editable && (item.type === 'activity' || item.assignable)) && !preview });
   const previewPeopleSignature = previewPeople.map(person => person.id).join('\u0000');
+  const previewDirectorySignature = previewDirectory.map(person => `${person.id}:${person.name}:${person.photoUrl ?? ''}`).join('\u0000');
+  const previewCategoriesSignature = previewCategories.map(category => `${category.id}:${category.key}:${category.name}:${category.iconName}`).join('\u0000');
 
   useEffect(() => {
     if (!item) return;
@@ -120,7 +126,8 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
     setAttendeeUserIds(preview ? previewPeople.map(person => person.id) : []);
     setScope('series');
     setError(null);
-  }, [item, preview, previewPeopleSignature, previewReminderOffset]);
+    setReadyPreviewSessionId(previewSessionId);
+  }, [item, preview, previewPeopleSignature, previewReminderOffset, previewSessionId]);
 
   useEffect(() => {
     if (!item || calendarId || item.calendarId) return;
@@ -137,8 +144,65 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
     setReminderOffset(reminders.data[0] === undefined ? 'none' : String(reminders.data[0]));
   }, [nativeId, reminders.data]);
 
+  useEffect(() => {
+    if (!open || !item || readyPreviewSessionId !== previewSessionId || !onDraftPreview) return;
+    const kind = item.kind ?? (item.sourceModule === 'meetings' ? 'meeting' : item.type === 'deadline' ? 'deadline' : item.type === 'task' ? 'task' : 'event');
+    const supportsDeadline = kind === 'event' || kind === 'task';
+    const calendar = calendars.find(value => value.id === calendarId);
+    const categoryData = preview ? previewCategories : categories.data ?? [];
+    const category = categoryData.find(value => value.id === categoryId);
+    const directoryPeople: PersonOption[] = (directory.data ?? []).map(person => ({ id: person.userId, name: recipientName(person), jobTitle: person.role, department: person.department, photoUrl: person.profileImage }));
+    const peopleById = new Map<string, PersonOption>();
+    [...previewDirectory, ...previewPeople, ...directoryPeople].forEach(person => peopleById.set(person.id, person));
+    if (item.assigneeUserId && !peopleById.has(item.assigneeUserId)) peopleById.set(item.assigneeUserId, { id: item.assigneeUserId, name: item.assigneeName ?? 'Current assignee' });
+    const selectedPeople = item.type === 'task'
+      ? assigneeUserId ? [peopleById.get(assigneeUserId) ?? { id: assigneeUserId, name: item.assigneeName ?? 'Current assignee' }] : []
+      : attendeeUserIds.map(userId => peopleById.get(userId) ?? { id: userId, name: 'SIOMAC employee' });
+    const timedStart = startDate ? localTimestamp(startDate, startTime) : null;
+    const timedEnd = endDate ? localTimestamp(endDate, endTime) : null;
+    onDraftPreview({
+      item: {
+        ...item,
+        title: title.trim() || 'Untitled calendar item',
+        titleIconType,
+        titleIconValue,
+        notes: notes.trim() || null,
+        allDay,
+        startsOn: allDay ? startDate : null,
+        endsOn: allDay ? endDate : null,
+        startsAt: allDay ? null : timedStart,
+        endsAt: allDay ? null : timedEnd,
+        priority: item.type === 'task' ? priority : item.priority,
+        assigneeUserId: item.type === 'task' ? assigneeUserId : item.assigneeUserId,
+        assigneeName: item.type === 'task' ? selectedPeople[0]?.name ?? null : item.assigneeName,
+        attendeeCount: item.type === 'activity' ? selectedPeople.length : item.attendeeCount,
+        visibility,
+        departmentId: visibility === 'team' && departmentId ? departmentId : null,
+        locationLabel: locationLabel.trim() || null,
+        colorKey: customColor ? null : colorKey,
+        customColor,
+        calendarId,
+        calendarName: calendar?.name ?? item.calendarName,
+        categoryId,
+        categoryKey: category?.key ?? item.categoryKey,
+        categoryName: category?.name ?? item.categoryName,
+        categoryIcon: category?.iconName ?? item.categoryIcon,
+        recurrenceRule: recurrenceRule || null,
+        deadlineAt: supportsDeadline && deadlineEnabled && deadlineDate ? localTimestamp(deadlineDate, deadlineTime) : null,
+        availability: item.type === 'activity' ? availability : item.availability,
+      },
+      details: {
+        people: selectedPeople,
+        reminderOffsets: reminderOffset === 'none' ? [] : [Number(reminderOffset)],
+      },
+    });
+  // Array-valued preview props are represented by stable content signatures so
+  // a parent render cannot create a preview feedback loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allDay, assigneeUserId, attendeeUserIds, availability, calendarId, calendars, categories.data, categoryId, colorKey, customColor, deadlineDate, deadlineEnabled, deadlineTime, departmentId, directory.data, endDate, endTime, item, locationLabel, notes, onDraftPreview, open, preview, previewCategoriesSignature, previewDirectorySignature, previewPeopleSignature, previewSessionId, priority, readyPreviewSessionId, recurrenceRule, reminderOffset, startDate, startTime, title, titleIconType, titleIconValue, visibility]);
+
   if (!item) return null;
-  const kind = item.kind;
+  const kind = item.kind ?? (item.sourceModule === 'meetings' ? 'meeting' : item.type === 'deadline' ? 'deadline' : item.type === 'task' ? 'task' : 'event');
   const dueSchedule = kind === 'deadline';
   const supportsDeadline = kind === 'event' || kind === 'task';
   const timed = !allDay;
@@ -146,7 +210,7 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
     && (!timed || localTimestamp(endDate, endTime) > localTimestamp(startDate, startTime));
   const deadlineValid = !deadlineEnabled || Boolean(deadlineDate && deadlineTime);
   const valid = Boolean(calendarId && categoryId) && title.trim().length > 0 && scheduleValid && deadlineValid && (visibility !== 'team' || Boolean(departmentId));
-  const recurrence = Boolean(item.recurrenceSeriesId ?? item.recurrenceRule ?? item.occurrenceDate);
+  const recurrence = Boolean(item.recurrenceSeriesId || item.recurrenceRule || item.occurrenceDate);
   const directoryPeople: PersonOption[] = (directory.data ?? []).map(person => ({ id: person.userId, name: recipientName(person), jobTitle: person.role, department: person.department, photoUrl: person.profileImage }));
   const peopleById = new Map<string, PersonOption>();
   [...previewDirectory, ...previewPeople, ...directoryPeople].forEach(person => peopleById.set(person.id, person));
@@ -226,13 +290,13 @@ export function CalendarItemEditor({ open = true, item, calendars = [], preview 
     {visibility === 'team' ? <FormField label="Department"><Select value={departmentId} onChange={setDepartmentId} options={[{ value: '', label: 'Select department' }, ...(departments.data ?? []).map(department => ({ value: department.id, label: department.name }))]} searchable disabled={departments.isLoading} /></FormField> : null}
   </div>;
   const pending = update.isPending || setReminders.isPending;
-  return <Drawer open={open} contained title={`Edit ${kind}`} sub={item.title} headIcon={<LucideIcon name="PencilLine" size={19} />} panelClass="cal-side-rail cal-item-editor-drawer" closeLabel="Close calendar editor" onClose={onClose} foot={<Button variant="primary" tone="success" loading={pending} loadingText="Saving…" disabled={!valid} iconLeft={<LucideIcon name="Save" size={16} />} onClick={() => void save()}>Save Changes</Button>}>
+  return <Drawer open={open} contained title={`Edit ${item.kind ?? (item.type === 'activity' ? 'event' : item.type)}`} sub={item.title} headIcon={<LucideIcon name="PencilLine" size={19} />} panelClass="cal-side-rail cal-item-editor-drawer" closeLabel="Close calendar editor" onClose={onClose} foot={<Button variant="primary" tone="success" loading={pending} loadingText="Saving…" disabled={!valid} iconLeft={<LucideIcon name="Save" size={16} />} onClick={() => void save()}>Save Changes</Button>}>
     <div class="cal-item-editor-body">
       {error ? <div class="cal-form-error" role="alert"><LucideIcon name="CircleAlert" size={15} />{error}</div> : null}
       <section class="cal-editor-primary" aria-label="Calendar item details">
         <FormField label="Title" required charCount={{ value: title.length, max: 200 }}><div class="cal-title-field-row"><CalendarTitleIconPicker mode={titleIconMode} type={titleIconType} value={titleIconValue} disabled={scope === 'occurrence'} onChange={(type, value) => { setTitleIconType(type); setTitleIconValue(value); }} /><TextInput value={title} onInput={setTitle} maxLength={200} autoFocus /></div></FormField>
         <FormGrid2><FormField label="Calendar" required><Select value={calendarId} onChange={setCalendarId} options={calendars.map(calendar => ({ value: calendar.id, label: `${calendar.name}${calendar.isDefault ? ' · Default' : ''}` }))} disabled={!calendars.length || scope === 'occurrence'} /></FormField><FormField label="Category" required error={!preview && categories.isError ? 'Categories could not be loaded.' : undefined}><Select value={categoryId} onChange={setCategoryId} options={categoryOptions} searchable disabled={(!preview && categories.isLoading) || !categoryOptions.length || scope === 'occurrence'} /></FormField></FormGrid2>
-        <FormField label="Card Colour"><CalendarColorPicker value={customColor ? null : colorKey} customColor={customColor} onChange={next => { setColorKey(next); if (next) setCustomColor(null); onColourPreview?.(item, next, null); }} onCustomColorChange={next => { setCustomColor(next); if (next) setColorKey(null); onColourPreview?.(item, null, next); }} allowAutomatic allowCustom disabled={update.isPending || scope === 'occurrence'} label="Edit card colour" /></FormField>
+        <FormField label="Card Colour"><CalendarColorPicker value={customColor ? null : colorKey} customColor={customColor} onChange={next => { setColorKey(next); if (next) setCustomColor(null); }} onCustomColorChange={next => { setCustomColor(next); if (next) setColorKey(null); }} allowAutomatic allowCustom disabled={update.isPending || scope === 'occurrence'} label="Edit card colour" /></FormField>
         <div class="cal-editor-all-day">
           <Checkbox checked={allDay} onChange={setAllDay} label="All Day" />
           <div><strong>All-Day Event</strong><span>Schedule this item across one or more dates without assigning specific start or end times.</span></div>

@@ -3,6 +3,8 @@ import { vi } from 'vitest';
 import { CalendarDashboardRail } from './CalendarDashboardRail';
 import { CALENDAR_STAGING_CALENDARS, calendarStagingDetail, calendarStagingItems } from './calendarStaging';
 
+const CALENDARS = [{ id: '00000000-0000-4000-8000-000000000001', name: 'My Calendar', description: null, ownerUserId: 'user-1', ownerName: 'User', visibility: 'personal' as const, departmentId: null, departmentName: null, colorKey: 'blue' as const, customColor: null, isDefault: true, status: 'active' as const, canEdit: true, canArchive: false, provider: null, readOnly: false }];
+
 describe('CalendarDashboardRail', () => {
   it('shows the selected week with calendars first and a focused category navigator', () => {
     const toggleCategory = vi.fn();
@@ -32,8 +34,8 @@ describe('CalendarDashboardRail', () => {
       onToggleCategory={toggleCategory}
     />);
 
-    expect(screen.getByText('No Actions Scheduled')).toBeTruthy();
-    expect(screen.getByText('Tasks, deadlines, invitations and linked operational items for this day will appear here.')).toBeTruthy();
+    expect(screen.getByText('No Event Actions Today')).toBeTruthy();
+    expect(screen.getByText('Events with tasks, deadlines, invitations or linked operational actions appear here automatically.')).toBeTruthy();
     expect(container.querySelector('.ui-empty-icon-cluster')).toBeTruthy();
     expect(container.querySelector('.cal-board-rail')?.classList.contains('is-event-empty')).toBe(true);
     expect(screen.getByText('Categories')).toBeTruthy();
@@ -115,7 +117,7 @@ describe('CalendarDashboardRail', () => {
 
   it('does not invent guests or avatars for owner-only tasks', () => {
     const today = new Date(2026, 8, 6, 12);
-    const task = calendarStagingItems(today).find(item => item.title === 'Permit Handover')!;
+    const task = calendarStagingItems(today).find(item => item.title === 'Close Permit Actions')!;
     const { container } = render(<CalendarDashboardRail
       month={new Date(2026, 8, 1, 12)}
       selectedKey="2026-09-06"

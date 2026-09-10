@@ -34,6 +34,8 @@ export interface AnchoredPopupProps {
   open: boolean;
   /** The element the surface is positioned against. */
   anchor: HTMLElement | null;
+  /** Viewport point for cursor/context menus that have no durable DOM trigger. */
+  anchorPoint?: { x: number; y: number } | null;
   /** Optional collision boundary. Defaults to the browser viewport. */
   boundary?: HTMLElement | null;
   onDismiss: () => void;
@@ -74,7 +76,7 @@ interface Position {
 }
 
 export function AnchoredPopup({
-  open, anchor, boundary = null, onDismiss,
+  open, anchor, anchorPoint = null, boundary = null, onDismiss,
   matchAnchorWidth = true, align = 'start', placement = 'auto', offset = 4, maxHeight = 280,
   class: extra, id, role, onKeyDown, onSurfaceMount, children, ...aria
 }: AnchoredPopupProps): VNode | null {
@@ -92,12 +94,18 @@ export function AnchoredPopup({
   // useLayoutEffect: measure and place before paint, or the surface is visible
   // for one frame at the wrong coordinates.
   useLayoutEffect(() => {
-    if (!open || !anchor) { setPos(null); return; }
+    if (!open || (!anchor && !anchorPoint)) { setPos(null); return; }
 
     function place(): void {
-      const el = anchor;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
+      const r = anchor?.getBoundingClientRect() ?? (anchorPoint ? {
+        top: anchorPoint.y,
+        right: anchorPoint.x,
+        bottom: anchorPoint.y,
+        left: anchorPoint.x,
+        width: 0,
+        height: 0,
+      } : null);
+      if (!r) return;
       const boundaryRect = boundary?.getBoundingClientRect();
       const bounds = {
         top: Math.max(0, boundaryRect?.top ?? 0),
@@ -186,7 +194,7 @@ export function AnchoredPopup({
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', place);
     };
-  }, [open, anchor, boundary, matchAnchorWidth, align, placement, offset, maxHeight, onDismiss]);
+  }, [open, anchor, anchorPoint, boundary, matchAnchorWidth, align, placement, offset, maxHeight, onDismiss]);
 
   // Content-sized surfaces cannot be horizontally centred/clamped or reliably
   // collision-tested until their real dimensions exist. Correct the provisional
@@ -194,8 +202,16 @@ export function AnchoredPopup({
   // This second vertical check matters for form popovers: a surface can have
   // more than the 160px "usable list" threshold while still clipping its footer.
   useLayoutEffect(() => {
-    if (!open || !anchor || !pos || !surfaceRef.current) return;
-    const r = anchor.getBoundingClientRect();
+    if (!open || (!anchor && !anchorPoint) || !pos || !surfaceRef.current) return;
+    const r = anchor?.getBoundingClientRect() ?? (anchorPoint ? {
+      top: anchorPoint.y,
+      right: anchorPoint.x,
+      bottom: anchorPoint.y,
+      left: anchorPoint.x,
+      width: 0,
+      height: 0,
+    } : null);
+    if (!r) return;
     const boundaryRect = boundary?.getBoundingClientRect();
     const bounds = {
       top: Math.max(0, boundaryRect?.top ?? 0) + 8,
@@ -252,7 +268,7 @@ export function AnchoredPopup({
         } : {}),
       } : current);
     }
-  }, [open, anchor, boundary, matchAnchorWidth, align, placement, offset, maxHeight, pos]);
+  }, [open, anchor, anchorPoint, boundary, matchAnchorWidth, align, placement, offset, maxHeight, pos]);
 
   useEffect(() => {
     if (!open) return;
